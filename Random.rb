@@ -42,7 +42,7 @@ module RandomizedChallenge
   
     
     #Lista de movimientos baneados para el random
-    MOVEBLACKLIST=[PBMoves::CHATTERI, PBMoves::DIG, PBMoves::TELEPORT, PBMoves::SONICBOOM,PBMoves::DRAGONRAGE,PBMoves::STRUGGLE]
+    MOVEBLACKLIST=[PBMoves::CHATTER, PBMoves::DIG, PBMoves::TELEPORT, PBMoves::SONICBOOM,PBMoves::DRAGONRAGE,PBMoves::STRUGGLE]
     
     #Lista de habilidades baneados para el random
     ABILITYBLACKLIST = [PBAbilities::IMPOSTER, PBAbilities::PLUS, PBAbilities::MINUS, PBAbilities::ZENMODE, PBAbilities::WONDERGUARD, PBAbilities::STANCECHANGE, PBAbilities::DISGUISE, PBAbilities::FORECAST, PBAbilities::ILLUSION, PBAbilities::HARVEST, PBAbilities::MULTITYPE, PBAbilities::HONEYGATHER]
