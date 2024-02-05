@@ -509,18 +509,19 @@ end
   
   
   def generarInicialesRandom()
-    inicial_1 = RandomizedChallenge::ListaStartersRandomizado.shuffle[0]
-    
-    inicial_2 = inicial_1
-    loop do
-      inicial_2 = RandomizedChallenge::ListaStartersRandomizado.shuffle[0]
-      break if (inicial_1 != inicial_2)
-    end
-    
-    inicial_3 = inicial_1
-    loop do
-      inicial_3 = RandomizedChallenge::ListaStartersRandomizado.shuffle[0]
-      break if (inicial_1 != inicial_3) && (inicial_2 != inicial_3)
+      inicial_1 = RandomizedChallenge::ListaStartersRandomizado.length > 0 ? RandomizedChallenge::ListaStartersRandomizado.shuffle[0] : getRandomSpecies()
+      
+      inicial_2 = inicial_1
+      loop do
+        inicial_2 = RandomizedChallenge::ListaStartersRandomizado.length > 0 ? RandomizedChallenge::ListaStartersRandomizado.shuffle[0] : getRandomSpecies()
+        break if (inicial_1 != inicial_2)
+      end
+      
+      inicial_3 = inicial_1
+      loop do
+        inicial_3 = RandomizedChallenge::ListaStartersRandomizado.length > 0 ? RandomizedChallenge::ListaStartersRandomizado.shuffle[0] : getRandomSpecies()
+        break if (inicial_1 != inicial_3) && (inicial_2 != inicial_3)
+      end
     end
     
     $game_variables[803] = inicial_1

@@ -2,9 +2,9 @@
 
 ## Descripción
 
-El modo random randomizará ataques y habilidades de los pokémon tanto de entrenadores como de los salvajes, se puede activar que tambien se randomize la compatibilidad con las MTs, se podra restringir las generaciones de los pokémon que apareceran en el random.
+El modo random randomizará ataques y habilidades de los pokémon tanto de entrenadores como de los salvajes, se puede activar que también se randomize la compatibilidad con las MTs, se podrá restringir las generaciones de los pokémon que apareceran en el random.
 
-El random es progresivo en base a la cantidad de medallas del jugador, entre mas medallas tenga salen pokemon con mas BST, aqui dejo la formula, que la pueden modificar en el metodo `getMaxBSTCap` y `getMinBSTCap`
+El random es progresivo en base a la cantidad de medallas del jugador, entre más medallas tenga salen pokémon con mas BST, aquí dejo la formula, que la pueden modificar en el metodo `getMaxBSTCap` y `getMinBSTCap`
 
 - 0 y 1 medalla BST min 0 y BST max 400
 - 2 medallas BST min 0 y BST max 440
@@ -12,27 +12,31 @@ El random es progresivo en base a la cantidad de medallas del jugador, entre mas
 - 4 medallas BST min 375 y BST max 520
 - 5 medallas BST min 400 y BST max 560
 - 6 medallas BST min 425 y BST max 600
-- Mas de 6 medallas BST min 440 y BST max 800
+- Más de 6 medallas BST min 440 y BST max 800
 
 También si el jugador tiene menos de 3 medallas no pueden salir movimientos con mas de 70 de poder base.
 
-Tambien se pueden randomizar los objetos obtenidos, para eso en los eventos que dan objetos hay que checkear si el switch del random esta activo, si lo esta en lugar de llamar a pbItemBall, hay que llamar `getItemRandomFromPokeball()` abajo dejo un ejemplo de como hacerlo.
+Se puede hacer que los pokemon salgan de un listado definido por el maker, para eso actualice el script `Random.rb` en la variable `ListaStartersRandomizado` si se debe separar por comas, por ejemplo `[PBSpecies::BULBASAUR,PBSpecies::CHARMANDER,PBSpecies::SQUIRTLE, PBSpecies::PIDGEY,PBSpecies::NIDORANmA,PBSpecies::NIDORANfE,PBSpecies::ZUBAT,PBSpecies::MANKEY,PBSpecies::POLIWAG, PBSpecies::ABRA]`
+Si este listado esta vacio los iniciales serán 100% random respetando las restricciones de generaciones, BST y blacklist de pokémon.
+
+También se pueden randomizar los objetos obtenidos, para eso en los eventos que dan objetos hay que checkear si el switch del random está activo, si lo está en lugar de llamar a pbItemBall, hay que llamar `getItemRandomFromPokeball()` abajo dejo un ejemplo de como hacerlo.
 ![Objeto random](images/evento_objeto_random.png)
 
 En el script `ObjetosRandom.rb` hay una variable `BLACK_LIST` que contiene los objetos que no se pueden obtener, de un objeto random si se quiere restringir mas de un objeto se debe separar por comas, por ejemplo `[:LOPUNNYTE, :SACREDASH, :BLACKFLUTE]`
 
-Tambien se hay una variable `MTLIST_RANDOM` que contiene las MTs que SI se pueden conseguir a través de un objeto random si se quiere agregar mas MTs se debe separar por comas, por ejemplo `[:TM01, :TM02, :TM03]`
+También se hay una variable `MTLIST_RANDOM` que contiene las MTs que SI se pueden conseguir a través de un objeto random si se quiere agregar mas MTs se debe separar por comas, por ejemplo `[:TM01, :TM02, :TM03]`
 
-## Implementacion
+## Implementación
 
-1. Descargar el zip del [ultimo release](https://github.com/Pokemon-Fan-Games/ModoRandom/releases/latest)
+1. Descargar el zip del [último release](https://github.com/Pokemon-Fan-Games/ModoRandom/releases/latest)
 2. Crear los 3 scripts que estan en el zip, arriba del script Main
 3. Crear el siguiente NPC para activar el modo random
-   1. Debe activar el switch que tengan definido en el script, si lo dejan tal cual seria el 409
-   2. Agregar una opcion de script al evento con el llamado a la funcion `generarInicialesRandom()`
-   3. El NPC tambien podria deasactivar el random, solo tiene que desactivar el switch
+   1. Debe activar el switch que tengan definido en el script, si lo dejan tal cual sería el 409
+   2. Agregar una opción de script al evento con el llamado a la función `generarInicialesRandom()`
+   3. El NPC también podría deasactivar el random, solo tiene que desactivar el switch
       ![NPC Activar Random](images/activar_random.png)
 4. Crear un NPC para que el jugador pueda limitar los pokémon de que generaciones salen en el random
+   _Nota: Saldrán Pokémon de las generaciones elegidas y evoluciones que hayan salido en gens posteriores, eligiendo la gen 1 podria salir Magnezone por ejemplo_
    ![NPC Restringir Generaciones](images/random_gens_event.png)
    Codigo del script del evento:
    ```ruby
@@ -50,7 +54,7 @@ Tambien se hay una variable `MTLIST_RANDOM` que contiene las MTs que SI se puede
 5. Si quieres activar el randomizado de la compatibilidad con las MTs, en el script `Random.rb` hay una variable que se llama `RANDOM_TM_COMPAT` por defecto esta en `false` si la cambias a `true` se randomizara la compatibilidad con las MTs
 6. Se puede restringir que pokemon salen en el random, para eso se debe modificar el script `Random.rb` en la variable `BlackListedPokemon` si se quiere restringir mas de un pokemon se debe separar por comas, por ejemplo `[PBSpecies::ARTICUNO,PBSpecies::MOLTRES, PBSpecies::ZAPDOS]`
 7. Se puede restringir que habilidades salen en el random, para eso se debe modificar el script `Random.rb` en la variable `ABILITYBLACKLIST` si se quiere restringir mas de una habilidad se debe separar por comas, por ejemplo `[PBAbilities::IMPOSTER, PBAbilities::ZENMODE, PBAbilities::WONDERGUARD]`
-8. Se pueden restringir que movimientos salen en el random, para eso se debe modificar el script `Random.rb` en la variable `MOVEBLACKLIST` si se quiere restringir mas de un movimiento se debe separar por comas, por ejemplo `[PBMoves::CHATTERI, PBMoves::DIG, PBMoves::TELEPORT, PBMoves::SONICBOOM,PBMoves::DRAGONRAGE,PBMoves::STRUGGLE]`
+8. Se pueden restringir que movimientos salen en el random, para eso se debe modificar el script `Random.rb` en la variable `MOVEBLACKLIST` si se quiere restringir mas de un movimiento se debe separar por comas, por ejemplo `[PBMoves::CHATTER, PBMoves::DIG, PBMoves::TELEPORT, PBMoves::SONICBOOM, PBMoves::DRAGONRAGE, PBMoves::STRUGGLE]`
 
 ### Evento Iniciales
 
@@ -61,6 +65,5 @@ En el evento de los iniciales se debe generar una nueva pagina con la condicion 
    1. Hay que desactivar el control switch del random
    2. Hay que agregar otra sentencia de tipo script con esta linea `pbAddPokemon(pbGet(803),5)` para que se le asigne el inicial random que se generó al activar el random y que el jugador no pueda reiniciar hasta que le salga el inicial que quiere
    3. Luego hay que volver a activar el switch del random
-Aqui dejo un ejemplo del evento, las partes importantes están marcadas con un cuadro rojo
-![Evento Iniciales](images/evento_inicial_random.png)
-
+      Aqui dejo un ejemplo del evento, las partes importantes están marcadas con un cuadro rojo
+      ![Evento Iniciales](images/evento_inicial_random.png)
