@@ -69,21 +69,17 @@ def getItemRandomFromPokeball()
   objeto_elegido = 0
   loop do
     objeto_elegido = rand(PBItems.maxValue)
-    # Kernel.pbMessage(_INTL("OBJETO: {1}, {2}", objeto_elegido, PBItems.getName(objeto_elegido))
     for i in BLACK_LIST
       item=getID(PBItems,i)
       enBlackList = true if objeto_elegido==item
       break if enBlackList
     end
-    # Kernel.pbMessage(_INTL("BLACKLIST")) if enBlackList
     for i in MTLIST_RANDOM
       item=getID(PBItems,i)
       mtRepetida = true if (objeto_elegido==item && $PokemonBag.pbHasItem?(objeto_elegido))
       break if mtRepetida
     end
-    # Kernel.pbMessage(_INTL("MT REPETIDA")) if mtRepetida
     break if !enBlackList && !mtRepetida
-    # Kernel.pbMessage(_INTL("Generando otro..."))
   end
   Kernel.pbItemBall(objeto_elegido)
 end
