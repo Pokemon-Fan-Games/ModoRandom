@@ -28,7 +28,7 @@ El random es progresivo en base a la cantidad de medallas del jugador, entre má
 
 También si el jugador tiene menos de 3 medallas no pueden salir movimientos con mas de 70 de poder base.
 
-Se puede hacer que los pokemon salgan de un listado definido por el maker, para eso actualice el script `Random.rb` en la variable `ListaStartersRandomizado` si se debe separar por comas, por ejemplo `[PBSpecies::BULBASAUR,PBSpecies::CHARMANDER,PBSpecies::SQUIRTLE, PBSpecies::PIDGEY,PBSpecies::NIDORANmA,PBSpecies::NIDORANfE,PBSpecies::ZUBAT,PBSpecies::MANKEY,PBSpecies::POLIWAG, PBSpecies::ABRA]`
+Se puede hacer que los pokemon inciales salgan de un listado definido por el maker, para eso actualice el script `Random.rb` en la variable `ListaStartersRandomizado` si se debe separar por comas, por ejemplo `[PBSpecies::BULBASAUR,PBSpecies::CHARMANDER,PBSpecies::SQUIRTLE, PBSpecies::PIDGEY,PBSpecies::NIDORANmA,PBSpecies::NIDORANfE,PBSpecies::ZUBAT,PBSpecies::MANKEY,PBSpecies::POLIWAG, PBSpecies::ABRA]`
 Si este listado está vacío los iniciales serán 100% random respetando las restricciones de generaciones, BST y blacklist de pokémon.
 
 También se pueden randomizar los objetos obtenidos, para eso en los eventos que dan objetos hay que checkear si el switch del random está activo, si lo está en lugar de llamar a pbItemBall, hay que llamar `getItemRandomFromPokeball()` abajo dejo un ejemplo de como hacerlo.
