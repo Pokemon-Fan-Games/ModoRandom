@@ -161,7 +161,7 @@ module RandomizedChallenge
   # Ejemplo Intimidacion se convierte en Inicio Lento
   # Lo que no significa que Inicio Lento se convierta en Intimidacion
   # Si la variable FULL_RANDOM_ABS esta en true esa sera la opcion determinada
-  MAP_RANDOM_ABS = true
+  MAP_RANDOM_ABS = false
   # Si ambas variables estan en false no se randomizaran las habilidades
 end
 
@@ -231,6 +231,12 @@ def getRandomSpecies()
     end
   end
   return species
+end
+
+def resetAbilities
+  $PokemonGlobal.randomAbsPokemon.clear() if $PokemonGlobal.randomAbsPokemon
+  $PokemonGlobal.abilityHash.clear() if $PokemonGlobal.abilityHash
+  createAbilityHash if RandomizedChallenge::MAP_RANDOM_ABS
 end
 
 class PokeBattle_Pokemon
@@ -485,12 +491,8 @@ def getAbilityList
     if RandomizedChallenge::FULL_RANDOM_ABS
       return getAbilityFullRandom(ret)
     elsif RandomizedChallenge::MAP_RANDOM_ABS
-      createAbilityHash if !$PokemonGlobal.abilityHash
       return getAbilityMap(ret)
     end
-  else
-    $PokemonGlobal.randomAbsPokemon = {}
-    createAbilityHash
   end
   return ret
 end
@@ -569,16 +571,15 @@ def generarInicialesRandom()
 end
 
 def createAbilityHash
-abilityHash={}
-abilityArr=[]
-for i in 1..PBAbilities.maxValue
-  next if RandomizedChallenge::ABILITYBLACKLIST.include?(i)
-  abilityArr.push(i)
-end
-abilityArr.shuffle!
-#  abilityArr.insert(0,nil)
-for i in 0...abilityArr.length
-  abilityHash[i]=abilityArr[i]
-end
-$PokemonGlobal.abilityHash=abilityHash
+  abilityHash={}
+  abilityArr=[]
+  for i in 1..PBAbilities.maxValue
+    next if RandomizedChallenge::ABILITYBLACKLIST.include?(i)
+    abilityArr.push(i)
+  end
+  abilityArr.shuffle!
+  for i in 0...abilityArr.length
+    abilityHash[i]=abilityArr[i]
+  end
+  $PokemonGlobal.abilityHash=abilityHash
 end
