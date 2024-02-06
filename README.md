@@ -2,7 +2,7 @@
 
 ## Descripción
 
-El modo random randomizará ataques y habilidades de los pokémon tanto de entrenadores como de los salvajes, se puede activar que también se randomize la compatibilidad con las MTs, se podrá restringir las generaciones de los pokémon que apareceran en el random.
+El modo random randomizará ataques y habilidades de los pokémon tanto de entrenadores como de los salvajes, se puede activar que también se randomice la compatibilidad con las MTs, se podrá restringir las generaciones de los pokémon que apareceran en el random.
 
 Se puede elegir como funciona el random de las habilidades si 100% random por especie o mapeo de una habilidad a otra, o directamente no randomizar las habilidades.
 Unos ejemplos:
