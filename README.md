@@ -8,9 +8,9 @@ Se puede elegir como funciona el random de las habilidades si 100% random por es
 Unos ejemplos:
 
 - Opcion 1: 100% random -> Para esta opcion hay que poner la constante `FULL_RANDOM_ABS` que esta en el script `Random.rb` en `true`
-  Ejemplo Pikachu tendra Intimidacion y Cura Natural, pero Raichu podria tener otras distintas, como Absorbe agua y levitacion
-- Opcion 2: Mapeo de habilidades -> Para esta opcion hay que poner la constante `MAP_RANDOM_ABS` que esta en el script `Random.rb` en `true`
-  Ejemplo Intimidacion se convierte en Inicio Lento, lo que no significa, que Inicio Lento se convierta en Intimidacion
+  Ejemplo Pikachu tendra Intimidación y Cura Natural, pero Raichu podría tener otras distintas, como Absorbe agua y levitación
+- Opcion 2: Mapeo de habilidades -> Para esta opcion hay que poner la constante `MAP_RANDOM_ABS` que está en el script `Random.rb` en `true`
+  Ejemplo Intimidacion se convierte en Inicio Lento, lo que no significa, que Inicio Lento se convierta en Intimidación
 
 Si ninguno de las 2 constantes está en `true` no se randomizaran las habilidades.
 
@@ -27,7 +27,7 @@ El random es progresivo en base a la cantidad de medallas del jugador, entre má
 También si el jugador tiene menos de 3 medallas no pueden salir movimientos con mas de 70 de poder base.
 
 Se puede hacer que los pokemon salgan de un listado definido por el maker, para eso actualice el script `Random.rb` en la variable `ListaStartersRandomizado` si se debe separar por comas, por ejemplo `[PBSpecies::BULBASAUR,PBSpecies::CHARMANDER,PBSpecies::SQUIRTLE, PBSpecies::PIDGEY,PBSpecies::NIDORANmA,PBSpecies::NIDORANfE,PBSpecies::ZUBAT,PBSpecies::MANKEY,PBSpecies::POLIWAG, PBSpecies::ABRA]`
-Si este listado esta vacio los iniciales serán 100% random respetando las restricciones de generaciones, BST y blacklist de pokémon.
+Si este listado está vacío los iniciales serán 100% random respetando las restricciones de generaciones, BST y blacklist de pokémon.
 
 También se pueden randomizar los objetos obtenidos, para eso en los eventos que dan objetos hay que checkear si el switch del random está activo, si lo está en lugar de llamar a pbItemBall, hay que llamar `getItemRandomFromPokeball()` abajo dejo un ejemplo de como hacerlo.
 ![Objeto random](images/evento_objeto_random.png)
@@ -76,5 +76,5 @@ En el evento de los iniciales se debe generar una nueva pagina con la condicion 
    1. Hay que desactivar el control switch del random
    2. Hay que agregar otra sentencia de tipo script con esta linea `pbAddPokemon(pbGet(803),5)` para que se le asigne el inicial random que se generó al activar el random y que el jugador no pueda reiniciar hasta que le salga el inicial que quiere
    3. Luego hay que volver a activar el switch del random
-      Aqui dejo un ejemplo del evento, las partes importantes están marcadas con un cuadro rojo
+      Aquí dejo un ejemplo del evento, las partes importantes están marcadas con un cuadro rojo
       ![Evento Iniciales](images/evento_inicial_random.png)
