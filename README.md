@@ -38,7 +38,7 @@ También se hay una variable `MTLIST_RANDOM` que contiene las MTs que SI se pued
 
 ## Implementación
 
-1. Descargar el zip del [último release](https://github.com/Pokemon-Fan-Games/ModoRandom/releases/latest)
+1. Descargar el zip "ModoRandom.zip" del [último release](https://github.com/Pokemon-Fan-Games/ModoRandom/releases/latest)
 2. Crear los 3 scripts que estan en el zip, arriba del script Main
 3. Crear el siguiente NPC para activar el modo random
    1. Debe activar el switch que tengan definido en el script, si lo dejan tal cual sería el 409
