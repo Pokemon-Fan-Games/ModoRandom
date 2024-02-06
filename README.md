@@ -81,4 +81,5 @@ En el evento de los iniciales se debe generar una nueva pagina con la condicion 
    2. Hay que agregar otra sentencia de tipo script con esta linea `pbAddPokemon(pbGet(803),5)` para que se le asigne el inicial random que se generó al activar el random y que el jugador no pueda reiniciar hasta que le salga el inicial que quiere
    3. Luego hay que volver a activar el switch del random
       Aquí dejo un ejemplo del evento, las partes importantes están marcadas con un cuadro rojo
+      
       ![Evento Iniciales](images/evento_inicial_random.png)
