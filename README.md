@@ -7,9 +7,9 @@ El modo random randomizará ataques y habilidades de los pokémon tanto de entre
 Se puede elegir como funciona el random de las habilidades si 100% random por especie o mapeo de una habilidad a otra, o directamente no randomizar las habilidades.
 Unos ejemplos:
 
-- Opcion 1: 100% random -> Para esta opcion hay que poner la constante `FULL_RANDOM_ABS` que esta en el script `Random.rb` en `true`
+- **Opción 1:** 100% random -> Para esta opcion hay que poner la constante `FULL_RANDOM_ABS` que esta en el script `Random.rb` en `true`
   Ejemplo Pikachu tendra Intimidación y Cura Natural, pero Raichu podría tener otras distintas, como Absorbe agua y levitación
-- Opcion 2: Mapeo de habilidades -> Para esta opcion hay que poner la constante `MAP_RANDOM_ABS` que está en el script `Random.rb` en `true`
+- **Opción 2:** Mapeo de habilidades -> Para esta opcion hay que poner la constante `MAP_RANDOM_ABS` que está en el script `Random.rb` en `true`
   Ejemplo Intimidacion se convierte en Inicio Lento, lo que no significa, que Inicio Lento se convierta en Intimidación
 
 Si ninguno de las 2 constantes está en `true` no se randomizaran las habilidades.
