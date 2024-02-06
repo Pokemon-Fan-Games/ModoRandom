@@ -44,10 +44,12 @@ También se hay una variable `MTLIST_RANDOM` que contiene las MTs que SI se pued
    1. Debe activar el switch que tengan definido en el script, si lo dejan tal cual sería el 409
    2. Agregar una opción de script al evento con el llamado a la función `generarInicialesRandom()`
    3. El NPC también podría deasactivar el random, solo tiene que desactivar el switch
+   
    **Ejemplo del evento que activa/desactiva el random**
    ![NPC Activar Random](images/activar_random.png)
 4. Crear un NPC para que el jugador pueda limitar los pokémon de que generaciones salen en el random
-   _Nota: Saldrán Pokémon de las generaciones elegidas y evoluciones que hayan salido en gens posteriores, eligiendo la gen 1 podria salir Magnezone por ejemplo_
+
+   _Nota: Saldrán Pokémon de las generaciones elegidas y evoluciones que hayan salido en gens posteriores, eligiendo la gen 1 podría salir por ejemplo un Magnezone_
    ![NPC Restringir Generaciones](images/random_gens_event.png)
 
    Codigo del script del evento:
