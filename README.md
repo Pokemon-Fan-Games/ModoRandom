@@ -4,6 +4,18 @@
 
 El modo random randomizará ataques y habilidades de los pokémon tanto de entrenadores como de los salvajes, se puede activar que también se randomize la compatibilidad con las MTs, se podrá restringir las generaciones de los pokémon que apareceran en el random.
 
+Se puede elegir como funciona el random de las habilidades si 100% random por especie o mapeo de una habilidad a otra, o directamente no randomizar las habilidades.
+Unos ejemplos:
+
+- Opcion 1: 100% random -> Para esta opcion hay que poner la constante `FULL_RANDOM_ABS` que esta en el script `Random.rb` en `true`
+  Ejemplo Pikachu tendra Intimidacion y Cura Natural
+  Pero Raichu podria tener otras distintas como Absorbe agua y levitacion
+- Opcion 2: Mapeo de habilidades -> Para esta opcion hay que poner la constante `MAP_RANDOM_ABS` que esta en el script `Random.rb` en `true`
+  Ejemplo Intimidacion se convierte en Inicio Lento
+  Lo que no significa que Inicio Lento se convierta en Intimidacion
+
+Si ninguno de las 2 constantes esta en `true` no se randomizaran las habilidades.
+
 El random es progresivo en base a la cantidad de medallas del jugador, entre más medallas tenga salen pokémon con mas BST, aquí dejo la formula, que la pueden modificar en el metodo `getMaxBSTCap` y `getMinBSTCap`
 
 - 0 y 1 medalla BST min 0 y BST max 400
