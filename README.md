@@ -12,7 +12,8 @@ Unos ejemplos:
 - **Opción 2:** Mapeo de habilidades -> Para esta opcion hay que poner la constante `MAP_RANDOM_ABS` que está en el script `Random.rb` en `true`
   Ejemplo Intimidacion se convierte en Inicio Lento, lo que no significa, que Inicio Lento se convierta en Intimidación
 
-Si ninguno de las 2 constantes está en `true` no se randomizaran las habilidades.
+Si ninguna de las 2 constantes está en `true` no se randomizaran las habilidades.
+Si ambas constantes estan en `true` se utilizará la opción 1
 
 El random es progresivo en base a la cantidad de medallas del jugador, entre más medallas tenga salen pokémon con mas BST, aquí dejo la formula, que la pueden modificar en el metodo `getMaxBSTCap` y `getMinBSTCap`
 
