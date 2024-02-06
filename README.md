@@ -8,13 +8,11 @@ Se puede elegir como funciona el random de las habilidades si 100% random por es
 Unos ejemplos:
 
 - Opcion 1: 100% random -> Para esta opcion hay que poner la constante `FULL_RANDOM_ABS` que esta en el script `Random.rb` en `true`
-  Ejemplo Pikachu tendra Intimidacion y Cura Natural
-  Pero Raichu podria tener otras distintas como Absorbe agua y levitacion
+  Ejemplo Pikachu tendra Intimidacion y Cura Natural, pero Raichu podria tener otras distintas, como Absorbe agua y levitacion
 - Opcion 2: Mapeo de habilidades -> Para esta opcion hay que poner la constante `MAP_RANDOM_ABS` que esta en el script `Random.rb` en `true`
-  Ejemplo Intimidacion se convierte en Inicio Lento
-  Lo que no significa que Inicio Lento se convierta en Intimidacion
+  Ejemplo Intimidacion se convierte en Inicio Lento, lo que no significa, que Inicio Lento se convierta en Intimidacion
 
-Si ninguno de las 2 constantes esta en `true` no se randomizaran las habilidades.
+Si ninguno de las 2 constantes está en `true` no se randomizaran las habilidades.
 
 El random es progresivo en base a la cantidad de medallas del jugador, entre más medallas tenga salen pokémon con mas BST, aquí dejo la formula, que la pueden modificar en el metodo `getMaxBSTCap` y `getMinBSTCap`
 
@@ -46,7 +44,8 @@ También se hay una variable `MTLIST_RANDOM` que contiene las MTs que SI se pued
    1. Debe activar el switch que tengan definido en el script, si lo dejan tal cual sería el 409
    2. Agregar una opción de script al evento con el llamado a la función `generarInicialesRandom()`
    3. El NPC también podría deasactivar el random, solo tiene que desactivar el switch
-      ![NPC Activar Random](images/activar_random.png)
+   **Ejemplo del evento que activa/desactiva el random**
+   ![NPC Activar Random](images/activar_random.png)
 4. Crear un NPC para que el jugador pueda limitar los pokémon de que generaciones salen en el random
    _Nota: Saldrán Pokémon de las generaciones elegidas y evoluciones que hayan salido en gens posteriores, eligiendo la gen 1 podria salir Magnezone por ejemplo_
    ![NPC Restringir Generaciones](images/random_gens_event.png)
