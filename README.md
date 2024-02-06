@@ -50,6 +50,7 @@ También se hay una variable `MTLIST_RANDOM` que contiene las MTs que SI se pued
 4. Crear un NPC para que el jugador pueda limitar los pokémon de que generaciones salen en el random
 
    _Nota: Saldrán Pokémon de las generaciones elegidas y evoluciones que hayan salido en gens posteriores, eligiendo la gen 1 podría salir por ejemplo un Magnezone_
+   
    ![NPC Restringir Generaciones](images/random_gens_event.png)
 
    Codigo del script del evento:
