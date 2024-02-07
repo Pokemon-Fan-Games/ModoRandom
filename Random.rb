@@ -163,6 +163,10 @@ module RandomizedChallenge
   # Si la variable FULL_RANDOM_ABS esta en true esa sera la opcion determinada
   MAP_RANDOM_ABS = false
   # Si ambas variables estan en false no se randomizaran las habilidades
+
+  # Este flag decide que el BST de los pokemon sea progresivo, es decir si el flag está en true 
+  # no podran salir pokemon con un BST mayor al que se define en la funcion getMaxBSTCap
+  PROGRESSIVE_RANDOM = true
 end
 
 ######################### Do not edit anything below here.
@@ -216,6 +220,11 @@ def is_pokemon_in_gen_range(species)
   end
   return is_valid
 end
+
+def isNotInAllowedBSTRange(bst)
+  return false if !RandomizedChallenge::PROGRESSIVE_RANDOM
+  bst > getMaxBSTCap() || bst < getMinBSTCap()
+end
   
 def getRandomSpecies()
   species = RandomizedChallenge::WhiteListedPokemon.shuffle[0]
@@ -224,7 +233,7 @@ def getRandomSpecies()
     baseStatsSum = getBaseStatsSum(species)
     previous_species = pbGetPreviousForm(species)
     $PokemonGlobal.randomGens = [] if !$PokemonGlobal.randomGens
-    while RandomizedChallenge::BlackListedPokemon.include?(species) || ( baseStatsSum > getMaxBSTCap() || baseStatsSum < getMinBSTCap() ) || ( $PokemonGlobal.randomGens.length > 0 && !is_pokemon_in_gen_range(species) &&  !is_pokemon_in_gen_range(previous_species) )# Cambios DPERTIERRA
+    while RandomizedChallenge::BlackListedPokemon.include?(species) || ( isNotInAllowedBSTRange(baseStatsSum) ) || ( $PokemonGlobal.randomGens.length > 0 && !is_pokemon_in_gen_range(species) &&  !is_pokemon_in_gen_range(previous_species) )
       species = rand(PBSpecies.maxValue - 1) + 1
       previous_species = pbGetPreviousForm(species)
       baseStatsSum = getBaseStatsSum(species)
@@ -390,7 +399,7 @@ class PokeBattle_Pokemon
       while movelist.length<4
         move=rand(PBMoves::PBMoves.maxValue - 1)+1
         movedata=PBMoveData.new(move)
-        if $Trainer.numbadges < 3 
+        if $Trainer.numbadges < 3 && RandomizedChallenge::PROGRESSIVE_RANDOM
           next if (!move || movedata.basedamage > 70 || RandomizedChallenge::MOVEBLACKLIST.include?(move)) 
         else
           next if (!move || RandomizedChallenge::MOVEBLACKLIST.include?(move)) 
@@ -519,7 +528,7 @@ def getMoveList
     if move != nil
         move=rand(PBMoves::PBMoves.maxValue)+1 
         movedata=PBMoveData.new(move)
-        if $Trainer.numbadges < 3
+        if $Trainer.numbadges < 3 && RandomizedChallenge::PROGRESSIVE_RANDOM
           moveExists = $PokemonGlobal.randomMoves[@species].detect{ |elem| elem[1] == (move) }
           while movedata.basedamage > 70 || RandomizedChallenge::MOVEBLACKLIST.include?(move) || moveExists
             move=rand(PBMoves::PBMoves.maxValue)+1
