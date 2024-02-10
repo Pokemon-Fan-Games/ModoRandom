@@ -42,10 +42,10 @@ module RandomizedChallenge
   
   
   #Lista de movimientos baneados para el random
-  MOVEBLACKLIST=[PBMoves::CHATTERI, PBMoves::DIG, PBMoves::TELEPORT, PBMoves::SONICBOOM,PBMoves::DRAGONRAGE,PBMoves::STRUGGLE]
+  MOVEBLACKLIST=[]
   
   #Lista de habilidades baneados para el random
-  ABILITYBLACKLIST = [PBAbilities::IMPOSTER, PBAbilities::PLUS, PBAbilities::MINUS, PBAbilities::ZENMODE, PBAbilities::WONDERGUARD, PBAbilities::STANCECHANGE, PBAbilities::DISGUISE, PBAbilities::FORECAST, PBAbilities::ILLUSION, PBAbilities::HARVEST, PBAbilities::MULTITYPE, PBAbilities::HONEYGATHER]
+  ABILITYBLACKLIST = []
   
   
   # LISTA DE STARTERS PARA EL RANDOM
@@ -177,6 +177,7 @@ class PokemonGlobalMetadata
   attr_accessor :valid_num_ranges
   attr_accessor :randomAbsPokemon
   attr_accessor :abilityHash
+  attr_accessor :randomMoves
   alias random_abil_init initialize
   def initialize
     random_abil_init
