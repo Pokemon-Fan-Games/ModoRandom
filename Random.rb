@@ -155,7 +155,7 @@ module RandomizedChallenge
   # Este flag decide que las habilidades sean random para cada especie
   # Ejemplo Pikachu tendra Intimidacion y Cura Natural
   # Pero Raichu podria tener otras distintas como Absorbe agua y levitacion
-  FULL_RANDOM_ABS = false
+  FULL_RANDOM_ABS = true
   
   # Este flag decide que las habilidades sean un mapeo de una a otra
   # Ejemplo Intimidacion se convierte en Inicio Lento
