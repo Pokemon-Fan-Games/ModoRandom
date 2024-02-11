@@ -42,9 +42,9 @@ También hay una variable `MTLIST_RANDOM` que debe contener las MTs, para que si
 
 ## Implementación
 
-1. Descargar el zip "ModoRandom.zip" desde [aquí](https://github.com/Pokemon-Fan-Games/ModoRandom/releases/download/v1.1.1/ModoRandom.zip)
-2. Crear los 3 scripts que están en el zip, arriba del script Main
-3. Crear el siguiente NPC para activar el modo random
+1. Descargar el zip "ModoRandom.zip" desde [aquí](https://github.com/Pokemon-Fan-Games/ModoRandom/releases/download/v1.1.2/ModoRandom.zip)
+3. Crear los 3 scripts que están en el zip, arriba del script Main
+4. Crear el siguiente NPC para activar el modo random
 
    1. Debe activar el switch que tengan definido en el script, si lo dejan tal cual sería el 409
    2. Agregar una opción de script al evento con el llamado a la función `generarInicialesRandom()`
@@ -53,7 +53,7 @@ También hay una variable `MTLIST_RANDOM` que debe contener las MTs, para que si
    **Ejemplo del evento que activa/desactiva el random**
    ![NPC Activar Random](images/activar_random.png)
 
-4. Crear un NPC para que el jugador pueda limitar las generaciones de Pokémon que salen en el random
+5. Crear un NPC para que el jugador pueda limitar las generaciones de Pokémon que salen en el random
 
    _Nota: Saldrán Pokémon de las generaciones elegidas y evoluciones que hayan salido en gens posteriores, eligiendo la gen 1 podría salir por ejemplo un Magnezone_
 
@@ -74,10 +74,10 @@ También hay una variable `MTLIST_RANDOM` que debe contener las MTs, para que si
     add_or_remove_random_gen(ret+1);
    ```
 
-5. Si quieres activar el randomizado de la compatibilidad con las MTs, en el script `Random.rb` hay una variable que se llama `RANDOM_TM_COMPAT` por defecto está en `false` si la cambias a `true` se randomizará la compatibilidad con las MTs
-6. Se puede restringir qué pokémon salen en el random, para eso se debe modificar el script `Random.rb` en la variable `BlackListedPokemon` si se quiere restringir más de un pokémon se debe separar por comas, por ejemplo `[PBSpecies::ARTICUNO,PBSpecies::MOLTRES, PBSpecies::ZAPDOS]`
-7. Se puede restringir qué habilidades salen en el random, para eso se debe modificar el script `Random.rb` en la variable `ABILITYBLACKLIST` si se quiere restringir más de una habilidad se debe separar por comas, por ejemplo `[PBAbilities::IMPOSTER, PBAbilities::ZENMODE, PBAbilities::WONDERGUARD]`
-8. Se pueden restringir qué movimientos salen en el random, para eso se debe modificar el script `Random.rb` en la variable `MOVEBLACKLIST` si se quiere restringir más de un movimiento se debe separar por comas, por ejemplo `[PBMoves::CHATTER, PBMoves::DIG, PBMoves::TELEPORT, PBMoves::SONICBOOM, PBMoves::DRAGONRAGE, PBMoves::STRUGGLE]`
+6. Si quieres activar el randomizado de la compatibilidad con las MTs, en el script `Random.rb` hay una variable que se llama `RANDOM_TM_COMPAT` por defecto está en `false` si la cambias a `true` se randomizará la compatibilidad con las MTs
+7. Se puede restringir qué pokémon salen en el random, para eso se debe modificar el script `Random.rb` en la variable `BlackListedPokemon` si se quiere restringir más de un pokémon se debe separar por comas, por ejemplo `[PBSpecies::ARTICUNO,PBSpecies::MOLTRES, PBSpecies::ZAPDOS]`
+8. Se puede restringir qué habilidades salen en el random, para eso se debe modificar el script `Random.rb` en la variable `ABILITYBLACKLIST` si se quiere restringir más de una habilidad se debe separar por comas, por ejemplo `[PBAbilities::IMPOSTER, PBAbilities::ZENMODE, PBAbilities::WONDERGUARD]`
+9. Se pueden restringir qué movimientos salen en el random, para eso se debe modificar el script `Random.rb` en la variable `MOVEBLACKLIST` si se quiere restringir más de un movimiento se debe separar por comas, por ejemplo `[PBMoves::CHATTER, PBMoves::DIG, PBMoves::TELEPORT, PBMoves::SONICBOOM, PBMoves::DRAGONRAGE, PBMoves::STRUGGLE]`
 
 ### Evento Iniciales
 
