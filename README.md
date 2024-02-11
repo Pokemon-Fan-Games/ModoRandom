@@ -42,7 +42,7 @@ También hay una variable `MTLIST_RANDOM` que debe contener las MTs, para que si
 
 ## Implementación
 
-1. Descargar el zip "ModoRandom.zip" desde [aquí](https://github.com/Pokemon-Fan-Games/ModoRandom/releases/download/v1.1.0/ModoRandom.zip)
+1. Descargar el zip "ModoRandom.zip" desde [aquí](https://github.com/Pokemon-Fan-Games/ModoRandom/releases/download/v1.1.1/ModoRandom.zip)
 2. Crear los 3 scripts que están en el zip, arriba del script Main
 3. Crear el siguiente NPC para activar el modo random
 
