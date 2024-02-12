@@ -46,7 +46,6 @@ También hay una variable `MTLIST_RANDOM` que debe contener las MTs, para que si
   Si ninguna de las 2 constantes está en `true` no se randomizarán las habilidades.
   Si ambas constantes están en `true` se utilizará la opción 1.
 
-
 ### Con la version 1.2.0
 
 Hay varias mejoras, ahora se puede decidir si los movimientos están randomizados o no, se agregaron un total de 7 metodos nuevos para que como maker puedan darle la opcion al jugador de configurar el random a su gusto, estos metodos son:
