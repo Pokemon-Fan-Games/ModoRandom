@@ -108,6 +108,10 @@ Los valores por defecto para estas constantes son:
     add_or_remove_random_gen(ret+1);
    ```
 
+6. Ejemplo del evento configuracion del random
+
+   ![Evento Configuracion Random](images/ejemplo_evento_configurador.png)
+
 ### Evento Iniciales
 
 En el evento de los iniciales se debe generar una nueva página con la condición de que el switch del random este activo
