@@ -26,9 +26,6 @@ module RandomizedChallenge
   Switch = 409 # switch ID to randomize a pokemon, if it's on then ALL
               # pokemon will be randomized. No exceptions.
   
-              
-  RANDOM_TM_COMPAT = false
-  
   BlackListedPokemon = []
   # Los Pokémon de la blacklist jamas saldran, ni en entrenadores ni como salvajes.
   # Ejemplo Blacklist
@@ -163,10 +160,28 @@ module RandomizedChallenge
   # Si la variable FULL_RANDOM_ABS esta en true esa sera la opcion determinada
   MAP_RANDOM_ABS = false
   # Si ambas variables estan en false no se randomizaran las habilidades
+  # Se puede cambiar el metodo de randomizado de habilidades 
+  # llamando al metodo choose_random_ability_mode a este metodo hay que pasarle el modo
+  # Para el mapeo hay que pasarle :MAP_RANDOM_ABS, asi choose_random_ability_mode(:MAP_RANDOM_ABS)
+  # Para el modo full random hay que pasarle :FULL_RANDOM_ABS, asi choose_random_ability_mode(:FULL_RANDOM_ABS)
+  # Tengan en cuenta que el llamado a este método volverá a randomizar las habilidades
+  # Y las antiguas no podrán ser recuperadas.
 
   # Este flag decide que el BST de los pokemon sea progresivo, es decir si el flag está en true 
   # no podran salir pokemon con un BST mayor al que se define en la funcion getMaxBSTCap
-  PROGRESSIVE_RANDOM = true
+  # Siempre se podra modificar esto llamando al metodo toggle_progressive_random
+  PROGRESSIVE_RANDOM_DEFAULT_VALUE = true
+
+  # Movimientos randomizados
+  # Si quieres que los movimientos esten randomizados por defecto pon esta constante en true
+  # Siempre se podra modificar esto llamando al metodo toggle_random_moves
+  RANDOM_MOVES_DEFAULT_VALUE = true
+  
+  # Randomizar compatibilidad con las MTs
+  # Se podrá cambiar llamando al metodo toggle_tm_compat
+  # Tengan en cuenta que de esa forma un jugador podria armarse el moveset como quiera
+  # Activando y desactivando esta opción
+  RANDOM_TM_COMPAT_DEFAULT_VALUE = false
 end
 
 ######################### Do not edit anything below here.
@@ -178,12 +193,46 @@ class PokemonGlobalMetadata
   attr_accessor :randomAbsPokemon
   attr_accessor :abilityHash
   attr_accessor :randomMoves
+  attr_accessor :enable_random_moves
+  attr_accessor :random_ability_mode
+  attr_accessor :progressive_random
+  attr_accessor :enable_random_tm_compat
   alias random_abil_init initialize
   def initialize
     random_abil_init
     @abilityHash=nil
   end
 end
+
+def are_random_moves_on()
+  return $PokemonGlobal.enable_random_moves ? true : false
+end
+def toggle_random_moves()
+  $PokemonGlobal.enable_random_moves = RandomizedChallenge::RANDOM_MOVES_DEFAULT_VALUE if $PokemonGlobal.enable_random_moves == nil
+  $PokemonGlobal.enable_random_moves = !$PokemonGlobal.enable_random_moves
+end
+
+def is_progressive_random_on()
+  return $PokemonGlobal.progressive_random ? true : false
+end
+def toggle_progressive_random()
+  $PokemonGlobal.progressive_random = !$PokemonGlobal.progressive_random
+end
+
+def is_random_tm_compat_on()
+  return $PokemonGlobal.enable_random_tm_compat ? true : false
+end
+def toggle_random_tm_compat()
+  $PokemonGlobal.enable_random_tm_compat = !$PokemonGlobal.enable_random_tm_compat
+end
+
+
+def choose_random_ability_mode(mode=:FULL_RANDOM_ABS)
+  return if $PokemonGlobal.random_ability_mode == mode
+  $PokemonGlobal.random_ability_mode = mode
+  resetAbilities
+end
+
 
 def get_random_gens()
   return $PokemonGlobal.randomGens ? $PokemonGlobal.randomGens : []
@@ -209,6 +258,23 @@ def add_or_remove_random_gen(gen = nil)
   end
 end
 
+def enable_random 
+  return if !$game_switches
+  resetAbilities
+  $PokemonGlobal.enable_random_moves = RandomizedChallenge::RANDOM_MOVES_DEFAULT_VALUE if $PokemonGlobal.enable_random_moves == nil
+  if !$PokemonGlobal.random_ability_mode
+    if RandomizedChallenge::FULL_RANDOM_ABS 
+      $PokemonGlobal.random_ability_mode = :FULL_RANDOM_ABS
+    elsif RandomizedChallenge::MAP_RANDOM_ABS 
+      $PokemonGlobal.random_ability_mode = :MAP_RANDOM_ABS
+    end
+  end
+  $PokemonGlobal.progressive_random = RandomizedChallenge::PROGRESSIVE_RANDOM_DEFAULT_VALUE if $PokemonGlobal.progressive_random == nil
+  $PokemonGlobal.enable_random_tm_compat = RandomizedChallenge::RANDOM_TM_COMPAT_DEFAULT_VALUE if $PokemonGlobal.enable_random_tm_compat == nil
+  generarInicialesRandom
+  $game_switches[RandomizedChallenge::Switch] = true
+end
+
 def is_pokemon_in_gen_range(species)
   return true if !$PokemonGlobal.randomGens
   is_valid = false
@@ -223,7 +289,7 @@ def is_pokemon_in_gen_range(species)
 end
 
 def isNotInAllowedBSTRange(bst)
-  return false if !RandomizedChallenge::PROGRESSIVE_RANDOM
+  return false if !$PokemonGlobal.progressive_random
   bst > getMaxBSTCap() || bst < getMinBSTCap()
 end
   
@@ -246,15 +312,10 @@ end
 def resetAbilities
   $PokemonGlobal.randomAbsPokemon.clear() if $PokemonGlobal.randomAbsPokemon
   $PokemonGlobal.abilityHash.clear() if $PokemonGlobal.abilityHash
-  createAbilityHash if RandomizedChallenge::MAP_RANDOM_ABS
+  createAbilityHash if $PokemonGlobal.random_ability_mode == :MAP_RANDOM_ABS
 end
 
 class PokeBattle_Pokemon
-  
-  alias randomized_init initialize
-  alias random_getAbilityList getAbilityList
-  alias random_getMoveList getMoveList
-
   def getBaseStatsSum(species)
     dexdata=pbOpenDexData
     pbDexDataOffset(dexdata,species,10)
@@ -318,6 +379,7 @@ class PokeBattle_Pokemon
   #    level     - Nivel del Pokémon.
   #    player    - Objeto PokeBattle_Trainer para el entrenador original.
   #    withMoves - Si está en false, este Pokémon no tendrá movimientos.
+  alias randomized_init initialize
   def initialize(species,level,player=nil,withMoves=true)
     return randomized_init(species,level,player,withMoves) if !($game_switches && $game_switches[RandomizedChallenge::Switch])
     species = getRandomSpecies()
@@ -395,29 +457,31 @@ class PokeBattle_Pokemon
       atkdata.pos=offset
       # Genera lista de movimientos
       movelist=[]
-      # INCIO generación de movimientos random
-      movelist = []
-      while movelist.length<4
-        move=rand(PBMoves::PBMoves.maxValue - 1)+1
-        movedata=PBMoveData.new(move)
-        if $Trainer.numbadges < 3 && RandomizedChallenge::PROGRESSIVE_RANDOM
-          next if (!move || movedata.basedamage > 70 || RandomizedChallenge::MOVEBLACKLIST.include?(move)) 
-        else
-          next if (!move || RandomizedChallenge::MOVEBLACKLIST.include?(move)) 
+      if $PokemonGlobal.enable_random_moves 
+        while movelist.length<4
+          move=rand(PBMoves::PBMoves.maxValue - 1)+1
+          movedata=PBMoveData.new(move)
+          if $Trainer.numbadges < 3 && $PokemonGlobal.progressive_random
+            next if (!move || movedata.basedamage > 70 || RandomizedChallenge::MOVEBLACKLIST.include?(move)) 
+          else
+            next if (!move || RandomizedChallenge::MOVEBLACKLIST.include?(move)) 
+          end
+          movelist.push(move)
+          movelist|=[] # Elimina duplicados
         end
-        movelist.push(move)
-        movelist|=[] # Elimina duplicados
-      end
-      # FIN generación de movimientos random
-      for i in 0..length-1
-        alevel=atkdata.fgetw
-        move=atkdata.fgetw
-        if alevel<=level
-          movelist[movelist.length]=move
+         # FIN generación de movimientos random
+      else
+        for i in 0..length-1
+          alevel=atkdata.fgetw
+          move=atkdata.fgetw
+          if alevel<=level
+            movelist[movelist.length]=move
+          end
         end
       end
       atkdata.close
       movelist|=[] # Elimina duplicados
+     
       # Se usan los últimos 4 elementos en la lista de movimientos
       listend=movelist.length-4
       listend=0 if listend<0
@@ -435,7 +499,7 @@ class PokeBattle_Pokemon
   end
   
 def isCompatibleWithMove?(move)
-  if !RandomizedChallenge::RANDOM_TM_COMPAT || ($game_switches && !$game_switches[RandomizedChallenge::Switch])
+  if !$PokemonGlobal.enable_random_tm_compat || ($game_switches && !$game_switches[RandomizedChallenge::Switch])
     return pbSpeciesCompatible?(self.species,move)
   end
 
@@ -495,21 +559,24 @@ def getAbilityMap(ret)
   return ret
 end
 
+alias random_getAbilityList getAbilityList
 def getAbilityList
   ret = random_getAbilityList
   if $game_switches && $game_switches[RandomizedChallenge::Switch]
-    if RandomizedChallenge::FULL_RANDOM_ABS
+    if $PokemonGlobal.random_ability_mode == :FULL_RANDOM_ABS
       return getAbilityFullRandom(ret)
-    elsif RandomizedChallenge::MAP_RANDOM_ABS
+    elsif $PokemonGlobal.random_ability_mode == :MAP_RANDOM_ABS
       return getAbilityMap(ret)
     end
   end
   return ret
 end
 
-
+alias random_getMoveList getMoveList
 def getMoveList
-  return random_getMoveList() if !($game_switches && $game_switches[RandomizedChallenge::Switch])
+  if ($game_switches && !$game_switches[RandomizedChallenge::Switch]) || !$PokemonGlobal.enable_random_moves
+   return random_getMoveList
+  end
   movelist=[]
   atkdata=pbRgssOpen("Data/attacksRS.dat","rb")
   offset=atkdata.getOffset(@species-1)
@@ -529,7 +596,7 @@ def getMoveList
     if move != nil
         move=rand(PBMoves::PBMoves.maxValue)+1 
         movedata=PBMoveData.new(move)
-        if $Trainer.numbadges < 3 && RandomizedChallenge::PROGRESSIVE_RANDOM
+        if $Trainer.numbadges < 3 && $PokemonGlobal.progressive_random
           moveExists = $PokemonGlobal.randomMoves[@species].detect{ |elem| elem[1] == (move) }
           while movedata.basedamage > 70 || RandomizedChallenge::MOVEBLACKLIST.include?(move) || moveExists
             move=rand(PBMoves::PBMoves.maxValue)+1
