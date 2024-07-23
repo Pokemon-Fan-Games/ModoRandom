@@ -220,6 +220,7 @@ class PokemonGlobalMetadata
 end
 
 def are_random_moves_on()
+  return false if !$game_switches[RandomizedChallenge::Switch]
   return $PokemonGlobal.enable_random_moves ? true : false
 end
 def toggle_random_moves()
@@ -228,6 +229,7 @@ def toggle_random_moves()
 end
 
 def is_progressive_random_on()
+  return false if !$game_switches[RandomizedChallenge::Switch]
   return $PokemonGlobal.progressive_random ? true : false
 end
 def toggle_progressive_random()
@@ -242,6 +244,7 @@ def toggle_random_tm_compat()
 end
 
 def are_random_evos_on()
+  return false if !$game_switches[RandomizedChallenge::Switch]
   return $PokemonGlobal.random_evos ? true : false
 end
 def toggle_random_evos()
@@ -250,6 +253,7 @@ def toggle_random_evos()
 end
 
 def are_random_evos_similar_bst_on()
+  return false if !$game_switches[RandomizedChallenge::Switch]
   return $PokemonGlobal.random_evos_similar_bst ? true : false
 end
 def toggle_random_evos_similar_bst()
