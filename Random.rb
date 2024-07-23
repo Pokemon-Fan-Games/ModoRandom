@@ -182,6 +182,19 @@ module RandomizedChallenge
   # Tengan en cuenta que de esa forma un jugador podria armarse el moveset como quiera
   # Activando y desactivando esta opción
   RANDOM_TM_COMPAT_DEFAULT_VALUE = false
+
+  # Randomizar evoluciones de los pokemones
+  # Se podrá cambiar llamando al metodo toggle_random_evos
+  RANDOM_EVOS_DEFAULT_VALUE = true
+
+  # Randomizar evoluciones de los pokemones a otro con BST similares 
+  # Por ejemplo un Pichu no podra evolucionar a un Slaking
+  # Se podrá cambiar llamando al metodo toggle_random_evos_similar_bst
+  RANDOM_EVOS_SIMILAR_BST_DEFAULT_VALUE = true
+
+  # Esto es el margen de diferencia de los BST para las evos random, actualmente es un 10%
+  # Si quisieran cambiarlo a un 20% hay que cambiarlo a 0.2
+  EVO_BST_MARGIN = 0.1
 end
 
 ######################### Do not edit anything below here.
@@ -197,6 +210,8 @@ class PokemonGlobalMetadata
   attr_accessor :random_ability_mode
   attr_accessor :progressive_random
   attr_accessor :enable_random_tm_compat
+  attr_accessor :random_evos
+  attr_accessor :random_evos_similar_bst
   alias random_abil_init initialize
   def initialize
     random_abil_init
@@ -226,6 +241,21 @@ def toggle_random_tm_compat()
   $PokemonGlobal.enable_random_tm_compat = !$PokemonGlobal.enable_random_tm_compat
 end
 
+def are_random_evos_on()
+  return $PokemonGlobal.random_evos ? true : false
+end
+def toggle_random_evos()
+  $PokemonGlobal.random_evos = RandomizedChallenge::RANDOM_EVOS_DEFAULT_VALUE if $PokemonGlobal.random_evos == nil
+  $PokemonGlobal.random_evos = !$PokemonGlobal.random_evos
+end
+
+def are_random_evos_similar_bst_on()
+  return $PokemonGlobal.random_evos_similar_bst ? true : false
+end
+def toggle_random_evos_similar_bst()
+  $PokemonGlobal.random_evos_similar_bst = RandomizedChallenge::RANDOM_EVOS_SIMILAR_BST_DEFAULT_VALUE if $PokemonGlobal.random_evos_similar_bst == nil
+  $PokemonGlobal.random_evos_similar_bst = !$PokemonGlobal.random_evos_similar_bst
+end
 
 def choose_random_ability_mode(mode=:FULL_RANDOM_ABS)
   return if $PokemonGlobal.random_ability_mode == mode
@@ -271,6 +301,8 @@ def enable_random
   end
   $PokemonGlobal.progressive_random = RandomizedChallenge::PROGRESSIVE_RANDOM_DEFAULT_VALUE if $PokemonGlobal.progressive_random == nil
   $PokemonGlobal.enable_random_tm_compat = RandomizedChallenge::RANDOM_TM_COMPAT_DEFAULT_VALUE if $PokemonGlobal.enable_random_tm_compat == nil
+  $PokemonGlobal.random_evos = RandomizedChallenge::RANDOM_EVOS_DEFAULT_VALUE
+  $PokemonGlobal.random_evos_similar_bst = RandomizedChallenge::RANDOM_EVOS_SIMILAR_BST_DEFAULT_VALUE
   generarInicialesRandom
   $game_switches[RandomizedChallenge::Switch] = true
 end
@@ -288,19 +320,59 @@ def is_pokemon_in_gen_range(species)
   return is_valid
 end
 
+# AQUI SE DEFINE EL BST QUE VAN A TENER LOS POKEMON EN EL RANDOMIZADO.
+# SEGÚN CADA CANTIDAD DE MEDALLAS, PONER EN LOS RETURN EL BST QUE TENDRÁN
+# LOS POKÉMON.
+def getMaxBSTCap()
+  if $Trainer.numbadges <= 1
+    return 400
+  elsif $Trainer.numbadges <= 2
+    return 440
+  elsif $Trainer.numbadges <= 3
+    return 480
+  elsif $Trainer.numbadges <= 4
+    return 520
+  elsif $Trainer.numbadges <= 5
+    return 560
+  elsif $Trainer.numbadges <= 6
+    return 600
+  elsif $Trainer.numbadges <= 7
+    return 800
+  elsif $Trainer.numbadges <= 8
+    return 800
+  end
+end
+
+def getMinBSTCap()
+  if $Trainer.numbadges > 6
+    return 440
+  elsif $Trainer.numbadges > 5
+    return 425
+  elsif $Trainer.numbadges > 4
+    return 400
+  elsif $Trainer.numbadges > 3
+    return 375
+  elsif $Trainer.numbadges > 2
+    return 350
+  else
+    return 0
+  end
+end
+
+
 def isNotInAllowedBSTRange(bst)
   return false if !$PokemonGlobal.progressive_random
   bst > getMaxBSTCap() || bst < getMinBSTCap()
 end
   
-def getRandomSpecies()
+def getRandomSpecies(evo = false, evo_bst_range = [])
   species = RandomizedChallenge::WhiteListedPokemon.shuffle[0]
   if RandomizedChallenge::WhiteListedPokemon.length == 0
     species = rand(PBSpecies.maxValue - 1) + 1
     baseStatsSum = getBaseStatsSum(species)
     previous_species = pbGetPreviousForm(species)
     $PokemonGlobal.randomGens = [] if !$PokemonGlobal.randomGens
-    while RandomizedChallenge::BlackListedPokemon.include?(species) || ( isNotInAllowedBSTRange(baseStatsSum) ) || ( $PokemonGlobal.randomGens.length > 0 && !is_pokemon_in_gen_range(species) &&  !is_pokemon_in_gen_range(previous_species) )
+    while RandomizedChallenge::BlackListedPokemon.include?(species) || ( isNotInAllowedBSTRange(baseStatsSum) ) || ( $PokemonGlobal.randomGens.length > 0 && !is_pokemon_in_gen_range(species) &&  !is_pokemon_in_gen_range(previous_species) ) || ( evo && evo_bst_range.length > 0 && !baseStatsSum.between?(evo_bst_range[0],evo_bst_range[1]) )  
       species = rand(PBSpecies.maxValue - 1) + 1
       previous_species = pbGetPreviousForm(species)
       baseStatsSum = getBaseStatsSum(species)
@@ -309,70 +381,44 @@ def getRandomSpecies()
   return species
 end
 
+def getRandomEvo(current_pokemon, expected_evo)
+  if are_random_evos_similar_bst_on() 
+    min_bst = getBaseStatsSum(expected_evo) * ( 1 - RandomizedChallenge::EVO_BST_MARGIN)
+    max_bst = getBaseStatsSum(expected_evo) * ( 1 + RandomizedChallenge::EVO_BST_MARGIN )
+    evo_bst_range = [min_bst,max_bst]
+  else
+    evo_bst_range = []
+  end 
+  return getRandomSpecies(true, evo_bst_range)
+end
+
+
 def resetAbilities
   $PokemonGlobal.randomAbsPokemon.clear() if $PokemonGlobal.randomAbsPokemon
   $PokemonGlobal.abilityHash.clear() if $PokemonGlobal.abilityHash
   createAbilityHash if $PokemonGlobal.random_ability_mode == :MAP_RANDOM_ABS
 end
 
-class PokeBattle_Pokemon
-  def getBaseStatsSum(species)
-    dexdata=pbOpenDexData
-    pbDexDataOffset(dexdata,species,10)
-    ret=[
-       dexdata.fgetb, # PS
-       dexdata.fgetb, # Ataque
-       dexdata.fgetb, # Defensa
-       dexdata.fgetb, # Velocidad
-       dexdata.fgetb, # Ataque Especial
-       dexdata.fgetb  # Defensa Especial
-    ]
-    dexdata.close
-    baseStatsSum = 0
-    for i in 0..5
-      baseStatsSum += ret[i]
-    end
-    return baseStatsSum
+def getBaseStatsSum(species)
+  dexdata=pbOpenDexData
+  pbDexDataOffset(dexdata,species,10)
+  ret=[
+     dexdata.fgetb, # PS
+     dexdata.fgetb, # Ataque
+     dexdata.fgetb, # Defensa
+     dexdata.fgetb, # Velocidad
+     dexdata.fgetb, # Ataque Especial
+     dexdata.fgetb  # Defensa Especial
+  ]
+  dexdata.close
+  baseStatsSum = 0
+  for i in 0..5
+    baseStatsSum += ret[i]
   end
+  return baseStatsSum
+end
 
-  # AQUI SE DEFINE EL BST QUE VAN A TENER LOS POKEMON EN EL RANDOMIZADO.
-  # SEGÚN CADA CANTIDAD DE MEDALLAS, PONER EN LOS RETURN EL BST QUE TENDRÁN
-  # LOS POKÉMON.
-  def getMaxBSTCap()
-    if $Trainer.numbadges <= 1
-      return 400
-    elsif $Trainer.numbadges <= 2
-      return 440
-    elsif $Trainer.numbadges <= 3
-      return 480
-    elsif $Trainer.numbadges <= 4
-      return 520
-    elsif $Trainer.numbadges <= 5
-      return 560
-    elsif $Trainer.numbadges <= 6
-      return 600
-    elsif $Trainer.numbadges <= 7
-      return 800
-    elsif $Trainer.numbadges <= 8
-      return 800
-    end
-  end
-  
-  def getMinBSTCap()
-    if $Trainer.numbadges > 6
-      return 440
-    elsif $Trainer.numbadges > 5
-      return 425
-    elsif $Trainer.numbadges > 4
-      return 400
-    elsif $Trainer.numbadges > 3
-      return 375
-    elsif $Trainer.numbadges > 2
-      return 350
-    else
-      return 0
-    end
-  end
+class PokeBattle_Pokemon
 
   # Creación de un objeto Pokémon nuevo.
   #    species   - Especie del Pokémon.
@@ -619,6 +665,21 @@ def getMoveList
   movelist = $PokemonGlobal.randomMoves[@species] 
   return movelist
 end
+end
+
+alias pbCheckEvolutionExRandom pbCheckEvolutionEx
+def pbCheckEvolutionEx(pokemon)
+  return pbCheckEvolutionExRandom(pokemon) if !are_random_evos_on()
+  return -1 if pokemon.species<=0 || pokemon.isEgg?
+  return -1 if isConst?(pokemon.species,PBSpecies,:PICHU) && pokemon.form==1
+  return -1 if isConst?(pokemon.item,PBItems,:EVERSTONE) &&
+               !isConst?(pokemon.species,PBSpecies,:KADABRA)
+  ret=-1
+  for form in pbGetEvolvedFormData(pokemon.species)
+    ret=yield pokemon,form[0],form[1], getRandomEvo(pokemon, form[2]) #form[2]
+    break if ret>0
+  end
+  return ret
 end
 
 
