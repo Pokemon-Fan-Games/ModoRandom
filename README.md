@@ -74,11 +74,23 @@ Los valores por defecto para estas constantes son:
 - `RANDOM_MOVES_DEFAULT_VALUE = true`
 - `RANDOM_TM_COMPAT_DEFAULT_VALUE = false`
 
+### Versión 1.3.0
+
+- Se agregó la opcion de evoluciones random, ya sea con BSTs similares o full random.
+  - Para el modo full random
+    - Hay que poner la constante `RANDOM_EVOS_DEFAULT_VALUE = true` en el script `Random.rb`
+  - Para el modo con BSTs similares
+    - Hay que poner la constante `RANDOM_EVOS_DEFAULT_VALUE = true` en el script `Random.rb`
+    - Y la constante `RANDOM_EVOS_SIMILAR_BST_DEFAULT_VALUE = true` en el script `Random.rb`
+    - Tambien se puede configurar el margen de bst similares con `EVO_BST_MARGIN`
+
+- Se agregaron los métodos `are_random_evos_on`, `toggle_random_evos`, `are_random_evos_similar_bst_on` y `toggle_random_evos_similar_bst` para poder activar y desactivar fácilmente el random de evoluciones
+
 ## Implementación
 
-1. Descargar el zip "ModoRandom.zip" desde [aquí](https://github.com/Pokemon-Fan-Games/ModoRandom/releases/download/v1.2.0/ModoRandom.zip)
-3. Crear los 3 scripts que están en el zip, arriba del script Main
-4. Crear el siguiente NPC para activar el modo random
+1. Descargar el zip "ModoRandom.zip" desde [aquí](https://github.com/Pokemon-Fan-Games/ModoRandom/releases/download/v1.3.0/ModoRandom.zip)
+2. Crear los 3 scripts que están en el zip, arriba del script Main
+3. Crear el siguiente NPC para activar el modo random
 
    1. Se debe agregar una sentencia de tipo script que llame al método `enable_random`
    2. El NPC también podría desactivar el random, solo tiene que desactivar el switch
@@ -86,7 +98,7 @@ Los valores por defecto para estas constantes son:
    **Ejemplo del evento que activa/desactiva el random**
    ![NPC Activar Random](images/activar_random.png)
 
-5. Crear un NPC para que el jugador pueda limitar las generaciones de Pokémon que salen en el random
+4. Crear un NPC para que el jugador pueda limitar las generaciones de Pokémon que salen en el random
 
    _Nota: Saldrán Pokémon de las generaciones elegidas y evoluciones que hayan salido en gens posteriores, eligiendo la gen 1 podría salir por ejemplo un Magnezone_
 
@@ -107,7 +119,7 @@ Los valores por defecto para estas constantes son:
     add_or_remove_random_gen(ret+1);
    ```
 
-6. Ejemplo del evento configuracion del random
+5. Ejemplo del evento configuracion del random
 
    ![Evento Configuracion Random](images/ejemplo_evento_configurador.png)
 
