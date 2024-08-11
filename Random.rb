@@ -327,41 +327,43 @@ end
 # AQUI SE DEFINE EL BST QUE VAN A TENER LOS POKEMON EN EL RANDOMIZADO.
 # SEGÚN CADA CANTIDAD DE MEDALLAS, PONER EN LOS RETURN EL BST QUE TENDRÁN
 # LOS POKÉMON.
-def getMaxBSTCap()
-  if $Trainer.numbadges <= 1
-    return 400
-  elsif $Trainer.numbadges <= 2
-    return 440
-  elsif $Trainer.numbadges <= 3
-    return 480
-  elsif $Trainer.numbadges <= 4
-    return 520
-  elsif $Trainer.numbadges <= 5
-    return 560
-  elsif $Trainer.numbadges <= 6
-    return 600
-  elsif $Trainer.numbadges <= 7
-    return 800
-  elsif $Trainer.numbadges <= 8
-    return 800
-  end
+# SI LA CANTIDAD DE MEDALLAS ES MAYOR A LA MAYOR DEL LISTADO DE max_caps, SE DEVUELVE EL BST MAS ALTO
+def getMaxBSTCap
+  max_caps = {
+    1 => 400,
+    2 => 440,
+    3 => 480,
+    4 => 520,
+    5 => 560,
+    6 => 600,
+    7 => 800
+  }
+  min_key = max_caps.keys.min
+  max_key = max_caps.keys.max
+
+  # Si la cantidad de medallas es menor que la menor clave de max_caps, se devuelve el valor de la clave mas baja.
+  # Si la cantidad de medallas es mayor a la clave mas alta de max_caps, se devuelve el valor de la clave mas alta.
+  # De esta forma se evitan duplicar claves para medallas con el mismo BST
+  $Trainer.numbadges < min_key ? max_caps[min_key] :
+  max_caps.fetch($Trainer.numbadges, max_caps[max_key])
 end
 
-def getMinBSTCap()
-  if $Trainer.numbadges > 6
-    return 440
-  elsif $Trainer.numbadges > 5
-    return 425
-  elsif $Trainer.numbadges > 4
-    return 400
-  elsif $Trainer.numbadges > 3
-    return 375
-  elsif $Trainer.numbadges > 2
-    return 350
-  else
-    return 0
-  end
+def getMinBSTCap
+  min_caps = {
+    7 => 440,
+    6 => 425,
+    5 => 400,
+    4 => 375,
+    3 => 350
+  }
+  max_key = min_caps.keys.max
+
+  # Si la cantidad de medallas es mayor que la mayor clave de min_caps, se devuelve el valor de la clave mas alta.
+  # Si la cantidad de medallas es menor a la clave mas baja de min_caps, se devuelve el 0
+  $Trainer.numbadges > max_key ? min_caps[max_key] :
+  min_caps.fetch($Trainer.numbadges, 0)
 end
+
 
 
 def isNotInAllowedBSTRange(bst)
