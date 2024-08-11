@@ -368,7 +368,7 @@ end
 
 def isNotInAllowedBSTRange(bst)
   return false if !$PokemonGlobal.progressive_random
-  bst > getMaxBSTCap() || bst < getMinBSTCap()
+  !(bst.between?(getMinBSTCap(), getMaxBSTCap()))
 end
   
 def getRandomSpecies(evo = false, evo_bst_range = [])
