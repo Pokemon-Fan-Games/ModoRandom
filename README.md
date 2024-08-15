@@ -59,7 +59,7 @@ Hay varias mejoras, ahora se puede decidir si los movimientos están randomizado
 - choose_random_ability_mode -> Permite cambiar el modo de random de las habilidades, recibe en el modo esperado :FULL_RANDOM_ABS para el modo full random (la opcion 1 mencionanda mas arriba) o :MAP_RANDOM_ABS para el modo de mapeo de habilidades (la opcion 2 mencionanda mas arriba)
   Tengan en cuenta de que cambiar el modo de las habilidades las regenerará, por lo que si el jugador ya tiene un pokémon con habilidades randomizadas, estas se perderán
 
-Si creo el metodo enable_random para facilitar la activacion del random, en el evento solo llamán a este metodo y el random se activará con las opciones que se hayan predefinido en el script, las opciones que se pueden predefinir son:
+Se creó el metodo enable_random para facilitar la activacion del random, en el evento solo llamán a este metodo y el random se activará con las opciones que se hayan predefinido en el script, las opciones que se pueden predefinir son:
 
 - `FULL_RANDOM_ABS = true` o `MAP_RANDOM_ABS = true` -> Esto determina el modo de random de las habilidades, si no se predefine ninguna de estas constantes, las habilidades no se randomizarán, si ambas están en true se utilizará la opcion 1
 - `PROGRESSIVE_RANDOM_DEFAULT_VALUE = true o false` -> Esto determina si la progresividad del random está activa, el usuario podría cambiar esta opción si le crean un evento que llame al método toggle_progressive_random
