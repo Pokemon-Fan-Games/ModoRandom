@@ -15,11 +15,11 @@
 # es el que viene definido más abajo en la línea 28, donde pone "Switch = 60").
 #
 # Si no quieres que ciertos Pokémon aparezcan nunca, agrégalos dentro de la lista 
-# negra en BlackListedPokemon (Esto no tiene efecto si el interruptor mencionado 
+# negra en BLACKLISTED_POKEMON (Esto no tiene efecto si el interruptor mencionado 
 # arriba está apagado.)
 #
 # Si quieres que SOLO ciertos Pokémon aparezcan, agrégalos a la lista blanca llamada
-# WhiteListedPokemon. Esto solo se recomienda cuando la cantidad de Pokémon aleatorios
+# WHITELISTED_POKEMON. Esto solo se recomienda cuando la cantidad de Pokémon aleatorios
 # disponibles es alrededor de 32 o menos. (Esto no tiene efecto si el interruptor 
 # mencionado arriba está apagado.)
 #
@@ -78,19 +78,19 @@ module RandomizedChallenge
   
   # Pokémon que no pueden salir en el modo Random. Añade aquí los que no quieres que salgan
   # con el mismo formato de los que ya aparecen.
-  BlackListedPokemon = [:MEW, :ARCEUS]
+  BLACKLISTED_POKEMON = [:MEW, :ARCEUS]
   
   # Lista de los únicos Pokémon que pueden aparecer en el modo Random. Si la dejas VACÍA,
   # aparecerán todos los Pokémon del juego SALVO los que añadas a la lista que hay
-  # encima de esta, BlackListedPokemon.
-  WhiteListedPokemon = []
+  # encima de esta, BLACKLISTED_POKEMON.
+  WHITELISTED_POKEMON = []
   
   # Lista de movimientos que no pueden aparecer en el modo Random.
   # Debes añadirlos con el nombre interno que aparece en el PBS moves.txt.
   MOVEBLACKLIST=[:CHATTER, :DIG, :TELEPORT, :SONICBOOM, :DRAGONRAGE, :STRUGGLE]
   
   # Lista de posibles Pokémon que aparecerán como Pokémon Iniciales.
-  ListaStartersRandomizado = [
+  RANDOM_STARTERS_LIST = [
     :BULBASAUR, :CHARMANDER, :SQUIRTLE, :PIDGEY, :NIDORANmA, :NIDORANfE, :ZUBAT, :MANKEY, :POLIWAG, :ABRA, :MACHOP, :BELLSPROUT, :GEODUDE,
     :MAGNEMITE, :GASTLY, :RHYHORN, :HORSEA, :ELEKID, :MAGBY, :PORYGON, :ODDISH, :DRATINI, :CHIKORITA, :CYNDAQUIL, :TOTODILE, :MAREEP,
     :HOPPIP, :SWINUB, :TEDDIURSA, :LARVITAR, :TREECKO, :TORCHIC, :MUDKIP, :LOTAD, :SEEDOT, :RALTS, :ARON, :BUDEW, :TRAPINCH, :DUSKULL,
@@ -115,7 +115,7 @@ module RandomizedChallenge
   #                      Sin embargo, los Pokémon que tenían Llovizna no tienen por qué tener Presión, puede haberle tocado otra habilidad.
   #   :SAMEINEVOLUTION - Se mantiene la habilidad al evolucionar.
   #
-  # Si no quieres ningún tipo de randomizado pon "TIPO_DE_RANDOM_DE_HABILIDADES = nil"
+  # Si no quieres ningún tipo de randomizado pon "RANDOM_ABILITY_METHOD = nil"
   RANDOM_ABILITY_METHOD = :FULLRANDOM
 
   # Lista de habilidades que no pueden aparecer en el modo Random.

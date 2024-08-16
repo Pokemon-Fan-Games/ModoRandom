@@ -1,5 +1,5 @@
 Name = Random Pokemon & Moves + Randomizer EX (Abilities)
-Version = 1.1
+Version = 1.2.0
 Essentials = 21.1
 Requires   = v21.1 Hotfixes
 Credits    = Golisopod User, CrimsonTY, Luka SJ, DPertierra, Skyflyer

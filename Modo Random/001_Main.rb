@@ -199,7 +199,7 @@ end
 def valid_pokemon?(species, ignore_bst = false)
   bst = species.base_stats.values.sum
   previous_species = GameData::Species.get(species.get_previous_species)
-  species && !RandomizedChallenge::BlackListedPokemon.include?(species.species) &&
+  species && !RandomizedChallenge::BLACKLISTED_POKEMON.include?(species.species) &&
     (ignore_bst || valid_bst?(bst)) && ($PokemonGlobal.random_gens.empty? || (!$PokemonGlobal.random_gens.empty? &&
                                                                                 $PokemonGlobal.random_gens.include?(species.generation) &&
                                                                                  $PokemonGlobal.random_gens.include?(previous_species.generation)))
@@ -216,8 +216,8 @@ class Pokemon
 
   def initialize(species, level, owner = $player, withMoves = true, recheck_form = true)
     if $game_switches && $game_switches[RandomizedChallenge::Switch]
-      species = RandomizedChallenge::WhiteListedPokemon.sample
-      if RandomizedChallenge::WhiteListedPokemon.empty?
+      species = RandomizedChallenge::WHITELISTED_POKEMON.sample
+      if RandomizedChallenge::WHITELISTED_POKEMON.empty?
         species = random_species
         $PokemonGlobal.random_gens = [] unless $PokemonGlobal.random_gens
         species = random_species until valid_pokemon?(species)
@@ -383,7 +383,7 @@ end
 def generate_random_starters
   starter_count = RandomizedChallenge::RANDOM_STARTER_VARIABLES.length || 3
   # Selecciona 3 iniciales unicos de la lista
-  iniciales = RandomizedChallenge::ListaStartersRandomizado.sample(starter_count)
+  iniciales = RandomizedChallenge::RANDOM_STARTERS_LIST.sample(starter_count)
 
   # Asigna los iniciales a las variables
   RandomizedChallenge::RANDOM_STARTER_VARIABLES.each_with_index do |var, i|

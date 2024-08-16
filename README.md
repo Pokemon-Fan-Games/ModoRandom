@@ -16,57 +16,74 @@ El random es progresivo en base a la cantidad de medallas del jugador, entre má
 
 También si el jugador tiene menos de 3 medallas no pueden salir movimientos con más de 70 de poder base.
 
-Si se quiere deshabilitar la progresivadad del random hay que poner la variable `PROGRESSIVE_RANDOM` del script `Random.rb` en `false`
+Si se quiere deshabilitar la progresivadad del random hay que poner la variable `PROGRESSIVE_RANDOM` del script `000_Config.rb` en `false`
 
-Se puede hacer que los pokémon iniciales salgan de un listado definido por el maker, para se debe actualizar el script `Random.rb` en la variable `ListaStartersRandomizado` se deben separar los Pokémon por comas, por ejemplo `[PBSpecies::BULBASAUR,PBSpecies::CHARMANDER,PBSpecies::SQUIRTLE, PBSpecies::PIDGEY,PBSpecies::NIDORANmA,PBSpecies::NIDORANfE,PBSpecies::ZUBAT,PBSpecies::MANKEY,PBSpecies::POLIWAG, PBSpecies::ABRA]`
+Se puede hacer que los pokémon iniciales salgan de un listado definido por el maker, para se debe actualizar el script `000_Config.rb` en la variable `RANDOM_STARTERS_LIST` se deben separar los Pokémon por comas, por ejemplo `[:BULBASAUR, :CHARMANDER, :SQUIRTLE, :PIDGEY, :NIDORANmA, :NIDORANfE]`
 Si este listado está vacío los iniciales serán 100% random respetando las restricciones de generaciones, BST y blacklist de pokémon.
 
-También se pueden randomizar los objetos obtenidos, para eso en los eventos que dan objetos hay que checkear si el switch del random está activo, si lo está en lugar de llamar a pbItemBall, hay que llamar `getItemRandomFromPokeball()` abajo dejo un ejemplo de como hacerlo.
+También se pueden randomizar los objetos obtenidos, para eso en los eventos que dan objetos hay que checkear si el switch del random está activo, si lo está en lugar de llamar a pbItemBall, hay que llamar `random_item_from_pokeball()` abajo dejo un ejemplo de como hacerlo.
 ![Objeto random](images/evento_objeto_random.png)
 
-En el script `ObjetosRandom.rb` hay una variable `BLACK_LIST` que contiene los objetos que no se pueden obtener, del evento de arriba, si se quiere restringir más de un objeto se debe separar por comas, por ejemplo `[:LOPUNNYTE, :SACREDASH, :BLACKFLUTE]`
+En el script `003_Objetos.rb` hay una variable `ITEM_BLACK_LIST` que contiene los objetos que no se pueden obtener, del evento de arriba, si se quiere restringir más de un objeto se debe separar por comas, por ejemplo `[:LOPUNNYTE, :SACREDASH, :BLACKFLUTE]`
 
 También hay una variable `MTLIST_RANDOM` que debe contener las MTs, para que si el objeto que se randomizó es una MT que ya tienes se genere otra MT distinta, las distintas MTs se deben separar por comas, por ejemplo `[:TM01, :TM02, :TM03]`
 
 ### Configuraciones Base
 
-- Si quieres desactivar el randomizado de los movimientos, en el script `Random.rb` hay una variable que se llama `RANDOM_MOVES_DEFAULT_VALUE` por defecto está en `true` si la cambias a `false` no se randomizarán los movimientos
-- Si quieres activar el randomizado de la compatibilidad con las MTs, en el script `Random.rb` hay una variable que se llama `RANDOM_TM_COMPAT` por defecto está en `false` si la cambias a `true` se randomizará la compatibilidad con las MTs
-- Se puede restringir qué pokémon salen en el random, para eso se debe modificar el script `Random.rb` en la variable `BlackListedPokemon` si se quiere restringir más de un pokémon se debe separar por comas, por ejemplo `[PBSpecies::ARTICUNO,PBSpecies::MOLTRES, PBSpecies::ZAPDOS]`
-- Se puede restringir qué habilidades salen en el random, para eso se debe modificar el script `Random.rb` en la variable `ABILITYBLACKLIST` si se quiere restringir más de una habilidad se debe separar por comas, por ejemplo `[PBAbilities::IMPOSTER, PBAbilities::ZENMODE, PBAbilities::WONDERGUARD]`
-- Se pueden restringir qué movimientos salen en el random, para eso se debe modificar el script `Random.rb` en la variable `MOVEBLACKLIST` si se quiere restringir más de un movimiento se debe separar por comas, por ejemplo `[PBMoves::CHATTER, PBMoves::DIG, PBMoves::TELEPORT, PBMoves::SONICBOOM, PBMoves::DRAGONRAGE, PBMoves::STRUGGLE]`
-- Si quieres desactivar que el random sea progresivo, en el script `Random.rb` hay una variable que se llama `PROGRESSIVE_RANDOM_DEFAULT_VALUE` por defecto está en `true` si la cambias a `false`, el random no será progresivo, por lo que desde la ruta 1 te podrian salir Pokémons legendarios a menos que esten inluídos en la blacklist
+- Si quieres desactivar el randomizado de los movimientos, en el script `000_Config.rb` hay una variable que se llama `RANDOM_MOVES_DEFAULT_VALUE` por defecto está en `true` si la cambias a `false` no se randomizarán los movimientos
+- Si quieres activar el randomizado de la compatibilidad con las MTs, en el script `000_Config.rb` hay una variable que se llama `RANDOM_TM_COMPAT` por defecto está en `false` si la cambias a `true` se randomizará la compatibilidad con las MTs
+- Se puede restringir qué pokémon salen en el random, para eso se debe modificar el script `000_Config.rb` en la variable `BLACKLISTED_POKEMON` si se quiere restringir más de un pokémon se debe separar por comas, por ejemplo `[:ARTICUNO, :MOLTRES, :ZAPDOS]`
+- Se puede restringir qué habilidades salen en el random, para eso se debe modificar el script `000_Config.rb` en la variable `ABILITY_EXCLUSIONS` si se quiere restringir más de una habilidad se debe separar por comas, por ejemplo `[:IMPOSTER, :ZENMODE, :WONDERGUARD]`
+- Se pueden restringir qué movimientos salen en el random, para eso se debe modificar el script `000_Config.rb` en la variable `MOVEBLACKLIST` si se quiere restringir más de un movimiento se debe separar por comas, por ejemplo `[:CHATTER, :DIG, :TELEPORT, :SONICBOOM, :DRAGONRAGE, :STRUGGLE]`
+- Si quieres desactivar que el random sea progresivo, en el script `000_Config.rb` hay una variable que se llama `PROGRESSIVE_RANDOM_DEFAULT_VALUE` por defecto está en `true` si la cambias a `false`, el random no será progresivo, por lo que desde la ruta 1 te podrian salir Pokémons legendarios a menos que esten inluídos en la blacklist
 - Se puede elegir como funciona el random de las habilidades, si es 100% random por especie o si mapea una habilidad a otra, o directamente no randomizar las habilidades.
   Unos ejemplos:
-  - **Opción 1:** 100% random -> Para esta opcion hay que poner la constante `FULL_RANDOM_ABS` que está en el script `Random.rb` en `true`
+  - **Opción 1:** 100% random -> Para esta opcion hay que poner la constante `RANDOM_ABILITY_METHOD` que está en el script `000_Config.rb` en `:FULLRANDOM`
   Ejemplo Pikachu tendra Intimidación y Cura Natural, pero Raichu podría tener otras distintas, como Absorbe agua y levitación
-  - **Opción 2:** Mapeo de habilidades -> Para esta opcion hay que poner la constante `MAP_RANDOM_ABS` que está en el script `Random.rb` en `true`
+  - **Opción 2:** Mapeo de habilidades -> Para esta opcion hay que poner la constante `RANDOM_ABILITY_METHOD` que está en el script `000_Config.rb` en `:MAPABILITIES`
   Ejemplo Intimidación se convierte en Inicio Lento, lo que no significa, que Inicio Lento se convierta en Intimidación
+  - **Opción 3:** Se mantienen las habilidades al evolucionar -> Para esta opcion hay que poner la constante `RANDOM_ABILITY_METHOD` que está en el script `000_Config.rb` en `:SAMEINEVOLUTION`
   
-  Si ninguna de las 2 constantes está en `true` no se randomizarán las habilidades.
-  Si ambas constantes están en `true` se utilizará la opción 1.
+  Cualquier valor distinto a alguno de estos 3 hará que las habilidades no se randomicen.
 
 - Si quieres cambiar las variables destinadas a los iniciales random puedes cambiarlas en la constante `STATERS_VARIABLES`
 
-### Con la version 1.2.0
+### Opciones de randomización
 
-Hay varias mejoras, ahora se puede decidir si los movimientos están randomizados o no, se agregaron un total de 7 metodos nuevos para que como maker puedan darle la opcion al jugador de configurar el random a su gusto, estos metodos son:
+1. **Randomizar movimientos**
+   - random_moves_on? -> Devuelve si los movimientos están randomizados, esto es mas que nada por si en un evento le quieren informar al usuario el estado de esta opción del random
+   - toggle_random_moves -> Permite cambiar el estado de los movimientos randomizados, si estaban en true los pone en false y viceversa
+2. **Random Progresivo**
+   - progressive_random_on? -> Similar al primer metodo, devuelve si la progresividad del random está activa
+   - toggle_progressive_random -> Permite cambiar el estado de la progresividad del random, si estaba en true lo pone en false y viceversa
 
-- random_moves_on? -> Devuelve si los movimientos están randomizados, esto es mas que nada por si en un evento le quieren informar al usuario el estado de esta opción del random
-- toggle_random_moves -> Permite cambiar el estado de los movimientos randomizados, si estaban en true los pone en false y viceversa
-- progressive_random_on? -> Similar al primer metodo, devuelve si la progresividad del random está activa
-- toggle_progressive_random -> Permite cambiar el estado de la progresividad del random, si estaba en true lo pone en false y viceversa
-- random_tm_compat_on? -> Similar al primer metodo, devuelve si la compatibilidad con las MTs está randomizada
-- toggle_random_tm_compat -> Permite cambiar el estado de la compatibilidad con las MTs, si estaba en true lo pone en false y viceversa
-- choose_random_ability_mode -> Permite cambiar el modo de random de las habilidades, recibe en el modo esperado :FULL_RANDOM_ABS para el modo full random (la opcion 1 mencionanda mas arriba) o :MAP_RANDOM_ABS para el modo de mapeo de habilidades (la opcion 2 mencionanda mas arriba)
-  Tengan en cuenta de que cambiar el modo de las habilidades las regenerará, por lo que si el jugador ya tiene un pokémon con habilidades randomizadas, estas se perderán
+3. **Randomizar compatibilidad con las MTs**
+   - random_tm_compat_on? -> Similar al primer metodo, devuelve si la compatibilidad con las MTs está randomizada
+   - toggle_random_tm_compat -> Permite cambiar el estado de la compatibilidad con las MTs, si estaba en true lo pone en false y viceversa
 
-Se creó el metodo enable_random para facilitar la activacion del random, en el evento solo llamán a este metodo y el random se activará con las opciones que se hayan predefinido en el script, las opciones que se pueden predefinir son:
+4. **Randomizar habilidades**
+   - choose_random_ability_mode -> Permite cambiar el modo de random de las habilidades, recibe en el modo esperado :FULL_RANDOM_ABS para el modo full random (la opcion 1 mencionanda mas arriba) o :MAP_RANDOM_ABS para el modo de mapeo de habilidades (la opcion 2 mencionanda mas arriba)
+
+   Tengan en cuenta de que cambiar el modo de las habilidades las regenerará, por lo que si el jugador ya tiene un pokémon con habilidades randomizadas, estas se perderán
+
+5. **Randomizar evoluciones**
+   - `random_evos_on?`, `random_evos_similar_bst_on?` -> Permiten validar si los las evoluciones están randomizadas y si el BST de las evoluciones debe ser similar al de la evolución original
+   - `toggle_random_evos`, `toggle_random_evos_similar_bst` -> para poder activar y desactivar fácilmente el random de evoluciones
+
+6. **Randomizar tipos de los Pokémon**
+   - `random_types_enabled?` Devuelve true si los tipos random están activados, de lo contrario devuelve false
+   - `toggle_random_types` Permite cambiar el estado de los tipos random, si estaba en true lo pone en false y viceversa
+
+### Opciones por defecto
 
 - `FULL_RANDOM_ABS = true` o `MAP_RANDOM_ABS = true` -> Esto determina el modo de random de las habilidades, si no se predefine ninguna de estas constantes, las habilidades no se randomizarán, si ambas están en true se utilizará la opcion 1
 - `PROGRESSIVE_RANDOM_DEFAULT_VALUE = true o false` -> Esto determina si la progresividad del random está activa, el usuario podría cambiar esta opción si le crean un evento que llame al método toggle_progressive_random
 - `RANDOM_MOVES_DEFAULT_VALUE = true o false` -> Esto determina si los movimientos están randomizados, el usuario podría cambiar esta opción si le crean un evento que llame al método toggle_random_moves
 - `RANDOM_TM_COMPAT_DEFAULT_VALUE = true o false` -> Esto determina si la compatibilidad con las MTs está randomizada, el usuario podría cambiar esta opción si le crean un evento que llame al método toggle_random_tm_compat
+- `RANDOM_EVOS_DEFAULT_VALUE` -> Esto determina si las evoluciones están randomizadas, el usuario puede cambiar esta opción si le crean un evento que llame al método `toggle_random_evos`
+- `RANDOM_EVOS_SIMILAR_BST_DEFAULT_VALUE` -> Esto determina si las evoluciones random deben tener un BST similar a la evolución original. El usuario puede cambiar esta opción si le crean un evento que llame al método `toggle_random_evos_similar_bst`
+- `RANDOM_TYPES_DEFAULT_VALUE` -> Esto determina si los tipos random están activados, el usuario puede cambiar esta opción si le crean un evento que llame al método `toggle_random_types`
+- `INVALID_TYPES` -> Esto determina los tipos que nunca podran salir en el random, por defecto solo tiene el tipo QMARKS
 
 Los valores por defecto para estas constantes son:
 
@@ -75,74 +92,14 @@ Los valores por defecto para estas constantes son:
 - `PROGRESSIVE_RANDOM_DEFAULT_VALUE = true`
 - `RANDOM_MOVES_DEFAULT_VALUE = true`
 - `RANDOM_TM_COMPAT_DEFAULT_VALUE = false`
-
-### Versión 1.3.0
-
-- Se agregó la opcion de evoluciones random, ya sea con BSTs similares o full random.
-  - Para el modo full random
-    - Hay que poner la constante `RANDOM_EVOS_DEFAULT_VALUE = true` en el script `Random.rb`
-  - Para el modo con BSTs similares
-    - Hay que poner la constante `RANDOM_EVOS_DEFAULT_VALUE = true` en el script `Random.rb`
-    - Y la constante `RANDOM_EVOS_SIMILAR_BST_DEFAULT_VALUE = true` en el script `Random.rb`
-    - Tambien se puede configurar el margen de bst similares con `EVO_BST_MARGIN`
-
-- Se agregaron los métodos `are_random_evos_on`, `toggle_random_evos`, `are_random_evos_similar_bst_on` y `toggle_random_evos_similar_bst` para poder activar y desactivar fácilmente el random de evoluciones
-
-### Versión 1.4.0
-
-- Se agregó la opción de tipos random.
-  - Con esta opcion de agregaron 2 constantes en la configuracion
-    - `RANDOM_TYPES_DEFAULT_VALUE` para activar el random de tipos, por defecto es false
-    - `INVALID_TYPES` es un listado para excluir tipos del randomizado, por defecto solo tiene el tipo QMARKS
-  - También se crearon 2 métodos
-    - `random_types_enabled?` Devuelve true si los tipos random están activados, de lo contrario devuelve false
-    - `toggle_random_types` Permite cambiar el estado de los tipos random, si estaba en true lo pone en false y viceversa
+- `RANDOM_EVOS_DEFAULT_VALUE = false`
+- `RANDOM_EVOS_SIMILAR_BST_DEFAULT_VALUE = false`
+- `RANDOM_TYPES_DEFAULT_VALUE = false`
+- `INVALID_TYPES = [:QMARKS]`
 
 ## Implementación
 
-1. Descargar el zip "ModoRandom.zip" desde [aquí](https://github.com/Pokemon-Fan-Games/ModoRandom/releases/download/v1.3.0/ModoRandom.zip)
+1. Descargar el zip "ModoRandom.zip" desde [aquí](https://github.com/Pokemon-Fan-Games/ModoRandom/releases/download/21_LBDSKY_v1.2.0/ModoRandom.zip)
 2. Crear los 3 scripts que están en el zip, arriba del script Main
-3. Crear el siguiente NPC para activar el modo random
-   1. **Ejemplo del evento activación y configuración del random**
-      1. Crear un Label llamado "Inicio"
-      2. Crear una conditional branch de si el random está activo, para esto la condicion debe ser un script con el llamado a `random_enabled?`
-      3. Dentro del true de esa conditional branch crear un label llamado "Choices"
-      4. Agregar un show choices con las distintas configuraciones del random y la opcion para desactivarlo, en mi caso llamé a las choices "Configurar Random", "Restringir Generaciones" y "Desactivar Random" y puse la opción 4 como vacía para el cancel
-         1. Dentro de la opción "Configurar Random"
-            1. Crear un label llamado "Opciones"
-            2. Hay que poner un conditional branch con el script `show_config_options != -1`. En el true hacen un Jump to Label "Opciones"
-            3. En el else ponen un Jump to Label "Choices"
-         2. Dentro de la opción "Restringir Generaciones"
-            1. Crear un label llamado "Gens"
-            2. Hay que poner un conditional branch con el script `show_gens_chooser != -1`. En el true hacen un Jump to Label "Gens"
-            3. En el else ponen un Jump to Label "Choices"
-         3. Dentro de la opcion "Desactivar Random"
-            1. Piden una confirmacion para la desactivación con un Show Choices de Sí/No
-            2. En el Sí:
-               1. Llaman al script `disable_random`
-               2. Muestran un mensaje de que el random fue desactivado
-               3. Hacen un Exit Event Processing
-            3. En el No:
-               1. Hacen un Jump to Label "Choices"
-      5. En el false de la primer conditional branch ponen un show choices de Sí o No para activar el random.
-         1. Piden la confirmacion para activar el random y muestran un Show Choices de Sí/No
-         2. En el Sí:
-            1. Llaman al script `enable_random`
-            2. Muestran un mensaje de que el random fue activado
-         3. En el No:
-            1. No hace falta hacer nada
-
-### Evento Iniciales
-
-En el evento de los iniciales se debe generar una nueva página con la condición de que el switch del random este activo
-
-1. En el evento hay que agregar una sentencia de tipo script con esta linea `SpeciesIntro.new(pbGet(803)).set_mark_as_seen(false).show` 803 es el id de la variable que se usa para guardar el primer inicial random, para el segundo inicial se usa la variable 804 y para el tercero 805, estas variables se pueden cambiar en la constante `STATERS_VARIABLES`
-3. Luego si el jugador confirma que quiere ese inicial
-
-   1. Hay que desactivar el control switch del random
-   2. Hay que agregar otra sentencia de tipo script con esta linea `pbAddPokemon(pbGet(803),5)` para que se le asigne el inicial random que se generó al activar el random y que el jugador no pueda reiniciar hasta que le salga el inicial que quiere
-   3. Luego hay que volver a activar el switch del random
-
-      Aquí dejo un ejemplo del evento, las partes importantes están marcadas con un cuadro rojo
-
-      ![Evento Iniciales](images/evento_inicial_random.png)
+3. En La Base de Sky en el Mapa de Scripts pueden encontrar todos los eventos para el random, estos son el activador/configurador, el de las balls para cada inicial random y el de las Pokeball con objetos random
+![eventos](images/eventosLBDSKY.png)
