@@ -22,7 +22,6 @@ Se puede hacer que los pokémon iniciales salgan de un listado definido por el m
 Si este listado está vacío los iniciales serán 100% random respetando las restricciones de generaciones, BST y blacklist de pokémon.
 
 También se pueden randomizar los objetos obtenidos, para eso en los eventos que dan objetos hay que checkear si el switch del random está activo, si lo está en lugar de llamar a pbItemBall, hay que llamar `random_item_from_pokeball()` abajo dejo un ejemplo de como hacerlo.
-![Objeto random](images/evento_objeto_random.png)
 
 En el script `003_Objetos.rb` hay una variable `ITEM_BLACK_LIST` que contiene los objetos que no se pueden obtener, del evento de arriba, si se quiere restringir más de un objeto se debe separar por comas, por ejemplo `[:LOPUNNYTE, :SACREDASH, :BLACKFLUTE]`
 
