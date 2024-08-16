@@ -143,6 +143,9 @@ module RandomizedChallenge
     PBSpecies::TINKATINK,
     PBSpecies::FRIGIBAX
   ]
+
+  STATERS_VARIABLES = [801, 802, 803]
+
   MAX_NUM_GEN = { 1 => [1, 151], 2 => [152, 251], 3 => [252, 386], 4 => [387, 494],
                   5 => [495, 649], 6 => [650, 721], 7 => [722, 809], 8 => [810, 905],
                   9 => [906, 1025] }
@@ -285,7 +288,7 @@ def random_gens_choice_array
   (1..RandomizedChallenge::MAX_NUM_GEN.length).each do |i|
     choice_array.push(random_gens.include?(i) ? "[X] Gen #{i}" : "[  ] Gen #{i}")
   end
-  choice_array.push('Terminar')
+  choice_array.push(_INTL('Terminar'))
   choice_array
 end
 
@@ -759,23 +762,9 @@ end
 
 def generate_random_starters
   starters = RandomizedChallenge::ListaStartersRandomizado.shuffle
-  inicial_1 = starters[0]
-  inicial_2 = starters[1]
-  inicial_3 = starters[2]
-  # loop do
-  #   inicial_2 = RandomizedChallenge::ListaStartersRandomizado.shuffle[0]
-  #   break if (inicial_1 != inicial_2)
-  # end
-
-  # inicial_3 = inicial_1
-  # loop do
-  #   inicial_3 = RandomizedChallenge::ListaStartersRandomizado.shuffle[0]
-  #   break if (inicial_1 != inicial_3) && (inicial_2 != inicial_3)
-  # end
-
-  $game_variables[803] = inicial_1
-  $game_variables[804] = inicial_2
-  $game_variables[805] = inicial_3
+  RandomizedChallenge::STATERS_VARIABLES.each_with_index do |var, i|
+    $game_variables[var] = starters[i]
+  end
 end
 
 def create_ability_hash
