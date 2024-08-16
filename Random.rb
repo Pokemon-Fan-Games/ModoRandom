@@ -1,37 +1,17 @@
 ################################################################################
 # Randomized Pokemon Script
-# By Umbreon
-# Modificado por DPertierra y Skyflyer
-################################################################################
-# Used for a randomized pokemon challenge mainly.
-#
-# By randomized, I mean EVERY pokemon will be random, even interacted pokemon
-#   like legendaries. (You may easily disable the randomizer for certain
-#    situations like legendary battles and starter selecting.)
-#
-# To use: simply activate Switch Number X
-#  (X = the number listed After "Switch = ", default is switch number 36.)
-#
-# If you want certain pokemon to NEVER appear, add them inside the black list.
-#  (This does not take into effect if the switch stated above is off.)
-#
-# If you want ONLY certain pokemon to appear, add them to the whitelist. This
-#   is only recommended when the amount of random pokemon available is around
-#   32 or less.(This does not take into effect if the switch stated above is off.)
-#
-################################################################################
-
-########################## You may edit any settings below this freely.
+# por DPertierra y Skyflyer
+########################## You may edit any settings below this freely.#########
 module RandomizedChallenge
   Switch = 409 # switch ID to randomize a pokemon, if it's on then ALL
   # pokemon will be randomized. No exceptions.
 
-  BlackListedPokemon = []
+  BLACKLISTEDPOKEMON = []
   # Los Pokémon de la blacklist jamas saldran, ni en entrenadores ni como salvajes.
   # Ejemplo Blacklist
-  # BlackListedPokemon = [PBSpecies::ARTICUNO,PBSpecies::MOLTRES, PBSpecies::ZAPDOS]
+  # BLACKLISTEDPOKEMON = [PBSpecies::ARTICUNO,PBSpecies::MOLTRES, PBSpecies::ZAPDOS]
 
-  WhiteListedPokemon = []
+  WHITELISTEDPOKEMON = []
   # Leave this empty if all pokemon are allowed, otherwise only pokemon listed
   # above will be selected.
 
@@ -44,7 +24,7 @@ module RandomizedChallenge
   ABILITYBLACKLIST = []
 
   # LISTA DE STARTERS PARA EL RANDOM
-  ListaStartersRandomizado = [
+  RANDOM_STARTER_LIST = [
     PBSpecies::BULBASAUR,
     PBSpecies::CHARMANDER,
     PBSpecies::SQUIRTLE,
@@ -144,8 +124,12 @@ module RandomizedChallenge
     PBSpecies::FRIGIBAX
   ]
 
+  # Ingrese las variables en las que se guardaran lo inciales random, luego deberá utilizar esta variable 
+  # para el evento de elección de iniciales.
   STATERS_VARIABLES = [801, 802, 803]
 
+
+  # Es rango de numero de pokedex para cada generación
   MAX_NUM_GEN = { 1 => [1, 151], 2 => [152, 251], 3 => [252, 386], 4 => [387, 494],
                   5 => [495, 649], 6 => [650, 721], 7 => [722, 809], 8 => [810, 905],
                   9 => [906, 1025] }
@@ -160,6 +144,7 @@ module RandomizedChallenge
   # Lo que no significa que Inicio Lento se convierta en Intimidacion
   # Si la variable FULL_RANDOM_ABS esta en true esa sera la opcion determinada
   MAP_RANDOM_ABS = false
+
   # Si ambas variables estan en false no se randomizaran las habilidades
   # Se puede cambiar el metodo de randomizado de habilidades
   # llamando al metodo choose_random_ability_mode a este metodo hay que pasarle el modo
@@ -197,8 +182,13 @@ module RandomizedChallenge
   # Si quisieran cambiarlo a un 20% hay que cambiarlo a 0.2
   EVO_BST_MARGIN = 0.1
 
-  RANDOM_TYPES_DEFAULT_VALUE = true
-  INVALID_TYPES = [PBType::QMARKS]
+  # Valor por defecto para randomizar los tipos
+  # Se puede activar y desactivar el randomizado de tipos llamando al método toggle_random_types
+  RANDOM_TYPES_DEFAULT_VALUE = false
+
+  # Lista de tipos invalidos para randomizar
+  # El tipo QMARKS es para los pokemones que no tienen tipos
+  INVALID_TYPES = [PBTypes::QMARKS]
 end
 
 ######################### Do not edit anything below here.
@@ -271,6 +261,37 @@ def toggle_random_evos_similar_bst
   $PokemonGlobal.random_evos_similar_bst = !$PokemonGlobal.random_evos_similar_bst
 end
 
+def show_ability_mode_options
+  return if !random_enabled?
+
+  commands = []
+  if $PokemonGlobal.random_ability_mode == :FULL_RANDOM_ABS
+    commands.push(_INTL("[X] Full Random "))
+    commands.push(_INTL("[ ] Mapeo de habilidades"))
+    commands.push(_INTL("[ ] Sin randomizar"))
+  elsif $PokemonGlobal.random_ability_mode == :MAP_RANDOM_ABS
+    commands.push(_INTL("[ ] Full Random "))
+    commands.push(_INTL("[X] Mapeo de habilidades"))
+    commands.push(_INTL("[ ] Sin randomizar"))
+  elsif $PokemonGlobal.random_ability_mode == :NO_RANDOM
+    commands.push(_INTL("[ ] Full Random "))
+    commands.push(_INTL("[ ] Mapeo de habilidades"))
+    commands.push(_INTL("[X] Sin randomizar "))
+  end
+
+
+  ret = Kernel.pbMessage(_INTL("Elija el modo para las habilidades random"), commands, -1)
+
+  case ret
+  when 0
+    choose_random_ability_mode(:FULL_RANDOM_ABS)
+   when 1
+    choose_random_ability_mode(:MAP_RANDOM_ABS)
+   when 2
+    choose_random_ability_mode(:NO_RANDOM)
+  end
+end
+
 def choose_random_ability_mode(mode = :FULL_RANDOM_ABS)
   return if $PokemonGlobal.random_ability_mode == mode
 
@@ -292,9 +313,63 @@ def random_gens_choice_array
   choice_array
 end
 
-def add_or_remove_random_gen(gen = nil)
-  return if !gen || gen > RandomizedChallenge::MAX_NUM_GEN.length
+def show_config_options
+  text = _INTL("Configurar random")
+  ret = Kernel.pbMessage(text, config_options, -1)
+  change_config(ret) if ret != -1 
+  return ret
+end
 
+def config_options
+  return if !random_enabled?
+  commands = []
+
+  commands.push(_INTL("Elegir modo de randomizar habilidades"))
+  progressive_random_on? ? commands.push(_INTL("[X] Random progresivo")) : commands.push(_INTL("[  ] Random progresivo"))
+  
+  random_moves_on? ? commands.push(_INTL("[X] Movimientos random")) : commands.push(_INTL("[  ] Movimientos random"))
+
+  random_evos_on? ? commands.push(_INTL("[X] Evoluciones random")) : commands.push(_INTL("[  ] Evoluciones random"))
+
+  random_evos_similar_bst_on? ? commands.push(_INTL("[X] Evoluciones random con BST similar")) : commands.push(_INTL("[  ] Evoluciones random con BST similar"))
+
+  random_tm_compat_on? ? commands.push(_INTL("[X] Randomizar compatibilidad con MTs")) : commands.push(_INTL("[  ] Randomizar compatibilidad con MTs"))
+
+  random_types_enabled? ? commands.push(_INTL("[X] Randomizar tipos")) : commands.push(_INTL("[  ] Randomizar tipos"))
+
+  commands
+end
+
+def change_config(index)
+  case index
+  when 0
+    show_ability_mode_options
+  when 1
+    toggle_progressive_random
+  when 2
+    toggle_random_moves
+  when 3
+    toggle_random_evos
+  when 4
+    toggle_random_evos_similar_bst
+  when 5
+    toggle_random_tm_compat
+  when 6
+    toggle_random_types
+  end
+end
+
+def show_gens_chooser
+  text = _INTL("Elige las generaciones para el random")
+  gens = random_gens_choice_array
+  gen = Kernel.pbMessage(text, gens,  -1)
+  add_or_remove_random_gen(gen)
+  return gen
+end
+
+def add_or_remove_random_gen(gen = nil)
+  return if !gen || gen < 0 || gen+1 > RandomizedChallenge::MAX_NUM_GEN.length
+  gen = gen + 1
   $PokemonGlobal.random_gens = [] unless $PokemonGlobal.random_gens
   if !$PokemonGlobal.random_gens.include?(gen)
     $PokemonGlobal.random_gens.push(gen)
@@ -315,6 +390,8 @@ def enable_random
       $PokemonGlobal.random_ability_mode = :FULL_RANDOM_ABS
     elsif RandomizedChallenge::MAP_RANDOM_ABS
       $PokemonGlobal.random_ability_mode = :MAP_RANDOM_ABS
+    else
+      $PokemonGlobal.random_ability_mode = :NO_RANDOM
     end
   end
   if $PokemonGlobal.progressive_random.nil?
@@ -334,13 +411,12 @@ end
 def pokemon_in_gen_range?(species)
   return true unless $PokemonGlobal.random_gens
 
-  is_valid = false
   $PokemonGlobal.random_gens.each do |gen|
     next unless species.between?(RandomizedChallenge::MAX_NUM_GEN[gen][0], RandomizedChallenge::MAX_NUM_GEN[gen][1])
 
     return true
   end
-  is_valid
+  false
 end
 
 def toggle_random_types
@@ -404,12 +480,12 @@ def not_in_allowed_bst_range?(bst)
 end
 
 def random_species(evo = false, evo_bst_range = [])
-  if RandomizedChallenge::WhiteListedPokemon.empty?
+  if RandomizedChallenge::WHITELISTEDPOKEMON.empty?
     species = rand(PBSpecies.maxValue - 1) + 1
     bst = bst_sum(species)
     previous_species = pbGetPreviousForm(species)
     $PokemonGlobal.random_gens = [] unless $PokemonGlobal.random_gens
-    while RandomizedChallenge::BlackListedPokemon.include?(species) || not_in_allowed_bst_range?(bst) || ($PokemonGlobal.random_gens.length > 0 && !pokemon_in_gen_range?(species) && !pokemon_in_gen_range?(previous_species)) || (evo && evo_bst_range.length > 0 && !baseStatsSum.between?(
+    while RandomizedChallenge::BLACKLISTEDPOKEMON.include?(species) || not_in_allowed_bst_range?(bst) || ($PokemonGlobal.random_gens.length > 0 && !pokemon_in_gen_range?(species) && !pokemon_in_gen_range?(previous_species)) || (evo && evo_bst_range.length > 0 && !baseStatsSum.between?(
       evo_bst_range[0], evo_bst_range[1]
     ))
       species = rand(PBSpecies.maxValue - 1) + 1
@@ -417,7 +493,7 @@ def random_species(evo = false, evo_bst_range = [])
       bst = bst_sum(species)
     end
   else
-    species = RandomizedChallenge::WhiteListedPokemon.shuffle[0]
+    species = RandomizedChallenge::WHITELISTEDPOKEMON.shuffle[0]
   end
   species
 end
@@ -751,7 +827,7 @@ def pbCheckEvolutionEx(pokemon)
   ret = -1
   pbGetEvolvedFormData(pokemon.species).each do |form|
     ret = yield pokemon, form[0], form[1], random_evo(pokemon, form[2]) # form[2]
-    break if ret.positive?
+    break if ret > 0
   end
   ret
 end
@@ -761,7 +837,7 @@ end
 ################################################################################
 
 def generate_random_starters
-  starters = RandomizedChallenge::ListaStartersRandomizado.shuffle
+  starters = RandomizedChallenge::RANDOM_STARTER_LIST.shuffle
   RandomizedChallenge::STATERS_VARIABLES.each_with_index do |var, i|
     $game_variables[var] = starters[i]
   end

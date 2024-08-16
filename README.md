@@ -4,7 +4,7 @@
 
 El modo random randomizará ataques y habilidades de los pokémon tanto de entrenadores como de los salvajes, se puede activar que también se randomice la compatibilidad con las MTs, se podrá restringir las generaciones de los pokémon que apareceran en el random.
 
-El random es progresivo en base a la cantidad de medallas del jugador, entre más medallas tenga salen pokémon con más BST, aquí dejo la formula, que la pueden modificar en el metodo `getMaxBSTCap` y `getMinBSTCap`
+El random es progresivo en base a la cantidad de medallas del jugador, entre más medallas tenga salen pokémon con más BST, aquí dejo la formula, que la pueden modificar en el metodo `max_bst_cap` y `min_bst_cap`
 
 - 0 y 1 medalla BST min 0 y BST max 400
 - 2 medallas BST min 0 y BST max 440
@@ -50,11 +50,11 @@ También hay una variable `MTLIST_RANDOM` que debe contener las MTs, para que si
 
 Hay varias mejoras, ahora se puede decidir si los movimientos están randomizados o no, se agregaron un total de 7 metodos nuevos para que como maker puedan darle la opcion al jugador de configurar el random a su gusto, estos metodos son:
 
-- are_random_moves_on -> Devuelve si los movimientos están randomizados, esto es mas que nada por si en un evento le quieren informar al usuario el estado de esta opción del random
+- random_moves_on? -> Devuelve si los movimientos están randomizados, esto es mas que nada por si en un evento le quieren informar al usuario el estado de esta opción del random
 - toggle_random_moves -> Permite cambiar el estado de los movimientos randomizados, si estaban en true los pone en false y viceversa
-- is_progressive_random_on -> Similar al primer metodo, devuelve si la progresividad del random está activa
+- progressive_random_on? -> Similar al primer metodo, devuelve si la progresividad del random está activa
 - toggle_progressive_random -> Permite cambiar el estado de la progresividad del random, si estaba en true lo pone en false y viceversa
-- is_random_tm_compat_on -> Similar al primer metodo, devuelve si la compatibilidad con las MTs está randomizada
+- random_tm_compat_on? -> Similar al primer metodo, devuelve si la compatibilidad con las MTs está randomizada
 - toggle_random_tm_compat -> Permite cambiar el estado de la compatibilidad con las MTs, si estaba en true lo pone en false y viceversa
 - choose_random_ability_mode -> Permite cambiar el modo de random de las habilidades, recibe en el modo esperado :FULL_RANDOM_ABS para el modo full random (la opcion 1 mencionanda mas arriba) o :MAP_RANDOM_ABS para el modo de mapeo de habilidades (la opcion 2 mencionanda mas arriba)
   Tengan en cuenta de que cambiar el modo de las habilidades las regenerará, por lo que si el jugador ya tiene un pokémon con habilidades randomizadas, estas se perderán
@@ -86,42 +86,49 @@ Los valores por defecto para estas constantes son:
 
 - Se agregaron los métodos `are_random_evos_on`, `toggle_random_evos`, `are_random_evos_similar_bst_on` y `toggle_random_evos_similar_bst` para poder activar y desactivar fácilmente el random de evoluciones
 
+### Versión 1.4.0
+
+- Se agregó la opción de tipos random.
+  - Con esta opcion de agregaron 2 constantes en la configuracion
+    - `RANDOM_TYPES_DEFAULT_VALUE` para activar el random de tipos, por defecto es false
+    - `INVALID_TYPES` es un listado para excluir tipos del randomizado, por defecto solo tiene el tipo QMARKS
+  - También se crearon 2 métodos
+    - `random_types_enabled?` Devuelve true si los tipos random están activados, de lo contrario devuelve false
+    - `toggle_random_types` Permite cambiar el estado de los tipos random, si estaba en true lo pone en false y viceversa
+
 ## Implementación
 
 1. Descargar el zip "ModoRandom.zip" desde [aquí](https://github.com/Pokemon-Fan-Games/ModoRandom/releases/download/v1.3.0/ModoRandom.zip)
 2. Crear los 3 scripts que están en el zip, arriba del script Main
 3. Crear el siguiente NPC para activar el modo random
-
-   1. Se debe agregar una sentencia de tipo script que llame al método `enable_random`
-   2. El NPC también podría desactivar el random, solo tiene que desactivar el switch
-
-   **Ejemplo del evento que activa/desactiva el random**
-   ![NPC Activar Random](images/activar_random.png)
-
-4. Crear un NPC para que el jugador pueda limitar las generaciones de Pokémon que salen en el random
-
-   _Nota: Saldrán Pokémon de las generaciones elegidas y evoluciones que hayan salido en gens posteriores, eligiendo la gen 1 podría salir por ejemplo un Magnezone_
-
-   ![NPC Restringir Generaciones](images/random_gens_event.png)
-
-   Codigo del script del evento:
-
-   ```ruby
-    ret = Kernel.pbMessage("¿Pokémon de
-    que generaciones deseas?",
-    get_random_gens_choice_array());
-    # 9 es el numero de la opcion
-    # "Terminar" si no es 9 activa el
-    # switch, para que vuelvan a mostrar
-    # las opciones y puedas
-    # seleccionar más
-    $game_switches[159] = ret != 9;
-    add_or_remove_random_gen(ret+1);
-   ```
-
-5. Ejemplo del evento configuracion del random
-
-   ![Evento Configuracion Random](images/ejemplo_evento_configurador.png)
+   1. **Ejemplo del evento activación y configuración del random**
+      1. Crear un Label llamado "Inicio"
+      2. Crear una conditional branch de si el random está activo, para esto la condicion debe ser un script con el llamado a `random_enabled?`
+      3. Dentro del true de esa conditional branch crear un label llamado "Choices"
+      4. Agregar un show choices con las distintas configuraciones del random y la opcion para desactivarlo, en mi caso llamé a las choices "Configurar Random", "Restringir Generaciones" y "Desactivar Random" y puse la opción 4 como vacía para el cancel
+         1. Dentro de la opción "Configurar Random"
+            1. Crear un label llamado "Opciones"
+            2. Hay que poner un conditional branch con el script `show_config_options != -1`. En el true hacen un Jump to Label "Opciones"
+            3. En el else ponen un Jump to Label "Choices"
+         2. Dentro de la opción "Restringir Generaciones"
+            1. Crear un label llamado "Gens"
+            2. Hay que poner un conditional branch con el script `show_gens_chooser != -1`. En el true hacen un Jump to Label "Gens"
+            3. En el else ponen un Jump to Label "Choices"
+         3. Dentro de la opcion "Desactivar Random"
+            1. Piden una confirmacion para la desactivación con un Show Choices de Sí/No
+            2. En el Sí:
+               1. Llaman al script `disable_random`
+               2. Muestran un mensaje de que el random fue desactivado
+               3. Hacen un Exit Event Processing
+            3. En el No:
+               1. Hacen un Jump to Label "Choices"
+      5. En el false de la primer conditional branch ponen un show choices de Sí o No para activar el random.
+         1. Piden la confirmacion para activar el random y muestran un Show Choices de Sí/No
+         2. En el Sí:
+            1. Llaman al script `enable_random`
+            2. Muestran un mensaje de que el random fue activado
+         3. En el No:
+            1. No hace falta hacer nada
 
 ### Evento Iniciales
 
