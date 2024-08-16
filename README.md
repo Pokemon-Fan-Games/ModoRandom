@@ -45,6 +45,8 @@ También hay una variable `MTLIST_RANDOM` que debe contener las MTs, para que si
   - **Opción 3:** Se mantienen las habilidades al evolucionar -> Para esta opcion hay que poner la constante `RANDOM_ABILITY_METHOD` que está en el script `000_Config.rb` en `:SAMEINEVOLUTION`
   
   Cualquier valor distinto a alguno de estos 3 hará que las habilidades no se randomicen.
+  
+  _Quiero agradecer a los creadores del Plugin Randomizer EX (Abilities), Golisopod User, CrimsonTY, Luka SJ, que es el utilizado para randomizar las habilidades._
 
 - Si quieres cambiar las variables destinadas a los iniciales random puedes cambiarlas en la constante `STATERS_VARIABLES`
 
