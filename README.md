@@ -131,6 +131,11 @@ Los valores por defecto para estas constantes son:
             2. Muestran un mensaje de que el random fue activado
          3. En el No:
             1. No hace falta hacer nada
+   
+   Aquí dejo unas imagenes de como se veria el evento
+   ![evento_configuracion](images/evento_configuracion.png)
+   ![opciones random](images/opciones_random.png)
+   ![restringir generaciones](images/restringir_gens.png)
 
 ### Evento Iniciales
 
