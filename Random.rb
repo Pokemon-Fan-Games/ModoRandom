@@ -193,6 +193,9 @@ module RandomizedChallenge
   # Esto es el margen de diferencia de los BST para las evos random, actualmente es un 10%
   # Si quisieran cambiarlo a un 20% hay que cambiarlo a 0.2
   EVO_BST_MARGIN = 0.1
+
+  RANDOM_TYPES_DEFAULT_VALUE = true
+  INVALID_TYPES = [PBType::QMARKS]
 end
 
 ######################### Do not edit anything below here.
@@ -201,7 +204,8 @@ class PokemonGlobalMetadata
   attr_accessor :tm_compatibility_random, :random_gens,
                 :valid_num_ranges, :random_abs_pokemon, :ability_hash,
                 :random_moves, :enable_random_moves, :random_ability_mode,
-                :progressive_random, :enable_random_tm_compat, :random_evos, :random_evos_similar_bst
+                :progressive_random, :enable_random_tm_compat, :random_evos, :random_evos_similar_bst,
+                :enable_random_types, :random_types
   alias random_abil_init initialize
   def initialize
     random_abil_init
@@ -209,7 +213,7 @@ class PokemonGlobalMetadata
   end
 end
 
-def are_random_moves_on
+def random_moves_on?
   return false unless $game_switches[RandomizedChallenge::Switch]
 
   $PokemonGlobal.enable_random_moves ? true : false
@@ -222,7 +226,7 @@ def toggle_random_moves
   $PokemonGlobal.enable_random_moves = !$PokemonGlobal.enable_random_moves
 end
 
-def is_progressive_random_on
+def progressive_random_on?
   return false unless $game_switches[RandomizedChallenge::Switch]
 
   $PokemonGlobal.progressive_random ? true : false
@@ -232,7 +236,7 @@ def toggle_progressive_random
   $PokemonGlobal.progressive_random = !$PokemonGlobal.progressive_random
 end
 
-def is_random_tm_compat_on
+def random_tm_compat_on?
   $PokemonGlobal.enable_random_tm_compat ? true : false
 end
 
@@ -240,7 +244,7 @@ def toggle_random_tm_compat
   $PokemonGlobal.enable_random_tm_compat = !$PokemonGlobal.enable_random_tm_compat
 end
 
-def are_random_evos_on
+def random_evos_on?
   return false unless $game_switches[RandomizedChallenge::Switch]
 
   $PokemonGlobal.random_evos ? true : false
@@ -251,7 +255,7 @@ def toggle_random_evos
   $PokemonGlobal.random_evos = !$PokemonGlobal.random_evos
 end
 
-def are_random_evos_similar_bst_on
+def random_evos_similar_bst_on?
   return false unless $game_switches[RandomizedChallenge::Switch]
 
   $PokemonGlobal.random_evos_similar_bst ? true : false
@@ -275,7 +279,7 @@ def get_random_gens
   $PokemonGlobal.random_gens || []
 end
 
-def get_random_gens_choice_array
+def random_gens_choice_array
   choice_array = []
   random_gens = get_random_gens
   (1..RandomizedChallenge::MAX_NUM_GEN.length).each do |i|
@@ -318,11 +322,13 @@ def enable_random
   end
   $PokemonGlobal.random_evos = RandomizedChallenge::RANDOM_EVOS_DEFAULT_VALUE
   $PokemonGlobal.random_evos_similar_bst = RandomizedChallenge::RANDOM_EVOS_SIMILAR_BST_DEFAULT_VALUE
+  $PokemonGlobal.enable_random_types = RandomizedChallenge::RANDOM_TYPES_DEFAULT_VALUE
+  $PokemonGlobal.random_types = {}
   generate_random_starters
   $game_switches[RandomizedChallenge::Switch] = true
 end
 
-def is_pokemon_in_gen_range(species)
+def pokemon_in_gen_range?(species)
   return true unless $PokemonGlobal.random_gens
 
   is_valid = false
@@ -332,6 +338,14 @@ def is_pokemon_in_gen_range(species)
     return true
   end
   is_valid
+end
+
+def toggle_random_types
+  $PokemonGlobal.enable_random_types = !$PokemonGlobal.enable_random_types
+end
+
+def random_types_enabled?
+  $PokemonGlobal.enable_random_types ? true : false
 end
 
 # AQUI SE DEFINE EL BST QUE VAN A TENER LOS POKEMON EN EL RANDOMIZADO.
@@ -387,25 +401,30 @@ def not_in_allowed_bst_range?(bst)
 end
 
 def random_species(evo = false, evo_bst_range = [])
-  species = RandomizedChallenge::WhiteListedPokemon.sample
   if RandomizedChallenge::WhiteListedPokemon.empty?
     species = rand(PBSpecies.maxValue - 1) + 1
     bst = bst_sum(species)
     previous_species = pbGetPreviousForm(species)
     $PokemonGlobal.random_gens = [] unless $PokemonGlobal.random_gens
-    while RandomizedChallenge::BlackListedPokemon.include?(species) || not_in_allowed_bst_range?(bst) || ($PokemonGlobal.random_gens.length > 0 && !is_pokemon_in_gen_range(species) && !is_pokemon_in_gen_range(previous_species)) || (evo && evo_bst_range.length > 0 && !baseStatsSum.between?(
+    while RandomizedChallenge::BlackListedPokemon.include?(species) || not_in_allowed_bst_range?(bst) || ($PokemonGlobal.random_gens.length > 0 && !pokemon_in_gen_range?(species) && !pokemon_in_gen_range?(previous_species)) || (evo && evo_bst_range.length > 0 && !baseStatsSum.between?(
       evo_bst_range[0], evo_bst_range[1]
     ))
       species = rand(PBSpecies.maxValue - 1) + 1
       previous_species = pbGetPreviousForm(species)
       bst = bst_sum(species)
     end
+  else
+    species = RandomizedChallenge::WhiteListedPokemon.shuffle[0]
   end
   species
 end
 
+def random_enabled?
+  $game_switches[RandomizedChallenge::Switch] ? true : false
+end
+
 def random_evo(_current_pokemon, expected_evo)
-  if are_random_evos_similar_bst_on
+  if random_evos_similar_bst_on?
     min_bst = bst_sum(expected_evo) * (1 - RandomizedChallenge::EVO_BST_MARGIN)
     max_bst = bst_sum(expected_evo) * (1 + RandomizedChallenge::EVO_BST_MARGIN)
     evo_bst_range = [min_bst, max_bst]
@@ -568,6 +587,41 @@ class PokeBattle_Pokemon
     end
   end
 
+  alias type1_random type1
+  alias type2_random type2
+
+  def type1
+    return type1_random unless random_enabled? && random_types_enabled?
+
+    # Ensure that a random type is generated and stored if it doesn't exist
+    unless $PokemonGlobal.random_types[@species]
+      random_type1 = rand(PBTypes.maxValue - 1) + 1 while RandomizedChallenge::INVALID_TYPES.include?(random_type1)
+      $PokemonGlobal.random_types[@species] = [random_type1]
+    end
+    
+    $PokemonGlobal.random_types[@species][0]
+  end
+
+  def type2
+    return type2_random unless random_enabled? && random_types_enabled?
+
+    # Ensure that the second type is set, either the same as type1 or different
+    stored_types = $PokemonGlobal.random_types[@species]
+    if stored_types.nil? || stored_types.length < 2
+      # Fetch or generate type1 to ensure it's in the stored_types
+      type1_random = type1
+
+      # If type1 and type2 are originally the same, keep them the same
+      if type2_random == type1_random
+        $PokemonGlobal.random_types[@species].push(type1_random)
+      else
+        random_type2 = rand(PBTypes.maxValue - 1) + 1 while RandomizedChallenge::INVALID_TYPES.include?(random_type2)
+        $PokemonGlobal.random_types[@species].push(random_type2)
+      end
+    end
+
+    $PokemonGlobal.random_types[@species][1]
+  end
   def isCompatibleWithMove?(move)
     if !$PokemonGlobal.enable_random_tm_compat || ($game_switches && !$game_switches[RandomizedChallenge::Switch])
       return pbSpeciesCompatible?(species, move)
@@ -685,7 +739,7 @@ end
 
 alias pbCheckEvolutionExRandom pbCheckEvolutionEx
 def pbCheckEvolutionEx(pokemon)
-  return pbCheckEvolutionExRandom(pokemon) unless are_random_evos_on
+  return pbCheckEvolutionExRandom(pokemon) unless random_evos_on?
   return -1 if pokemon.species <= 0 || pokemon.isEgg?
   return -1 if isConst?(pokemon.species, PBSpecies, :PICHU) && pokemon.form == 1
   return -1 if isConst?(pokemon.item, PBItems, :EVERSTONE) &&
