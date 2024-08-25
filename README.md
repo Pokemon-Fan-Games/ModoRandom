@@ -75,7 +75,6 @@ También hay una variable `MTLIST_RANDOM` que debe contener las MTs, para que si
    - `random_types_enabled?` Devuelve true si los tipos random están activados, de lo contrario devuelve false
    - `toggle_random_types` Permite cambiar el estado de los tipos random, si estaba en true lo pone en false y viceversa
 
-
 ### Objetos Random
 
 Hay 4 constantes de configuracion relacionadas con los objetos random
