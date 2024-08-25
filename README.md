@@ -21,12 +21,6 @@ Si se quiere deshabilitar la progresivadad del random hay que poner la variable 
 Se puede hacer que los pokémon iniciales salgan de un listado definido por el maker, para se debe actualizar el script `000_Config.rb` en la variable `RANDOM_STARTERS_LIST` se deben separar los Pokémon por comas, por ejemplo `[:BULBASAUR, :CHARMANDER, :SQUIRTLE, :PIDGEY, :NIDORANmA, :NIDORANfE]`
 Si este listado está vacío los iniciales serán 100% random respetando las restricciones de generaciones, BST y blacklist de pokémon.
 
-También se pueden randomizar los objetos obtenidos, para eso en los eventos que dan objetos hay que checkear si el switch del random está activo, si lo está en lugar de llamar a pbItemBall, hay que llamar `random_item_from_pokeball()` abajo dejo un ejemplo de como hacerlo.
-
-En el script `003_Objetos.rb` hay una variable `ITEM_BLACK_LIST` que contiene los objetos que no se pueden obtener, del evento de arriba, si se quiere restringir más de un objeto se debe separar por comas, por ejemplo `[:LOPUNNYTE, :SACREDASH, :BLACKFLUTE]`
-
-También hay una variable `MTLIST_RANDOM` que debe contener las MTs, para que si el objeto que se randomizó es una MT que ya tienes se genere otra MT distinta, las distintas MTs se deben separar por comas, por ejemplo `[:TM01, :TM02, :TM03]`
-
 ### Configuraciones Base
 
 - Si quieres desactivar el randomizado de los movimientos, en el script `000_Config.rb` hay una variable que se llama `RANDOM_MOVES_DEFAULT_VALUE` por defecto está en `true` si la cambias a `false` no se randomizarán los movimientos
