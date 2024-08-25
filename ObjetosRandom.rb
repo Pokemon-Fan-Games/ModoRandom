@@ -1,6 +1,3 @@
-################################################################################
-# ITEMS RANDOM BY SKYFLYER
-################################################################################
 module RandomizedChallenge
 
   # Lista de objetos que no quieres que aparezcan entre los objetos Random
@@ -67,7 +64,3 @@ module RandomizedChallenge
     self::ITEM_BLACK_LIST.include?(item.id) || pbIsKeyItem?(item)
   end
 end
-################################################################################
-################################################################################ 
-
-
