@@ -109,7 +109,7 @@ Los valores por defecto para estas constantes son:
 
 ## Implementación
 
-1. Descargar el zip "ModoRandom.zip" desde [aquí](https://github.com/Pokemon-Fan-Games/ModoRandom/releases/download/21_LBDSKY_v1.4.0/ModoRandom.zip)
+1. Descargar el zip "ModoRandom.zip" desde [aquí](https://github.com/Pokemon-Fan-Games/ModoRandom/releases/download/21_LBDSKY_v1.5.0/ModoRandom.zip)
 2. Copiar la carpeta del zip dentro de la carpeta de tu juego.
-3. En La Base de Sky en el Mapa de Scripts pueden encontrar todos los eventos para el random, estos son el activador/configurador, el de las balls para cada inicial random y el de las Pokeball con objetos random
+3. En La Base de Sky en el Mapa de Scripts pueden encontrar todos los eventos para el random, estos son el activador/configurador, el de las balls para cada inicial random
 ![eventos](images/eventosLBDSKY.png)
