@@ -28,14 +28,58 @@ En el script `ObjetosRandom.rb` hay una variable `BLACK_LIST` que contiene los o
 
 También hay una variable `MTLIST_RANDOM` que debe contener las MTs, para que si el objeto que se randomizó es una MT que ya tienes se genere otra MT distinta, las distintas MTs se deben separar por comas, por ejemplo `[:TM01, :TM02, :TM03]`
 
-### Configuraciones Base
+## Configuraciones Base
+
+### Pokemón Random
+
+- Se puede restringir qué pokémon salen en el random, para eso se debe modificar el script `Random.rb` en la variable `BlackListedPokemon` si se quiere restringir más de un pokémon se debe separar por comas, por ejemplo `[PBSpecies::ARTICUNO,PBSpecies::MOLTRES, PBSpecies::ZAPDOS]`
+- Si quieres desactivar que el random sea progresivo, en el script `Random.rb` hay una variable que se llama `PROGRESSIVE_RANDOM_DEFAULT_VALUE` por defecto está en `true` si la cambias a `false`, el random no será progresivo, por lo que desde la ruta 1 te podrian salir Pokémons legendarios a menos que esten inluídos en la blacklist
+- Si quieres cambiar las variables destinadas a los iniciales random puedes cambiarlas en la constante `STATERS_VARIABLES`
+
+#### Evoluciones Random
+
+- Para el modo full random
+  - Hay que poner la constante `RANDOM_EVOS_DEFAULT_VALUE = true` en el script `Random.rb`
+- Para el modo con BSTs similares
+  - Hay que poner la constante `RANDOM_EVOS_DEFAULT_VALUE = true` en el script `Random.rb`
+  - Y la constante `RANDOM_EVOS_SIMILAR_BST_DEFAULT_VALUE = true` en el script `Random.rb`
+  - Tambien se puede configurar el margen de bst similares con `EVO_BST_MARGIN`
+
+#### Tipos Random
+
+- Se agregó la opción de tipos random.
+  - Con esta opcion de agregaron 2 constantes en la configuracion
+    - `RANDOM_TYPES_DEFAULT_VALUE` para activar el random de tipos, por defecto es false
+    - `INVALID_TYPES` es un listado para excluir tipos del randomizado, por defecto solo tiene el tipo QMARKS
+  - También se crearon 2 métodos
+    - `random_types_enabled?` Devuelve true si los tipos random están activados, de lo contrario devuelve false
+    - `toggle_random_types` Permite cambiar el estado de los tipos random, si estaba en true lo pone en false y viceversa
+
+
+### Movimientos Random
 
 - Si quieres desactivar el randomizado de los movimientos, en el script `Random.rb` hay una variable que se llama `RANDOM_MOVES_DEFAULT_VALUE` por defecto está en `true` si la cambias a `false` no se randomizarán los movimientos
 - Si quieres activar el randomizado de la compatibilidad con las MTs, en el script `Random.rb` hay una variable que se llama `RANDOM_TM_COMPAT` por defecto está en `false` si la cambias a `true` se randomizará la compatibilidad con las MTs
-- Se puede restringir qué pokémon salen en el random, para eso se debe modificar el script `Random.rb` en la variable `BlackListedPokemon` si se quiere restringir más de un pokémon se debe separar por comas, por ejemplo `[PBSpecies::ARTICUNO,PBSpecies::MOLTRES, PBSpecies::ZAPDOS]`
-- Se puede restringir qué habilidades salen en el random, para eso se debe modificar el script `Random.rb` en la variable `ABILITYBLACKLIST` si se quiere restringir más de una habilidad se debe separar por comas, por ejemplo `[PBAbilities::IMPOSTER, PBAbilities::ZENMODE, PBAbilities::WONDERGUARD]`
 - Se pueden restringir qué movimientos salen en el random, para eso se debe modificar el script `Random.rb` en la variable `MOVEBLACKLIST` si se quiere restringir más de un movimiento se debe separar por comas, por ejemplo `[PBMoves::CHATTER, PBMoves::DIG, PBMoves::TELEPORT, PBMoves::SONICBOOM, PBMoves::DRAGONRAGE, PBMoves::STRUGGLE]`
-- Si quieres desactivar que el random sea progresivo, en el script `Random.rb` hay una variable que se llama `PROGRESSIVE_RANDOM_DEFAULT_VALUE` por defecto está en `true` si la cambias a `false`, el random no será progresivo, por lo que desde la ruta 1 te podrian salir Pokémons legendarios a menos que esten inluídos en la blacklist
+
+### Objetos Random
+
+#### Nota importante
+
+- Para evitar overridear los metodos de Kernel.pbItemBall y Kernel.pbReceiveItem son requeridos los siguientes pasos manuales.
+  1. En el script `PField_Field` en la primer linea del método `def Kernel.pbItemBall` agregar la siguiente linea `item = RandomizedChallenge.determine_random_item(item) if random_enabled?`
+  2. En el script `PField_Field` en la primer linea del método `def Kernel.pbReceiveItem` agregar la siguiente linea `item = RandomizedChallenge.determine_random_item(item) if random_enabled?`
+
+- `ITEM_BLACK_LIST` es un listado para excluir objetos del randomizado
+
+- `MTLIST_RANDOM` Listado de MTs que pueden salir como objetos random, si la lista está vacía cualquier MT podrá salir en el modo random
+- `UNRANDOMIZABLE_ITEMS` Listado de objetos que no pueden ser randomizados, es decir si son dados en un evento no se randomizarán
+- `MT_GET_RANDOMIZED_TO_ANOTHER_MT` Las MTs dadas en un evento son randomizadas por otra MT que el jugador no tenga ya.
+
+### Habilidades Random
+
+- Se puede restringir qué habilidades salen en el random, para eso se debe modificar el script `Random.rb` en la variable `ABILITYBLACKLIST` si se quiere restringir más de una habilidad se debe separar por comas, por ejemplo `[PBAbilities::IMPOSTER, PBAbilities::ZENMODE, PBAbilities::WONDERGUARD]`
+
 - Se puede elegir como funciona el random de las habilidades, si es 100% random por especie o si mapea una habilidad a otra, o directamente no randomizar las habilidades.
   Unos ejemplos:
   - **Opción 1:** 100% random -> Para esta opcion hay que poner la constante `FULL_RANDOM_ABS` que está en el script `Random.rb` en `true`
@@ -45,8 +89,6 @@ También hay una variable `MTLIST_RANDOM` que debe contener las MTs, para que si
   
   Si ninguna de las 2 constantes está en `true` no se randomizarán las habilidades.
   Si ambas constantes están en `true` se utilizará la opción 1.
-
-- Si quieres cambiar las variables destinadas a los iniciales random puedes cambiarlas en la constante `STATERS_VARIABLES`
 
 ### Con la version 1.2.0
 
@@ -131,7 +173,7 @@ Los valores por defecto para estas constantes son:
             2. Muestran un mensaje de que el random fue activado
          3. En el No:
             1. No hace falta hacer nada
-   
+
    Aquí dejo unas imagenes de como se veria el evento
    ![evento_configuracion](images/evento_configuracion.png)
    ![opciones random](images/opciones_random.png)

@@ -485,7 +485,7 @@ def random_species(evo = false, evo_bst_range = [])
     bst = bst_sum(species)
     previous_species = pbGetPreviousForm(species)
     $PokemonGlobal.random_gens = [] unless $PokemonGlobal.random_gens
-    while RandomizedChallenge::BLACKLISTEDPOKEMON.include?(species) || not_in_allowed_bst_range?(bst) || ($PokemonGlobal.random_gens.length > 0 && !pokemon_in_gen_range?(species) && !pokemon_in_gen_range?(previous_species)) || (evo && evo_bst_range.length > 0 && !baseStatsSum.between?(
+    while RandomizedChallenge::BLACKLISTEDPOKEMON.include?(species) || not_in_allowed_bst_range?(bst) || ($PokemonGlobal.random_gens.length > 0 && !pokemon_in_gen_range?(species) && !pokemon_in_gen_range?(previous_species)) || (evo && evo_bst_range.length > 0 && !bst.between?(
       evo_bst_range[0], evo_bst_range[1]
     ))
       species = rand(PBSpecies.maxValue - 1) + 1
