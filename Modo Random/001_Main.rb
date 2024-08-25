@@ -59,7 +59,6 @@ def toggle_random_tm_compat
 end
 
 def progressive_random_on?
-  echoln "Progressive #{$PokemonGlobal.progressive_random}"
   $PokemonGlobal.progressive_random ? true : false
 end
 
