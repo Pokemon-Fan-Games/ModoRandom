@@ -137,7 +137,7 @@ Los valores por defecto para estas constantes son:
 
 ## Implementación
 
-1. Descargar el zip "ModoRandom.zip" desde [aquí](https://github.com/Pokemon-Fan-Games/ModoRandom/releases/download/v1.3.0/ModoRandom.zip)
+1. Descargar el zip "ModoRandom.zip" desde [aquí](https://github.com/Pokemon-Fan-Games/ModoRandom/releases/download/16_BES_v1.5.0/ModoRandom.zip)
 2. Crear los 3 scripts que están en el zip, arriba del script Main
 3. Crear el siguiente NPC para activar el modo random
    1. **Ejemplo del evento activación y configuración del random**
