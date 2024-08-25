@@ -75,6 +75,16 @@ También hay una variable `MTLIST_RANDOM` que debe contener las MTs, para que si
    - `random_types_enabled?` Devuelve true si los tipos random están activados, de lo contrario devuelve false
    - `toggle_random_types` Permite cambiar el estado de los tipos random, si estaba en true lo pone en false y viceversa
 
+
+### Objetos Random
+
+Hay 4 constantes de configuracion relacionadas con los objetos random
+
+- `ITEM_BLACK_LIST` -> Lista de objetos que no se pueden obtener, por ejemplo `[:LOPUNNYTE, :SACREDASH, :BLACKFLUTE]`. Los objetos clave nunca se generarán
+- `UNRANDOMIZABLE_ITEMS` -> Lista de objetos que si son dadas en algun evento no serán randomizados. Los objetos clave nunca se randomizarán
+- `MT_GET_RANDOMIZED_TO_ANOTHER_MT` -> Si es true, las MTs serán randomizadas a otra MT
+- `MTLIST_RANDOM` -> Listado de MTs que pueden ser generadas en el random, si este listado está vacío cualquier MT podrá salir en el random
+
 ### Opciones por defecto
 
 - `FULL_RANDOM_ABS = true` o `MAP_RANDOM_ABS = true` -> Esto determina el modo de random de las habilidades, si no se predefine ninguna de estas constantes, las habilidades no se randomizarán, si ambas están en true se utilizará la opcion 1

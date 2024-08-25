@@ -141,6 +141,13 @@ module RandomizedChallenge
   # Lista de objetos que no quieres que aparezcan entre los objetos Random.
   ITEM_BLACK_LIST = []
 
+  # Objetos que no se randomizarán si son dados en algun evento.
+  UNRANDOMIZABLE_ITEMS = []
+
+  # Si en un evento se da una MT se randomizará por otra MT del listado de abajo, a menos que el listado esté vacío
+  # Si el listado está vacío se randomizará por cualquier MT
+  MT_GET_RANDOMIZED_TO_ANOTHER_MT = true
+
   # Lista de las MTs que pueden salir en el modo Random.
   # Elimina las que prefieras que se entreguen por NPCs y por tanto no
   # se puedan encontrar en objetos del suelo.

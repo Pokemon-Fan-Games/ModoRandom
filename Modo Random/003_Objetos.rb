@@ -1,39 +1,77 @@
-#***********************************************************
-# OBJETOS RANDOM
-#
-# Por Skyflyer
-#***********************************************************
+#-------------------------------------------------------------------------------
+# Overrides of pbItemBall and pbReceiveItem
+#-------------------------------------------------------------------------------
+# Picking up an item found on the ground
+#-------------------------------------------------------------------------------
+alias pbItemBall_random pbItemBall
+def pbItemBall(item, quantity = 1)
+  return pbItemBall_random(item, quantity) unless random_enabled?
 
-def random_item
-    item_num = rand(GameData::Item.count - 1) + 1
-    count = 1
-    GameData::Item.each do |item| 
-      if count == item_num
-          return item
-      end
-      count += 1
-    end
+  random_item = RandomizedChallenge.determine_random_item(item)
+  pbItemBall_random(random_item, quantity)
 end
 
-# Al llamar a esta función, si el interruptor ITEMS_RANDOM está activo, el objeto
-# que encontramos es uno al azar.
-def random_item_from_pokeball()
-  objeto_elegido = 0
-  loop do
-    objeto_elegido = random_item
-    # Comprobamos si está en la Blacklist.
-    for blacklist_item in RandomizedChallenge::ITEM_BLACK_LIST
-      item = GameData::Item.get(blacklist_item)
-      enBlackList = true if objeto_elegido==item
-      break if enBlackList
-    end
-    # Revisión de MTs.
-    for mt in RandomizedChallenge::MTLIST_RANDOM
-      item = GameData::Item.get(mt)
-      mtRepetida = true if (objeto_elegido==item && $bag.has?(objeto_elegido))
-      break if mtRepetida
-    end
-    break if !enBlackList && !mtRepetida
+alias pbReceiveItem_random pbReceiveItem
+def pbReceiveItem(item, quantity = 1)
+  return pbReceiveItem_random(item, quantity) unless random_enabled?
+
+  random_item = RandomizedChallenge.determine_random_item(item)
+  pbReceiveItem_random(random_item, quantity)
+end
+
+module RandomizedChallenge
+  def self.item
+    items = GameData::Item.keys # Get all item IDs
+    random_item_id = items.sample      # Randomly select an item ID
+    GameData::Item.get(random_item_id) # Return the item object
   end
-  Kernel.pbItemBall(objeto_elegido)
+
+  def self.random_tm
+    loop do
+      tm = item # Calling the item method defined above
+      return tm if tm.is_machine? && !$bag.has?(tm)
+    end
+  end
+
+  def self.random_item
+    loop do
+      item = item() # Calling the item method defined above
+      next if excluded_item?(item)
+
+      return item
+    end
+  end
+
+  def self.determine_random_item(original_item)
+    return original_item if unrandomizable_item?(original_item)
+
+    if GameData::Item.get(original_item).is_machine? && RandomizedChallenge::MT_GET_RANDOMIZED_TO_ANOTHER_MT
+      return random_tm if RandomizedChallenge::MTLIST_RANDOM.empty?
+
+      random_tms = RandomizedChallenge::MTLIST_RANDOM.shuffle
+      random_tms.each do |tm_id|
+        tm_item = GameData::Item.get(tm_id)
+        return tm_item unless $bag.has?(tm_item)
+      end
+    else
+      random_item = random_item()
+      return random_item unless random_item.is_machine? && $bag.has?(random_item)
+    end
+
+    random_tms = RandomizedChallenge::MTLIST_RANDOM.shuffle
+    random_tms.each do |tm_id|
+      tm_item = GameData::Item.get(tm_id)
+      return tm_item unless $bag.has?(tm_item)
+    end
+
+    random_item
+  end
+
+  def self.unrandomizable_item?(item)
+    UNRANDOMIZABLE_ITEMS.include?(item) || GameData::Item.get(item).is_key_item?
+  end
+
+  def self.excluded_item?(item)
+    ITEM_BLACK_LIST.include?(item.id) || GameData::Item.get(item.id).is_key_item?
+  end
 end
