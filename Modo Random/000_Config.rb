@@ -54,10 +54,17 @@ module RandomizedChallenge
   # Puedes modificar esto en cualquier momento llamando al método toggle_random_moves.
   RANDOM_MOVES_DEFAULT_VALUE = true
 
+  # BANNEAR MOVIMIENTOS OHKO
+  BAN_OHKO_MOVES = true
+
+
   # RANDOMIZAR COMPATIBILIDAD DE LAS MTs
   # Si quieres que el aprendizaje de MTs sea aleatorio.
   # Puedes modificar esto en cualquier momento llamando al método toggle_tm_compat.
   RANDOM_TM_COMPAT_DEFAULT_VALUE = true
+
+  # BANNEAR MOVIMIENTOS OHKO
+  BAN_OHKO_MOVES = true
 
   # RANDOMIZAR EVOLUCIONES
   # Si quieres que las evoluciones estén randomizadas.

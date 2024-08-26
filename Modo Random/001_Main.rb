@@ -3,9 +3,9 @@
 # ***********************************************************
 
 class PokemonGlobalMetadata
-  attr_accessor :tm_compatibility_random, :random_moves,
-                :random_gens, :enable_random_moves, :progressive_random,
-                :enable_random_tm_compat, :enable_random_evolutions,
+  attr_accessor :progressive_random, :random_moves,
+                :enable_random_moves, :banohko, :random_gens,
+                :enable_random_tm_compat, :tm_compatibility_random, :enable_random_evolutions,
                 :enable_random_evolutions_similar_bst,
                 :enable_random_evolutions_respect_restrictions, :enable_random_types,
                 :random_types
@@ -26,16 +26,19 @@ class PokemonGlobalMetadata
     @enable_random_types = RandomizedChallenge::RANDOM_TYPES_DEFAULT_VALUE
     @random_types = {}
     @tm_compatibility_random = {}
+    @banohko = RandomizedChallenge::BAN_OHKO_MOVES
   end
 
   def disable_random_params
-    $PokemonGlobal.enable_random_moves = false
-    $PokemonGlobal.progressive_random = false
-    $PokemonGlobal.enable_random_tm_compat = false
-    $PokemonGlobal.enable_random_evolutions = false
-    $PokemonGlobal.enable_random_evolutions_similar_bst = false
-    $PokemonGlobal.enable_random_evolutions_respect_restrictions = false
-    $PokemonGlobal.enable_random_types = false
+    @enable_random_moves = false
+    @progressive_random = false
+    @enable_random_tm_compat = false
+    @enable_random_evolutions = false
+    @enable_random_evolutions_similar_bst = false
+    @enable_random_evolutions_respect_restrictions = false
+    @enable_random_types = false
+    @random_types = {}
+    @banohko = false
   end
 end
 
@@ -82,7 +85,7 @@ def toggle_random_evolutions_similar_bst
   $PokemonGlobal.enable_random_evolutions_similar_bst = !$PokemonGlobal.enable_random_evolutions_similar_bst
 end
 
-def do_random_evos_respect_restrictions?
+def random_evos_respect_restrictions?
   $PokemonGlobal.enable_random_evolutions_respect_restrictions
 end
 
@@ -117,6 +120,14 @@ def random_types_on?
   $PokemonGlobal.enable_random_types ? true : false
 end
 
+def ohko_banned?
+  $PokemonGlobal.banohko ? true : false
+end
+
+def toggle_ban_ohko
+  $PokemonGlobal.banohko = !$PokemonGlobal.banohko
+end
+
 def enable_random
   return unless $game_switches
   $PokemonGlobal.initialize_random_params
@@ -143,7 +154,7 @@ def disable_random
 end
 
 def random_enabled?
-  $game_switches[RandomizedChallenge::Switch]
+  $game_switches && $game_switches[RandomizedChallenge::Switch]
 end
 
 # BST máximo y mínimo de los Pokémon del Randomizado en base a cada medalla
@@ -157,8 +168,7 @@ def max_bst_cap
     4 => 520,
     5 => 560,
     6 => 600,
-    7 => 800,
-    8 => 800
+    7 => 800
   }
   min_key = max_caps.keys.min
   max_key = max_caps.keys.max
@@ -177,22 +187,20 @@ def min_bst_cap
   }
   max_key = min_caps.keys.max
   # Si el jugador tiene mas medallas que las definidas en min_caps se devuelve el valor de la mas alta
-  if $player.badge_count > max_key
-    min_caps[max_key]
-  else
-    # 0 por defecto si hay menos de 3 medallas
-    min_caps.fetch($player.badge_count, 0)
-  end
+  $player.badge_count > max_key ? min_caps[max_key] : min_caps.fetch($player.badge_count, 0)
 end
 
 def random_species
-  species_num = rand(GameData::Species.species_count - 1) + 1
-  count = 1
-  GameData::Species.each_species do |species|
-    return species if count == species_num
+  species_list = GameData::Species.keys
+  species = species_list[rand(species_list.length - 1) + 1]
+  GameData::Species.get(species)
+  # species_num = rand(GameData::Species.species_count - 1) + 1
+  # count = 1
+  # GameData::Species.each_species do |species|
+  #   return species if count == species_num
 
-    count += 1
-  end
+  #   count += 1
+  # end
 end
 
 def valid_pokemon?(species, ignore_bst = false)
@@ -214,7 +222,7 @@ class Pokemon
   alias randomized_init initialize
 
   def initialize(species, level, owner = $player, withMoves = true, recheck_form = true)
-    if $game_switches && $game_switches[RandomizedChallenge::Switch]
+    if random_enabled?
       species = RandomizedChallenge::WHITELISTED_POKEMON.sample
       if RandomizedChallenge::WHITELISTED_POKEMON.empty?
         species = random_species
@@ -251,102 +259,92 @@ class Pokemon
   end
 
   def random_move
-    move_num = rand(GameData::Move.count - 1) + 1
-    count = 1
-    GameData::Move.each do |move|
-      return move if count == move_num
+    moves = GameData::Move.keys
+    move = moves[rand(moves.length - 1) + 1]
+    GameData::Move.get(move)
+    # count = 1
+    # GameData::Move.each do |move|
+    #   return move if count == move_num
 
-      count += 1
+    #   count += 1
+    # end
+  end
+
+  def invalid_move?(move, move_data)
+    move_exists = $PokemonGlobal.random_moves[@species]&.detect { |elem| elem[1] == move }
+    RandomizedChallenge::MOVEBLACKLIST.include?(move) || move_exists || (move_data.ohko? && ohko_banned?)
+  end
+
+  def find_valid_move(move)
+    badge_count = $player.badge_count
+
+    loop do
+      move_data = GameData::Move.get(move.id)
+
+      if badge_count < 3
+        break if move_data.display_real_damage <= 70 && !invalid_move?(move, move_data)
+      elsif badge_count >= 6
+        break if move_data.display_real_damage >= 55 && !invalid_move?(move, move_data)
+      else
+        break unless invalid_move?(move, move_data)
+      end
+
+      move = random_move
     end
+
+    move
   end
 
   alias random_getMoveList getMoveList
   def getMoveList
-    moves = random_getMoveList
-    if $game_switches && $game_switches[RandomizedChallenge::Switch]
-      $PokemonGlobal.random_moves = {} unless $PokemonGlobal.random_moves
-      return $PokemonGlobal.random_moves[@species] if $PokemonGlobal.random_moves[@species]
+    return random_getMoveList unless random_enabled? && random_moves_on?
 
-      $PokemonGlobal.random_moves[@species] = []
+    $PokemonGlobal.random_moves = {} unless $PokemonGlobal.random_moves
+    return $PokemonGlobal.random_moves[@species] if $PokemonGlobal.random_moves[@species]
 
-      moves.each do |item|
-        level = item[0]
-        move = random_move
-        if $player.badge_count < 3
-          movedata = GameData::Move.get(move.id)
-          move_exists = $PokemonGlobal.random_moves[@species].detect { |elem| elem[1] == (move) }
-          while movedata.power > 70 || RandomizedChallenge::MOVEBLACKLIST.include?(move) || move_exists
-            move = random_move
-            movedata = GameData::Move.get(move.id)
-            move_exists = $PokemonGlobal.random_moves[@species].detect { |elem| elem[1] == (move) }
-          end
-        else
-          # Usar blacklist en el recordador.
-          move_exists = $PokemonGlobal.random_moves[@species].detect { |elem| elem[1] == (move) }
-          while RandomizedChallenge::MOVEBLACKLIST.include?(move) || !move || move_exists
-            move = random_move
-            move_exists = $PokemonGlobal.random_moves[@species].detect { |elem| elem[1] == (move) }
-          end
-        end
-        $PokemonGlobal.random_moves[@species].push([level, move])
-      end
-      
-      moves = $PokemonGlobal.random_moves[@species]
+    $PokemonGlobal.random_moves[@species] = []
+
+    moves.each do |item|
+      level = item[0]
+      move = find_valid_move(random_move)
+      $PokemonGlobal.random_moves[@species].push([level, move])
     end
-    moves
+    $PokemonGlobal.random_moves[@species]
   end
 
   alias compatible_with_move_random? compatible_with_move?
   def compatible_with_move?(move_id)
-    if ($game_switches && !$game_switches[RandomizedChallenge::Switch]) || !random_tm_compat_on?
-      return compatible_with_move_random?(move_id)
-    end
+    return compatible_with_move_random?(move_id) unless random_enabled? && random_tm_compat_on?
 
     # RAND Compatibility #TM
-    $PokemonGlobal.tm_compatibility_random = {} unless $PokemonGlobal.tm_compatibility_random
-    if $PokemonGlobal.tm_compatibility_random && $PokemonGlobal.tm_compatibility_random[species] && $PokemonGlobal.tm_compatibility_random[species].detect do |item|
-         item[0] == move_id
-       end
-      $PokemonGlobal.tm_compatibility_random[species].any? { |item| item[0] == move_id && item[1] == true }
-    elsif !$PokemonGlobal.tm_compatibility_random[species]
-      $PokemonGlobal.tm_compatibility_random[species] = []
-      if rand(2) == 1
-        $PokemonGlobal.tm_compatibility_random[species].push([move_id, true])
-        true
-      else
-        $PokemonGlobal.tm_compatibility_random[species].push([move_id, false])
-        false
-      end
-    elsif rand(2) == 1
-      $PokemonGlobal.tm_compatibility_random[species].push([move_id, true])
-      true
-    else
-      $PokemonGlobal.tm_compatibility_random[species].push([move_id, false])
-      false
-    end
+    $PokemonGlobal.tm_compatibility_random ||= {}
+    species_compatibility = $PokemonGlobal.tm_compatibility_random[species] ||= []
+
+    existing_compatibility = species_compatibility.find { |item| item[0] == move_id }
+    return existing_compatibility[1] if existing_compatibility
+
+    is_compatible = rand(2).zero?
+    species_compatibility << [move_id, is_compatible]
+    is_compatible
   end
 
   def get_random_evo(_current_species, new_species)
-    species_list = []
-    GameData::Species.each_species do |species|
-      species_list.push(species)
-    end
+    species_list = GameData::Species.keys
     # species_list.shuffle!
-    return species_list.sample if !random_evolutions_similar_bst_on? && !do_random_evos_respect_restrictions?
+    return species_list.sample unless random_evolutions_similar_bst_on? || random_evos_respect_restrictions?
 
-    if random_evolutions_similar_bst_on?
-      new_species_bst_min = GameData::Species.get(new_species).base_stats.values.sum * 0.9
-      new_species_bst_max = GameData::Species.get(new_species).base_stats.values.sum * 1.1
-      species_list.each do |species|
-        species_bst = GameData::Species.get(species).base_stats.values.sum
-        return species if valid_pokemon?(species, ignore_bst = true) && species_bst >= new_species_bst_min &&
-                          species_bst <= new_species_bst_max
-      end
-    elsif do_random_evos_respect_restrictions?
-      species_list.each do |species|
-        return species if valid_pokemon?(species)
+    filtered_species = species_list.select do |species|
+      species_bst = GameData::Species.get(species).base_stats.values.sum
+
+      if random_evolutions_similar_bst_on?
+        new_species_bst = GameData::Species.get(new_species).base_stats.values.sum
+        species_bst.between?(new_species_bst * 0.9, new_species_bst * 1.1) && valid_pokemon?(species, true)
+      elsif random_evos_respect_restrictions?
+        valid_pokemon?(species)
       end
     end
+
+    filtered_species.sample
   end
 
   def check_evolution_internal
@@ -382,10 +380,10 @@ end
 def generate_random_starters
   starter_count = RandomizedChallenge::RANDOM_STARTER_VARIABLES.length || 3
   # Selecciona 3 iniciales unicos de la lista
-  iniciales = RandomizedChallenge::RANDOM_STARTERS_LIST.sample(starter_count)
+  starters = RandomizedChallenge::RANDOM_STARTERS_LIST.sample(starter_count)
 
   # Asigna los iniciales a las variables
   RandomizedChallenge::RANDOM_STARTER_VARIABLES.each_with_index do |var, i|
-    $game_variables[var] = iniciales[i]
+    $game_variables[var] = starters[i]
   end
 end
