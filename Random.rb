@@ -15,13 +15,11 @@ module RandomizedChallenge
   # Leave this empty if all pokemon are allowed, otherwise only pokemon listed
   # above will be selected.
 
-  # StarterList = [PBSpecies::BULBASAUR,PBSpecies::CHARMANDER,PBSpecies::SQUIRTLE,PBSpecies::CHIKORITA,PBSpecies::CYNDAQUIL,PBSpecies::TOTODILE,PBSpecies::TREECKO,PBSpecies::TORCHIC,PBSpecies::MUDKIP,PBSpecies::TURTWIG,PBSpecies::CHIMCHAR,PBSpecies::PIPLUP,PBSpecies::SNIVY,PBSpecies::TEPIG,PBSpecies::OSHAWOTT,PBSpecies::CHESPIN,PBSpecies::FENNEKIN,PBSpecies::FROAKIE,PBSpecies::ROWLET,PBSpecies::LITTEN,PBSpecies::POPPLIO]
-
   # Lista de movimientos baneados para el random
-  MOVEBLACKLIST = []
+  MOVEBLACKLIST = [PBMoves::ELECTROPALMAS, PBMoves::BURNUP, PBMoves::CHATTERI, PBMoves::DIG, PBMoves::TELEPORT, PBMoves::SONICBOOM,PBMoves::DRAGONRAGE,PBMoves::STRUGGLE]
 
   # Lista de habilidades baneados para el random
-  ABILITYBLACKLIST = []
+  ABILITYBLACKLIST = [PBAbilities::MIRRORARMOR, PBAbilities::IMPOSTER, PBAbilities::PLUS, PBAbilities::MINUS, PBAbilities::ZENMODE, PBAbilities::WONDERGUARD, PBAbilities::STANCECHANGE, PBAbilities::DISGUISE, PBAbilities::FORECAST, PBAbilities::ILLUSION, PBAbilities::HARVEST, PBAbilities::MULTITYPE, PBAbilities::HONEYGATHER]
 
   # LISTA DE STARTERS PARA EL RANDOM
   RANDOM_STARTER_LIST = [
@@ -126,8 +124,7 @@ module RandomizedChallenge
 
   # Ingrese las variables en las que se guardaran lo inciales random, luego deberá utilizar esta variable 
   # para el evento de elección de iniciales.
-  STATERS_VARIABLES = [801, 802, 803]
-
+  STATERS_VARIABLES = [803, 804, 805]
 
   # Es rango de numero de pokedex para cada generación
   MAX_NUM_GEN = { 1 => [1, 151], 2 => [152, 251], 3 => [252, 386], 4 => [387, 494],
@@ -167,11 +164,11 @@ module RandomizedChallenge
   # Se podrá cambiar llamando al metodo toggle_tm_compat
   # Tengan en cuenta que de esa forma un jugador podria armarse el moveset como quiera
   # Activando y desactivando esta opción
-  RANDOM_TM_COMPAT_DEFAULT_VALUE = false
+  RANDOM_TM_COMPAT_DEFAULT_VALUE = true
 
   # Randomizar evoluciones de los pokemones
   # Se podrá cambiar llamando al metodo toggle_random_evos
-  RANDOM_EVOS_DEFAULT_VALUE = true
+  RANDOM_EVOS_DEFAULT_VALUE = false
 
   # Randomizar evoluciones de los pokemones a otro con BST similares
   # Por ejemplo un Pichu no podra evolucionar a un Slaking
@@ -189,6 +186,68 @@ module RandomizedChallenge
   # Lista de tipos invalidos para randomizar
   # El tipo QMARKS es para los pokemones que no tienen tipos
   INVALID_TYPES = [PBTypes::QMARKS]
+
+  ### MEGA STONES for each pokemon
+  MEGAS_RANDOMIZE_TO_MEGAS = true
+  POKEMON_MEGA_STONES = {
+    PBSpecies::VENUSAUR    => PBItems::VENUSAURITE,
+    PBSpecies::CHARIZARD   => [PBItems::CHARIZARDITEX, PBItems::CHARIZARDITEY],
+    PBSpecies::BLASTOISE   => PBItems::BLASTOISINITE,
+    PBSpecies::BEEDRILL    => PBItems::BEEDRILLITA,
+    PBSpecies::PIDGEOT     => PBItems::PIDGEOTITA,
+    PBSpecies::ALAKAZAM    => PBItems::ALAKAZAMITA,
+    PBSpecies::GENGAR      => PBItems::GENGARITA,
+    PBSpecies::KANGASKHAN  => PBItems::KANGASKHANITA,
+    PBSpecies::PINSIR      => PBItems::PINSIRITA,
+    PBSpecies::GYARADOS    => PBItems::GYARADOSITA,
+    PBSpecies::AERODACTYL  => PBItems::AERODACTYLITA,
+    PBSpecies::AMPHAROS    => PBItems::AMPHAROSITA,
+    PBSpecies::STEELIX     => PBItems::STEELIXITA,
+    PBSpecies::SCIZOR      => PBItems::SCIZORITA,
+    PBSpecies::HERACROSS   => PBItems::HERACROSSITA,
+    PBSpecies::HOUNDOOM    => PBItems::HOUNDOOMITA,
+    PBSpecies::TYRANITAR   => PBItems::TYRANITARITE,
+    PBSpecies::SCEPTILE    => PBItems::SCEPTILITE,
+    PBSpecies::BLAZIKEN    => PBItems::BLAZIKENITE,
+    PBSpecies::SWAMPERT    => PBItems::SWAMPERTITE,
+    PBSpecies::GARDEVOIR   => PBItems::GARDEVOIRITA,
+    PBSpecies::SABLEYE     => PBItems::SABLEYITA,
+    PBSpecies::AGGRON      => PBItems::AGGRONITA,
+    PBSpecies::MEDICHAM    => PBItems::MEDICHAMITA,
+    PBSpecies::MANECTRIC   => PBItems::MANECTRITA,
+    PBSpecies::SHARPEDO    => PBItems::SHARPEDITA,
+    PBSpecies::CAMERUPT    => PBItems::CAMERUPTITA,
+    PBSpecies::ALTARIA     => PBItems::ALTARITA,
+    PBSpecies::ABSOL       => PBItems::ABSOLITA,
+    PBSpecies::GLALIE      => PBItems::GLALIEITA,
+    PBSpecies::SALAMENCE   => PBItems::SALAMENCITE,
+    PBSpecies::METAGROSS   => PBItems::METAGROSSITE,
+    PBSpecies::LOPUNNY     => PBItems::LOPUNNYTE,
+    PBSpecies::GARCHOMP    => PBItems::GARCHOMPITE,
+    PBSpecies::LUCARIO     => PBItems::LUCARITA,
+    PBSpecies::GALLADE     => PBItems::GALLADITA,
+    PBSpecies::BUTTERFREE  => PBItems::BUTTERFREEITA,
+    PBSpecies::MACHAMP     => PBItems::MACHAMPITA,
+    PBSpecies::KINGLER     => PBItems::KINGLERITA,
+    PBSpecies::LAPRAS      => PBItems::LAPRASITA,
+    PBSpecies::GARBODOR    => PBItems::GARBODORITA,
+    PBSpecies::CORVIKNIGHT => PBItems::CORVIKNIGHTITA,
+    PBSpecies::ORBEETLE    => PBItems::ORBEETLEITA,
+    PBSpecies::DREDNAW     => PBItems::DREDNAWITA,
+    PBSpecies::COALOSSAL   => PBItems::COALOSSALITA,
+    PBSpecies::APPLETUN    => PBItems::FLAPPLETUNITA,
+    PBSpecies::FLAPPLE     => PBItems::FLAPPLETUNITA,
+    PBSpecies::SANDACONDA  => PBItems::SANDACONDITA,
+    PBSpecies::TOXTRICITY  => PBItems::TOXTRICITITA,
+    PBSpecies::CENTISKORCH => PBItems::CENTISKORCHITA,
+    PBSpecies::HATTERENE   => PBItems::HATTERENITA,
+    PBSpecies::GRIMMSNARL  => PBItems::GRIMMSNARLITA,
+    PBSpecies::ALCREMIE    => PBItems::ALCREMITA,
+    PBSpecies::COPPERAJAH  => PBItems::COPPERAJITA,
+    PBSpecies::DURALUDON   => PBItems::DURALUDONITA,
+    PBSpecies::ABOMASNOW   => PBItems::ABOMASNOWITA,
+  }
+
 end
 
 ######################### Do not edit anything below here.
@@ -207,9 +266,7 @@ class PokemonGlobalMetadata
 end
 
 def random_moves_on?
-  return false unless $game_switches[RandomizedChallenge::Switch]
-
-  $PokemonGlobal.enable_random_moves ? true : false
+  random_enabled? && random_moves_on? ? true : false
 end
 
 def toggle_random_moves
@@ -238,9 +295,7 @@ def toggle_random_tm_compat
 end
 
 def random_evos_on?
-  return false unless $game_switches[RandomizedChallenge::Switch]
-
-  $PokemonGlobal.random_evos ? true : false
+  random_enabled? && $PokemonGlobal.random_evos ? true : false
 end
 
 def toggle_random_evos
@@ -397,9 +452,7 @@ def enable_random
   if $PokemonGlobal.progressive_random.nil?
     $PokemonGlobal.progressive_random = RandomizedChallenge::PROGRESSIVE_RANDOM_DEFAULT_VALUE
   end
-  if $PokemonGlobal.enable_random_tm_compat.nil?
-    $PokemonGlobal.enable_random_tm_compat = RandomizedChallenge::RANDOM_TM_COMPAT_DEFAULT_VALUE
-  end
+  $PokemonGlobal.enable_random_tm_compat = RandomizedChallenge::RANDOM_TM_COMPAT_DEFAULT_VALUE
   $PokemonGlobal.random_evos = RandomizedChallenge::RANDOM_EVOS_DEFAULT_VALUE
   $PokemonGlobal.random_evos_similar_bst = RandomizedChallenge::RANDOM_EVOS_SIMILAR_BST_DEFAULT_VALUE
   $PokemonGlobal.enable_random_types = RandomizedChallenge::RANDOM_TYPES_DEFAULT_VALUE
@@ -479,18 +532,37 @@ def not_in_allowed_bst_range?(bst)
   !bst.between?(min_bst_cap, max_bst_cap)
 end
 
-def random_species(evo = false, evo_bst_range = [])
+def pause_random
+  $game_switches[RandomizedChallenge::Switch] = false
+end
+
+def resume_random
+  $game_switches[RandomizedChallenge::Switch] = true
+end
+
+
+def random_species(evo = false, evo_bst_range = [], with_mega = false)
   if RandomizedChallenge::WHITELISTEDPOKEMON.empty?
     species = rand(PBSpecies.maxValue - 1) + 1
-    bst = bst_sum(species)
-    previous_species = pbGetPreviousForm(species)
-    $PokemonGlobal.random_gens = [] unless $PokemonGlobal.random_gens
-    while RandomizedChallenge::BLACKLISTEDPOKEMON.include?(species) || not_in_allowed_bst_range?(bst) || ($PokemonGlobal.random_gens.length > 0 && !pokemon_in_gen_range?(species) && !pokemon_in_gen_range?(previous_species)) || (evo && evo_bst_range.length > 0 && !bst.between?(
-      evo_bst_range[0], evo_bst_range[1]
-    ))
-      species = rand(PBSpecies.maxValue - 1) + 1
-      previous_species = pbGetPreviousForm(species)
+    if with_mega && RandomizedChallenge::MEGAS_RANDOMIZE_TO_MEGAS
+      pause_random
+      pokemon = PokeBattle_Pokemon.new(species, 5)
+      while RandomizedChallenge::BLACKLISTEDPOKEMON.include?(species) || !pokemon.hasMegaForm?
+        species = rand(PBSpecies.maxValue - 1) + 1
+        pokemon = PokeBattle_Pokemon.new(species, 5)
+      end
+      resume_random
+    else
       bst = bst_sum(species)
+      previous_species = pbGetPreviousForm(species)
+      $PokemonGlobal.random_gens = [] unless $PokemonGlobal.random_gens
+      while RandomizedChallenge::BLACKLISTEDPOKEMON.include?(species) || not_in_allowed_bst_range?(bst) || ($PokemonGlobal.random_gens.length > 0 && !pokemon_in_gen_range?(species) && !pokemon_in_gen_range?(previous_species)) || (evo && evo_bst_range.length > 0 && !bst.between?(
+        evo_bst_range[0], evo_bst_range[1]
+      ))
+        species = rand(PBSpecies.maxValue - 1) + 1
+        previous_species = pbGetPreviousForm(species)
+        bst = bst_sum(species)
+      end
     end
   else
     species = RandomizedChallenge::WHITELISTEDPOKEMON.shuffle[0]
@@ -499,7 +571,7 @@ def random_species(evo = false, evo_bst_range = [])
 end
 
 def random_enabled?
-  $game_switches[RandomizedChallenge::Switch] ? true : false
+  $game_switches && $game_switches[RandomizedChallenge::Switch] ? true : false
 end
 
 def random_evo(_current_pokemon, expected_evo)
@@ -539,6 +611,14 @@ def bst_sum(species)
 end
 
 class PokeBattle_Pokemon
+  def random_form
+    form = rand(3)
+    mega_form = MultipleForms.call("getMegaForm", self)
+    primal_form = MultipleForms.call("getPrimalForm", self)
+    form = 0 if form == mega_form || form == primal_form
+    return form
+  end
+
   # Creación de un objeto Pokémon nuevo.
   #    species   - Especie del Pokémon.
   #    level     - Nivel del Pokémon.
@@ -546,9 +626,7 @@ class PokeBattle_Pokemon
   #    withMoves - Si está en false, este Pokémon no tendrá movimientos.
   alias randomized_init initialize
   def initialize(species, level, player = nil, withMoves = true)
-    unless $game_switches && $game_switches[RandomizedChallenge::Switch]
-      return randomized_init(species, level, player, withMoves)
-    end
+    return randomized_init(species, level, player, withMoves) unless random_enabled?
 
     species = random_species
     species = getID(PBSpecies, species) if species.is_a?(String) || species.is_a?(Symbol)
@@ -606,6 +684,7 @@ class PokeBattle_Pokemon
     @moves = []
     self.ballused = 0
     self.level = level
+    self.form = random_form
     calcStats
     @hp = @totalhp
     if $game_map
@@ -677,7 +756,7 @@ class PokeBattle_Pokemon
       random_type1 = rand(PBTypes.maxValue - 1) + 1 while RandomizedChallenge::INVALID_TYPES.include?(random_type1)
       $PokemonGlobal.random_types[@species] = [random_type1]
     end
-    
+
     $PokemonGlobal.random_types[@species][0]
   end
 
@@ -701,33 +780,21 @@ class PokeBattle_Pokemon
 
     $PokemonGlobal.random_types[@species][1]
   end
+
   def isCompatibleWithMove?(move)
-    if !$PokemonGlobal.enable_random_tm_compat || ($game_switches && !$game_switches[RandomizedChallenge::Switch])
-      return pbSpeciesCompatible?(species, move)
-    end
+    return pbSpeciesCompatible?(species, move) unless random_enabled? && random_tm_compat_on?
 
     # RAND TM
     $PokemonGlobal.tm_compatibility_random = {} unless $PokemonGlobal.tm_compatibility_random
-    if $PokemonGlobal.tm_compatibility_random && $PokemonGlobal.tm_compatibility_random[species] && $PokemonGlobal.tm_compatibility_random[species].detect do |item|
-         item[0] == move
-       end
-      $PokemonGlobal.tm_compatibility_random[species].any? { |item| item[0] == move && item[1] == true }
-    elsif !$PokemonGlobal.tm_compatibility_random[species]
-      $PokemonGlobal.tm_compatibility_random[species] = []
-      if rand(2) == 1
-        $PokemonGlobal.tm_compatibility_random[species].push([move, true])
-        true
-      else
-        $PokemonGlobal.tm_compatibility_random[species].push([move, false])
-        false
-      end
-    elsif rand(2) == 1
-      $PokemonGlobal.tm_compatibility_random[species].push([move, true])
-      true
-    else
-      $PokemonGlobal.tm_compatibility_random[species].push([move, false])
-      false
-    end
+    $PokemonGlobal.tm_compatibility_random[species] = [] unless $PokemonGlobal.tm_compatibility_random[species]
+    species_compatibility = $PokemonGlobal.tm_compatibility_random[species]
+
+    existing_compatibility = species_compatibility.find { |item| item[0] == move }
+    return existing_compatibility[1] if existing_compatibility
+
+    is_compatible = rand(2) == 0
+    $PokemonGlobal.tm_compatibility_random[species] << [move, is_compatible]
+    is_compatible
   end
 
   def ability_full_random(ret)
@@ -816,20 +883,44 @@ class PokeBattle_Pokemon
   end
 end
 
-alias pbCheckEvolutionExRandom pbCheckEvolutionEx
 def pbCheckEvolutionEx(pokemon)
-  return pbCheckEvolutionExRandom(pokemon) unless random_evos_on?
   return -1 if pokemon.species <= 0 || pokemon.isEgg?
   return -1 if isConst?(pokemon.species, PBSpecies, :PICHU) && pokemon.form == 1
-  return -1 if isConst?(pokemon.item, PBItems, :EVERSTONE) &&
-               !isConst?(pokemon.species, PBSpecies, :KADABRA)
-
+  return -1 if isConst?(pokemon.item, PBItems, :EVERSTONE)
   ret = -1
   pbGetEvolvedFormData(pokemon.species).each do |form|
-    ret = yield pokemon, form[0], form[1], random_evo(pokemon, form[2]) # form[2]
+    if random_enabled? && random_evos_on?
+      ret = yield pokemon, form[0], form[1], random_evo(pokemon, form[2]) # form[2]
+    else
+      ret = yield pokemon, form[0], form[1], form[2]
+    end
     break if ret > 0
   end
   ret
+end
+
+alias pbLoadTrainer_random pbLoadTrainer
+def pbLoadTrainer(trainerid,trainername,partyid=0)
+  trainer = pbLoadTrainer_random(trainerid,trainername,partyid)
+  return trainer unless random_enabled?
+
+  return trainer if trainer.nil?
+
+  party = trainer[2]
+  party.each do |pkmn|
+    if pbIsMegaStone?(pkmn.item) && pkmn.hasMegaForm?
+      megastone = RandomizedChallenge::POKEMON_MEGA_STONES.fetch(pkmn.species)
+      pkmn.item megastone.is_a?(Array) ? megastone[rand(megastone.length)] : megastone
+    elsif pbIsMegaStone?(pkmn.item)
+      new_species = random_species(false, [], true)
+      pkmn.setItem(RandomizedChallenge::POKEMON_MEGA_STONES.fetch(new_species))
+      pkmn.species = new_species
+      pokemon.resetMoves
+      pokemon.calcStats
+    end
+  end
+
+  trainer
 end
 
 ################################################################################
