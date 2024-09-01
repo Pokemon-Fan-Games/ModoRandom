@@ -397,15 +397,12 @@ def pbLoadTrainer(tr_type, tr_name, tr_version = 0)
   trainer = pbLoadTrainer_random(tr_type, tr_name, tr_version)
   return trainer if trainer.nil?
 
-  changed_items = {}
   trainer.party.map! do |pkmn|
     species_data = GameData::Species.get(pkmn.species)
     if pkmn.item.is_mega_stone? && species_data.mega_stone
       pkmn.item = species_data.mega_stone
-      changed_items[pkmn.item] = species_data.mega_stone
     elsif pkmn.item.is_mega_stone? && !species_data.mega_stone
       new_species = random_species(true)
-      changed_items[pkmn.item] = species_data.mega_stone
       pause_random
       pkmn = Pokemon.new(new_species, pkmn.level, pkmn.owner)
       resume_random
@@ -413,12 +410,6 @@ def pbLoadTrainer(tr_type, tr_name, tr_version = 0)
       pkmn.reset_moves
     end
     pkmn
-  end
-
-  unless changed_items.empty?
-    trainer.items.map! do |item|
-      changed_items[item] || item
-    end
   end
 
   trainer
