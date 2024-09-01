@@ -130,13 +130,12 @@ end
 
 def enable_random
   return unless $game_switches
+
   $PokemonGlobal.initialize_random_params
   case RandomizedChallenge::RANDOM_ABILITY_METHOD
-  when :FULLRANDOM
+  when :FULLRANDOM, :MAPABILITIES
     $game_switches[RandomizedChallenge::ABILITY_RANDOMIZER_SWITCH] = true
-  when :MAPABILITIES
-    $game_switches[RandomizedChallenge::ABILITY_RANDOMIZER_SWITCH] = true
-    $game_switches[RandomizedChallenge::ABILITY_SWAP_RANDOMIZER_SWITCH] = true
+    $game_switches[RandomizedChallenge::ABILITY_SWAP_RANDOMIZER_SWITCH] = RandomizedChallenge::RANDOM_ABILITY_METHOD == :MAPABILITIES
   when :SAMEINEVOLUTION
     $game_switches[RandomizedChallenge::ABILITY_RANDOMIZER_SWITCH] = true
     $game_switches[RandomizedChallenge::ABILITY_SEMI_RANDOMIZER_SWITCH] = true
@@ -151,6 +150,14 @@ def disable_random
   $game_switches[RandomizedChallenge::ABILITY_SWAP_RANDOMIZER_SWITCH] = false
   $game_switches[RandomizedChallenge::ABILITY_SEMI_RANDOMIZER_SWITCH] = false
   $PokemonGlobal.disable_random_params
+end
+
+def pause_random
+  $game_switches[RandomizedChallenge::SWITCH] = false
+end
+
+def resume_random
+  $game_switches[RandomizedChallenge::SWITCH] = true
 end
 
 def random_enabled?
@@ -190,8 +197,12 @@ def min_bst_cap
   $player.badge_count > max_key ? min_caps[max_key] : min_caps.fetch($player.badge_count, 0)
 end
 
-def random_species
+def random_species(with_mega = false)
   species_list = GameData::Species.keys
+  if with_mega
+    species_list = species_list.select { |s| GameData::Species.get(s).mega_stone }
+    return species_list[rand(species_list.length - 1) + 1]
+  end
   species = species_list[rand(species_list.length - 1) + 1]
   GameData::Species.get(species)
 end
@@ -227,16 +238,14 @@ class Pokemon
   end
 
   def random_types
-    types = []
+    types = Set.new
     current_types = GameData::Species.get(@species).types
 
-    (0...current_types.length).each do |_|
-      type = GameData::Type.keys[rand(GameData::Type.count - 1) + 1]
-      next if RandomizedChallenge::INVALID_TYPES.include?(type) || types.include?(type)
-
-      types << type
+    until types.size == current_types.size
+      type = GameData::Type.keys[rand(GameData::Type.count)]
+      types.add(type) unless RandomizedChallenge::INVALID_TYPES.include?(type)
     end
-    types
+    types.to_a
   end
 
   alias randomized_types types
@@ -375,4 +384,42 @@ def generate_random_starters
   RandomizedChallenge::RANDOM_STARTER_VARIABLES.each_with_index do |var, i|
     $game_variables[var] = starters[i]
   end
+end
+
+
+# ********************************************************
+# MEGAS RANDOMIZE TO MEGAS
+# ********************************************************
+alias pbLoadTrainer_random pbLoadTrainer
+def pbLoadTrainer(tr_type, tr_name, tr_version = 0)
+  return pbLoadTrainer_random(tr_type, tr_name, tr_version) unless random_enabled? && RandomizedChallenge::MEGAS_RANDOMIZE_TO_MEGAS
+
+  trainer = pbLoadTrainer_random(tr_type, tr_name, tr_version)
+  return trainer if trainer.nil?
+
+  changed_items = {}
+  trainer.party.map! do |pkmn|
+    species_data = GameData::Species.get(pkmn.species)
+    if pkmn.item.is_mega_stone? && species_data.mega_stone
+      pkmn.item = species_data.mega_stone
+      changed_items[pkmn.item] = species_data.mega_stone
+    elsif pkmn.item.is_mega_stone? && !species_data.mega_stone
+      new_species = random_species(true)
+      changed_items[pkmn.item] = species_data.mega_stone
+      pause_random
+      pkmn = Pokemon.new(new_species, pkmn.level, pkmn.owner)
+      resume_random
+      pkmn.item = species_data.mega_stone
+      pkmn.reset_moves
+    end
+    pkmn
+  end
+
+  unless changed_items.empty?
+    trainer.items.map! do |item|
+      changed_items[item] || item
+    end
+  end
+
+  trainer
 end

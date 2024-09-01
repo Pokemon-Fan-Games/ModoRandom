@@ -22,8 +22,7 @@ end
 module RandomizedChallenge
   def self.item
     items = GameData::Item.keys # Get all item IDs
-    random_item_id = items.sample      # Randomly select an item ID
-    GameData::Item.get(random_item_id) # Return the item object
+    GameData::Item.get(items.sample) # Return the item object
   end
 
   def self.random_tm
