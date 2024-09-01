@@ -41,7 +41,7 @@ module RandomizedChallenge::Ability
   # Load all randomized abilities
   #-----------------------------------------------------------------------------
   def self.get_randomized_data
-    $randomized_data = {} unless $randomized_data
+    $randomized_data ||= {}
 
     unless $randomized_data[:abilities].is_a?(Hash)
       $randomized_data[:abilities] = {}
@@ -124,7 +124,7 @@ module RandomizedChallenge::Ability
         end
       end
     end
-    return $randomized_data[:abilities]
+    $randomized_data[:abilities]
   end
   #-----------------------------------------------------------------------------
   # Reset randomized data
@@ -164,14 +164,15 @@ module GameData
     def get_first_evo
       prev = GameData::Species.get(@id).get_previous_evo
       return @id if prev == @id
-      return GameData::Species.get(prev).get_previous_evo
+
+      GameData::Species.get(prev).get_previous_evo
     end
 
     # utility function to get the previous species in the evolutionary line
     def get_previous_evo
       return @id if @evolutions.empty?
 
-      @evolutions.each { |evo| return GameData::Species.get_species_form(evo[0], @form).id if evo[3] }   # Get prevolution
+      @evolutions.each { |evo| return GameData::Species.get_species_form(evo[0], @form).id if evo[3] } # Get prevolution
       @id
     end
 
