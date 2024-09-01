@@ -20,50 +20,45 @@ def pbReceiveItem(item, quantity = 1)
 end
 
 module RandomizedChallenge
-  def self.item
+  def self.random_item(ignore_exclusions = false, no_tm = false)
     items = GameData::Item.keys # Get all item IDs
-    GameData::Item.get(items.sample) # Return the item object
+    item = GameData::Item.get(items.sample) # Return the item object
+    if !ignore_exclusions && excluded_item?(rand_item)
+      item = GameData::Item.get(items.sample) while excluded_item?(item) || (item.is_machine? && no_tm)
+    end
+    item
   end
 
-  def self.random_tm
-    loop do
-      tm = item # Calling the item method defined above
-      return tm if tm.is_machine? && !$bag.has?(tm)
+  def self.random_tm(check_allow_list = true, allow_duplicates = RandomizedChallenge::ALLOW_DUPLICATE_TMS)
+    if check_allow_list
+      random_tms = RandomizedChallenge::MTLIST_RANDOM.shuffle
+      return random_tms.find { |tm_id| !$bag.has?(GameData::Item.get(tm_id)) }
     end
-  end
-
-  def self.random_item
-    loop do
-      item = item() # Calling the item method defined above
-      next if excluded_item?(item)
-
-      return item
-    end
+    tm = random_item
+    tm = random_item until tm.is_machine? && (allow_duplicates || !$bag.has?(tm))
+    tm
   end
 
   def self.determine_random_item(original_item)
     return original_item if unrandomizable_item?(original_item)
 
-    if GameData::Item.get(original_item).is_machine? && RandomizedChallenge::MT_GET_RANDOMIZED_TO_ANOTHER_MT
-      return random_tm if RandomizedChallenge::MTLIST_RANDOM.empty?
+    item = if GameData::Item.get(original_item).is_machine? && RandomizedChallenge::MT_GET_RANDOMIZED_TO_ANOTHER_MT
+             random_tm(!RandomizedChallenge::MTLIST_RANDOM.empty?)
+           else
+             random_item
+           end
 
-      random_tms = RandomizedChallenge::MTLIST_RANDOM.shuffle
-      random_tms.each do |tm_id|
-        tm_item = GameData::Item.get(tm_id)
-        return tm_item unless $bag.has?(tm_item)
-      end
-    else
-      random_item = random_item()
-      return random_item unless random_item.is_machine? && $bag.has?(random_item)
+    return random_item(false, true) if !item && GameData::Item.get(original_item).is_machine?
+    return item unless item.is_machine? && $bag.has?(item)
+
+    if RandomizedChallenge::MTLIST_RANDOM.empty? && item.is_machine?
+      item = random_tm(false)
+    elsif !RandomizedChallenge::MTLIST_RANDOM.empty? && item.is_machine?
+      item = random_tm(true)
+      item ||= random_item(false, true)
     end
 
-    random_tms = RandomizedChallenge::MTLIST_RANDOM.shuffle
-    random_tms.each do |tm_id|
-      tm_item = GameData::Item.get(tm_id)
-      return tm_item unless $bag.has?(tm_item)
-    end
-
-    random_item
+    item
   end
 
   def self.unrandomizable_item?(item)

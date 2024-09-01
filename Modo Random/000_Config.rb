@@ -168,6 +168,9 @@ module RandomizedChallenge
     :TM91, :TM92, :TM93, :TM94, :TM95, :TM96, :TM97, :TM98, :TM99, :TM100
   ]
 
+  # Permitir que salgan MTs que el jugador ya tiene en los objetos random.
+  ALLOW_DUPLICATE_TMS = false
+
   #********************************************************
   # TIPOS RANDOMIZADAS
   #********************************************************
