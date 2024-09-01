@@ -40,7 +40,7 @@ module GameData
     end
 
     def ohko?
-      @flags.each { |flag| return true if flag.start_with?("OHKO") }
+      @flags.each { |flag| return true if flag.downcase.start_with?("ohko") }
       false
     end
   end
