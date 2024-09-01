@@ -38,7 +38,7 @@ module RandomizedChallenge
   # ID del Interruptor/Switch para randomizar a los Pokémon. En caso
   # de estar en ON, todos los Pokémon del juego sin excepción serán
   # randomizados, con las restricciones de las opciones siguientes.
-  Switch = 60
+  SWITCH = 60
 
   # VARIABLES POKEMON INICIALES
   # La posicion 1 es la de la primera variable, la 2 la de la segunda, etc.
@@ -56,7 +56,6 @@ module RandomizedChallenge
 
   # BANNEAR MOVIMIENTOS OHKO
   BAN_OHKO_MOVES = true
-
 
   # RANDOMIZAR COMPATIBILIDAD DE LAS MTs
   # Si quieres que el aprendizaje de MTs sea aleatorio.
@@ -77,25 +76,27 @@ module RandomizedChallenge
   # Si tanto este flag como el de arriba estan en false, las evoluciones random podrán ser cualquier pokémon
   # Esto puede beneficiarlos o perjudicarlos, ya que tu pichu podria evolucionar en un Palkia, pero tu Charmander podria evolucionar en un Weedle
   RANDOM_EVOLUTIONS_RESPECT_RESTRICTIONS = false
-  
+
+  # Las megas de los entrenadores se randomizan por otra mega.
+  MEGAS_RANDOMIZE_TO_MEGAS = true
 
   #********************************************************
   # RESTRICCIONES DEL RANDOMIZADO
   #********************************************************
-  
+
   # Pokémon que no pueden salir en el modo Random. Añade aquí los que no quieres que salgan
   # con el mismo formato de los que ya aparecen.
   BLACKLISTED_POKEMON = [:MEW, :ARCEUS]
-  
+
   # Lista de los únicos Pokémon que pueden aparecer en el modo Random. Si la dejas VACÍA,
   # aparecerán todos los Pokémon del juego SALVO los que añadas a la lista que hay
   # encima de esta, BLACKLISTED_POKEMON.
   WHITELISTED_POKEMON = []
-  
+
   # Lista de movimientos que no pueden aparecer en el modo Random.
   # Debes añadirlos con el nombre interno que aparece en el PBS moves.txt.
   MOVEBLACKLIST=[:CHATTER, :DIG, :TELEPORT, :SONICBOOM, :DRAGONRAGE, :STRUGGLE]
-  
+
   # Lista de posibles Pokémon que aparecerán como Pokémon Iniciales.
   RANDOM_STARTERS_LIST = [
     :BULBASAUR, :CHARMANDER, :SQUIRTLE, :PIDGEY, :NIDORANmA, :NIDORANfE, :ZUBAT, :MANKEY, :POLIWAG, :ABRA, :MACHOP, :BELLSPROUT, :GEODUDE,
@@ -108,12 +109,10 @@ module RandomizedChallenge
     :FRIGIBAX
   ]
 
-
-
   #********************************************************
   # HABILIDADES RANDOMIZADAS
   #********************************************************
-  
+
   # TIPO DE RANDOMIZADO DE HABILIDADES
   # Definir el tipo de randomizado de habilidades. Hay tres opciones:
   #   :FULLRANDOM      - Todas las habilidades serán aleatorias.
@@ -139,12 +138,10 @@ module RandomizedChallenge
   ABILITY_SEMI_RANDOMIZER_SWITCH = 62
   ABILITY_SWAP_RANDOMIZER_SWITCH = 63
 
-
-
   #********************************************************
   # OBJETOS RANDOMIZADAS
   #********************************************************
-  
+
   # Lista de objetos que no quieres que aparezcan entre los objetos Random.
   ITEM_BLACK_LIST = []
 
@@ -177,5 +174,4 @@ module RandomizedChallenge
 
   RANDOM_TYPES_DEFAULT_VALUE = true
   INVALID_TYPES = [:QMARKS]
-
 end

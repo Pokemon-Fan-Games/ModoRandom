@@ -142,11 +142,11 @@ def enable_random
     $game_switches[RandomizedChallenge::ABILITY_SEMI_RANDOMIZER_SWITCH] = true
   end
   generate_random_starters
-  $game_switches[RandomizedChallenge::Switch] = true
+  $game_switches[RandomizedChallenge::SWITCH] = true
 end
 
 def disable_random
-  $game_switches[RandomizedChallenge::Switch] = false
+  $game_switches[RandomizedChallenge::SWITCH] = false
   $game_switches[RandomizedChallenge::ABILITY_RANDOMIZER_SWITCH] = false
   $game_switches[RandomizedChallenge::ABILITY_SWAP_RANDOMIZER_SWITCH] = false
   $game_switches[RandomizedChallenge::ABILITY_SEMI_RANDOMIZER_SWITCH] = false
@@ -154,7 +154,7 @@ def disable_random
 end
 
 def random_enabled?
-  $game_switches && $game_switches[RandomizedChallenge::Switch]
+  $game_switches && $game_switches[RandomizedChallenge::SWITCH]
 end
 
 # BST máximo y mínimo de los Pokémon del Randomizado en base a cada medalla
@@ -194,22 +194,15 @@ def random_species
   species_list = GameData::Species.keys
   species = species_list[rand(species_list.length - 1) + 1]
   GameData::Species.get(species)
-  # species_num = rand(GameData::Species.species_count - 1) + 1
-  # count = 1
-  # GameData::Species.each_species do |species|
-  #   return species if count == species_num
-
-  #   count += 1
-  # end
 end
 
 def valid_pokemon?(species, ignore_bst = false)
   bst = species.base_stats.values.sum
   previous_species = GameData::Species.get(species.get_previous_species)
-  species && !RandomizedChallenge::BLACKLISTED_POKEMON.include?(species.species) &&
-    (ignore_bst || valid_bst?(bst)) && ($PokemonGlobal.random_gens.empty? || (!$PokemonGlobal.random_gens.empty? &&
-                                                                                $PokemonGlobal.random_gens.include?(species.generation) &&
-                                                                                 $PokemonGlobal.random_gens.include?(previous_species.generation)))
+  valid_bst = ignore_bst || valid_bst?(bst)
+  blacklisted = RandomizedChallenge::BLACKLISTED_POKEMON.include?(species)
+  valid_gen = $PokemonGlobal.random_gens.empty? || $PokemonGlobal.random_gens.include?(species.generation) || $PokemonGlobal.random_gens.include?(previous_species.generation)
+  species && !blacklisted && valid_bst && valid_gen
 end
 
 def valid_bst?(bst)
@@ -262,12 +255,6 @@ class Pokemon
     moves = GameData::Move.keys
     move = moves[rand(moves.length - 1) + 1]
     GameData::Move.get(move)
-    # count = 1
-    # GameData::Move.each do |move|
-    #   return move if count == move_num
-
-    #   count += 1
-    # end
   end
 
   def invalid_move?(move, move_data)
@@ -282,9 +269,9 @@ class Pokemon
       move_data = GameData::Move.get(move.id)
 
       if badge_count < 3
-        break if move_data.display_real_damage <= 70 && !invalid_move?(move, move_data)
+        break unless move_data.display_real_damage > 70 || invalid_move?(move, move_data)
       elsif badge_count >= 6
-        break if move_data.display_real_damage >= 55 && !invalid_move?(move, move_data)
+        break unless move_data.display_real_damage < 55 || invalid_move?(move, move_data)
       else
         break unless invalid_move?(move, move_data)
       end
@@ -324,7 +311,7 @@ class Pokemon
     return existing_compatibility[1] if existing_compatibility
 
     is_compatible = rand(2).zero?
-    species_compatibility << [move_id, is_compatible]
+    $PokemonGlobal.tm_compatibility_random[species] << [move_id, is_compatible]
     is_compatible
   end
 
@@ -372,6 +359,8 @@ class PokemonEvolutionScene
     @pokemon.level = previous_level if random_evolutions_on? && @pokemon.level != previous_level
   end
 end
+
+# TODO: Agregar logica para que las megas se randomicen por otras megas
 
 # ********************************************************
 # STARTERS RANDOMIZADOS CON DOS ETAPAS EVOLUTIVAS

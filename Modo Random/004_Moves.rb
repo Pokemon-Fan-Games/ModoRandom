@@ -208,7 +208,8 @@ module GameData
     end
 
     def ohko?
-      @flags.include?("OHKO") || @flags.include?("OHKOIce") || @flags.include?("OHKOHitsUndergroundTarget")
+      @flags.each { |flag| return true if flag.start_with?("OHKO") }
+      false
     end
   end
 end

@@ -10,12 +10,11 @@ class Game_Switches
   def []=(switch_id, value)
     old_value = self[switch_id]
     ret = __randomize__set_switch(switch_id, value)
-    if (switch_id == RandomizedChallenge::ABILITY_RANDOMIZER_SWITCH ||
-      switch_id == RandomizedChallenge::ABILITY_SEMI_RANDOMIZER_SWITCH) &&
-      value != old_value
+    if [RandomizedChallenge::ABILITY_RANDOMIZER_SWITCH,
+        RandomizedChallenge::ABILITY_SEMI_RANDOMIZER_SWITCH].include?(switch_id) && value != old_value
       RandomizedChallenge::Ability.reset_randomized_data
     end
-    return ret
+    ret
   end
 end
 
@@ -30,18 +29,21 @@ module RandomizedChallenge::Ability
   def self.get(key, default, hidden = false)
     # Load default data when switch is off
     return default if !$game_switches || !$game_switches[RandomizedChallenge::ABILITY_RANDOMIZER_SWITCH]
+
     # Load randomized data if exists
     all_abils = self.get_randomized_data
     ret = all_abils[key]
     return ret[hidden ? :hidden : :base] if GameData::Species.exists?(key) && ret.is_a?(Hash)
-    return default
+
+    default
   end
   #-----------------------------------------------------------------------------
   # Load all randomized abilities
   #-----------------------------------------------------------------------------
   def self.get_randomized_data
-    $randomized_data = {} if !$randomized_data
-    if !$randomized_data[:abilities].is_a?(Hash)
+    $randomized_data = {} unless $randomized_data
+
+    unless $randomized_data[:abilities].is_a?(Hash)
       $randomized_data[:abilities] = {}
       keys = GameData::Ability::DATA.keys.clone
       shuffle_keys = keys.clone
@@ -130,7 +132,7 @@ module RandomizedChallenge::Ability
   def self.reset_randomized_data
     # Clear randomized data
     $randomized_data[:abilities] = nil
-    self.get_randomized_data
+    get_randomized_data
     # Unrandomize / Rerandomize player Pokemon abilities
     pbEachPokemon do |pkmn, _|
       old_idx = pkmn.ability_index
@@ -141,25 +143,22 @@ module RandomizedChallenge::Ability
   #-----------------------------------------------------------------------------
 end
 
-
 #-------------------------------------------------------------------------------
 # Overriding Species GameData to load new abilities
 #-------------------------------------------------------------------------------
 module GameData
   class Species
-
     # Get abilities for species with Randomizer overrides
     def abilities; return RandomizedChallenge::Ability.get(@id, @abilities); end
 
     # Get hidden abilities for species with Randomizer overrides
     def hidden_abilities; return RandomizedChallenge::Ability.get(@id, @hidden_abilities, true); end
-    
+
     # Get abilities for species without Randomizer overrides
     def real_abilities; return @abilities; end
 
     # Get hidden abilities for species without Randomizer overrides
     def real_hidden_abilities; return @hidden_abilities; end
-
 
     # utility function to get the first species in the evolutionary line
     def get_first_evo
@@ -170,32 +169,32 @@ module GameData
 
     # utility function to get the previous species in the evolutionary line
     def get_previous_evo
-      return @id if @evolutions.length == 0
+      return @id if @evolutions.empty?
+
       @evolutions.each { |evo| return GameData::Species.get_species_form(evo[0], @form).id if evo[3] }   # Get prevolution
-      return @id
+      @id
     end
 
     # utility function to get every evolution after defined species
     def get_next_evos
       evo = GameData::Species.get(@id).get_evolutions
       all = []
-      return [@id] if evo.length < 1
+      return [@id] if evo.empty?
+
       evo.each do |arr|
         all += [GameData::Species.get_species_form(arr[0], @form).id]
         all += GameData::Species.get_species_form(arr[0], @form).get_next_evos
       end
-      return all.uniq
+      all.uniq
     end
 
     # utility function to get all species inside an evolutionary line
     def get_evolutionary_line
       sp = get_first_evo
-      return ([sp] + GameData::Species.get(sp).get_next_evos).uniq
+      ([sp] + GameData::Species.get(sp).get_next_evos).uniq
     end
-
   end
 end
-
 
 #-------------------------------------------------------------------------------
 # Save Data for randomized data, so it doesn't change on save reload
@@ -203,5 +202,5 @@ end
 SaveData.register(:randomized_data) do
   save_value { $randomized_data }
   load_value { |value| $randomized_data = value }
-  new_game_value { Hash.new }
+  new_game_value { {} }
 end
