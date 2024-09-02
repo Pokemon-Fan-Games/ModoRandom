@@ -27,6 +27,8 @@ class PokemonGlobalMetadata
     @random_types = {}
     @tm_compatibility_random = {}
     @banohko = RandomizedChallenge::BAN_OHKO_MOVES
+    @randomize_items = RandomizedChallenge::RANDOMIZE_ITEMS
+    @randomize_held_items = RandomizedChallenge::RANDOMIZE_HELD_ITEMS
   end
 
   def disable_random_params
@@ -39,6 +41,8 @@ class PokemonGlobalMetadata
     @enable_random_types = false
     @random_types = {}
     @banohko = false
+    @randomize_items = false
+    @randomize_held_items = false
   end
 end
 
@@ -126,6 +130,22 @@ end
 
 def toggle_ban_ohko
   $PokemonGlobal.banohko = !$PokemonGlobal.banohko
+end
+
+def randomize_items?
+  $PokemonGlobal.randomize_items ? true : false
+end
+
+def toggle_randomize_items
+  $PokemonGlobal.randomize_items = !$PokemonGlobal.randomize_items
+end
+
+def randomize_held_items?
+  $PokemonGlobal.randomize_held_items ? true : false
+end
+
+def toggle_randomize_held_items
+  $PokemonGlobal.randomize_held_items = !$PokemonGlobal.randomize_held_items
 end
 
 def enable_random

@@ -142,8 +142,17 @@ module RandomizedChallenge
   # OBJETOS RANDOMIZADAS
   #********************************************************
 
+  # Randomize Items Gift and Ball
+  RANDOMIZE_ITEMS = true
+
+  # Randomizar objetos equipados en salvajes
+  RANDOMIZE_HELD_ITEMS = false
+
   # Lista de objetos que no quieres que aparezcan entre los objetos Random.
   ITEM_BLACK_LIST = []
+
+  # Lista de objetos que no podrán salir como objetos equipados en salvajes
+  HELD_ITEM_BLACK_LIST = []
 
   # Objetos que no se randomizarán si son dados en algun evento.
   UNRANDOMIZABLE_ITEMS = []

@@ -5,7 +5,7 @@
 #-------------------------------------------------------------------------------
 alias pbItemBall_random pbItemBall
 def pbItemBall(item, quantity = 1)
-  return pbItemBall_random(item, quantity) unless random_enabled?
+  return pbItemBall_random(item, quantity) unless random_enabled? && randomize_items?
 
   random_item = RandomizedChallenge.determine_random_item(item)
   pbItemBall_random(random_item, quantity)
@@ -13,18 +13,28 @@ end
 
 alias pbReceiveItem_random pbReceiveItem
 def pbReceiveItem(item, quantity = 1)
-  return pbReceiveItem_random(item, quantity) unless random_enabled?
+  return pbReceiveItem_random(item, quantity) unless random_enabled? && randomize_items?
 
   random_item = RandomizedChallenge.determine_random_item(item)
   pbReceiveItem_random(random_item, quantity)
 end
 
+class Pokemon
+  alias wildHoldItems_randomized wildHoldItems
+  def wildHoldItems
+    items = wildHoldItems_randomized
+    return items unless random_enabled? && randomize_held_items?
+
+    items.map { |item| RandomizedChallenge.determine_random_item(item, true, true) }
+  end
+end
+
 module RandomizedChallenge
-  def self.random_item(ignore_exclusions = false, no_tm = false)
+  def self.random_item(ignore_exclusions = false, no_tm = false, is_held_item = false)
     items = GameData::Item.keys # Get all item IDs
     item = GameData::Item.get(items.sample) # Return the item object
     if !ignore_exclusions && excluded_item?(rand_item)
-      item = GameData::Item.get(items.sample) while excluded_item?(item) || (item.is_machine? && no_tm)
+      item = GameData::Item.get(items.sample) while excluded_item?(item, is_held_item) || (item.is_machine? && no_tm)
     end
     item
   end
@@ -65,7 +75,7 @@ module RandomizedChallenge
     UNRANDOMIZABLE_ITEMS.include?(item) || GameData::Item.get(item).is_key_item?
   end
 
-  def self.excluded_item?(item)
-    ITEM_BLACK_LIST.include?(item.id) || GameData::Item.get(item.id).is_key_item?
+  def self.excluded_item?(item, is_held_item = false)
+    ITEM_BLACK_LIST.include?(item.id) || (is_held_item && HELD_ITEM_BLACK_LIST.include?(item.id)) || GameData::Item.get(item.id).is_key_item?
   end
 end
