@@ -16,10 +16,10 @@ module RandomizedChallenge
   # above will be selected.
 
   # Lista de movimientos baneados para el random
-  MOVEBLACKLIST = [PBMoves::ELECTROPALMAS, PBMoves::BURNUP, PBMoves::CHATTERI, PBMoves::DIG, PBMoves::TELEPORT, PBMoves::SONICBOOM,PBMoves::DRAGONRAGE,PBMoves::STRUGGLE]
+  MOVEBLACKLIST = []
 
   # Lista de habilidades baneados para el random
-  ABILITYBLACKLIST = [PBAbilities::MIRRORARMOR, PBAbilities::IMPOSTER, PBAbilities::PLUS, PBAbilities::MINUS, PBAbilities::ZENMODE, PBAbilities::WONDERGUARD, PBAbilities::STANCECHANGE, PBAbilities::DISGUISE, PBAbilities::FORECAST, PBAbilities::ILLUSION, PBAbilities::HARVEST, PBAbilities::MULTITYPE, PBAbilities::HONEYGATHER]
+  ABILITYBLACKLIST = []
 
   # LISTA DE STARTERS PARA EL RANDOM
   RANDOM_STARTER_LIST = [
