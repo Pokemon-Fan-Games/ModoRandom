@@ -19,14 +19,13 @@ def pbReceiveItem(item, quantity = 1)
   pbReceiveItem_random(random_item, quantity)
 end
 
-class Pokemon
-  alias wildHoldItems_randomized wildHoldItems
-  def wildHoldItems
-    items = wildHoldItems_randomized
-    return items unless random_enabled? && randomize_held_items?
+alias pbGenerateWildPokemon_randomized pbGenerateWildPokemon
+def pbGenerateWildPokemon(species, level, isRoamer = false)
+  return pbGenerateWildPokemon_randomized(species, level, isRoamer) unless random_enabled? && randomize_held_items?
 
-    items.map { |item| RandomizedChallenge.determine_random_item(item, true, true) }
-  end
+  wild_poke = pbGenerateWildPokemon_randomized(species, level, isRoamer)
+  wild_poke.item = RandomizedChallenge.determine_random_item(wild_poke.item, true, true) if wild_poke.item
+  wild_poke
 end
 
 module RandomizedChallenge
