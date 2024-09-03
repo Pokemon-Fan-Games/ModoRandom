@@ -70,3 +70,21 @@ module RandomizedChallenge
     self::ITEM_BLACK_LIST.include?(item) || pbIsKeyItem?(item)
   end
 end
+
+
+# Alias pbItemBall y pbReceiveItem para randomizar los objetos de los eventos
+module Kernel
+  class << self
+    alias pbItemBall_random pbItemBall
+    def pbItemBall(item,quantity=1)
+      item = RandomizedChallenge.determine_random_item(item) if random_enabled?
+      return pbItemBall_random(item, quantity)
+    end
+    
+    alias pbReceiveItem_random pbReceiveItem
+    def pbReceiveItem(item,quantity=1)
+      item = RandomizedChallenge.determine_random_item(item) if random_enabled?
+      return pbReceiveItem(item,quantity)
+    end
+  end
+end
