@@ -45,6 +45,12 @@ module RandomizedChallenge
       end
     else
       rand_item = random_item
+      # Workaround para cuando el PBS tiene huecos 
+      item_name = PBItems.getName(rand_item)
+      if !item_name || item_name == ""
+        return determine_random_item(original_item)
+      end
+      
       return rand_item unless pbIsMachine?(rand_item) && $PokemonBag.pbHasItem?(rand_item)
     end
 
@@ -61,6 +67,6 @@ module RandomizedChallenge
   end
 
   def self.excluded_item?(item)
-    self::ITEM_BLACK_LIST.include?(item.id) || pbIsKeyItem?(item)
+    self::ITEM_BLACK_LIST.include?(item) || pbIsKeyItem?(item)
   end
 end
