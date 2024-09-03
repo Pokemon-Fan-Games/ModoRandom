@@ -59,14 +59,7 @@ También se randomizarán los objetos pueden leer la sección [Objetos Random](#
 
 ### Objetos Random
 
-#### Nota importante
-
-- Para evitar overridear los metodos de Kernel.pbItemBall y Kernel.pbReceiveItem son requeridos los siguientes pasos manuales.
-  1. En el script `PField_Field` en la primer linea del método `def Kernel.pbItemBall` agregar la siguiente linea `item = RandomizedChallenge.determine_random_item(item) if random_enabled?`
-  2. En el script `PField_Field` en la primer linea del método `def Kernel.pbReceiveItem` agregar la siguiente linea `item = RandomizedChallenge.determine_random_item(item) if random_enabled?`
-
 - `ITEM_BLACK_LIST` es un listado para excluir objetos del randomizado
-
 - `MTLIST_RANDOM` Listado de MTs que pueden salir como objetos random, si la lista está vacía cualquier MT podrá salir en el modo random
 - `UNRANDOMIZABLE_ITEMS` Listado de objetos que no pueden ser randomizados, es decir si son dados en un evento no se randomizarán
 - `MT_GET_RANDOMIZED_TO_ANOTHER_MT` Las MTs dadas en un evento son randomizadas por otra MT que el jugador no tenga ya.
