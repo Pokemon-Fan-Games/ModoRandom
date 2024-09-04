@@ -771,51 +771,36 @@ class PokeBattle_Pokemon
   end
 
   def ability_full_random(ret)
+    # Initialize global variable if it doesn't exist
     $PokemonGlobal.random_abs_pokemon = {} unless $PokemonGlobal.random_abs_pokemon
-    different_abs = MultipleForms.hasFunction?(self, 'getAbilityList')
-    if !different_abs && $PokemonGlobal.random_abs_pokemon[@species] && $PokemonGlobal.random_abs_pokemon[@species][0]
-      return $PokemonGlobal.random_abs_pokemon[@species][0]
-    elsif different_abs && $PokemonGlobal.random_abs_pokemon[@species] && $PokemonGlobal.random_abs_pokemon[@species][form]
-      return $PokemonGlobal.random_abs_pokemon[@species][form]
-    end
-
     $PokemonGlobal.random_abs_pokemon[@species] = {} unless $PokemonGlobal.random_abs_pokemon[@species]
-    if !RandomizedChallenge::DIFFERENT_FORMS_HAVE_DIFFERENT_ABILITIES
-      $PokemonGlobal.random_abs_pokemon[@species][0] = []
-    else
-      if !different_abs
-        $PokemonGlobal.random_abs_pokemon[@species][0] = []
-      else
-        $PokemonGlobal.random_abs_pokemon[@species][form] = []
-      end
-    end
+
+    different_abs = MultipleForms.hasFunction?(self, 'getAbilityList')
+    form_index = different_abs && RandomizedChallenge::DIFFERENT_FORMS_HAVE_DIFFERENT_ABILITIES ? form : 0
+
+    # Return cached abilities if available
+    return $PokemonGlobal.random_abs_pokemon[@species][form_index] if $PokemonGlobal.random_abs_pokemon[@species][form_index]
+
+    # Initialize the abilities array for the species and form if not yet set
+    $PokemonGlobal.random_abs_pokemon[@species][form_index] = [] unless $PokemonGlobal.random_abs_pokemon[@species][form_index]
+
     (0...ret.length).each do |i|
-      new_ab = rand(PBAbilities.maxValue - 1) + 1
-      new_ab = rand(PBAbilities.maxValue - 1) + 1 while !new_ab || RandomizedChallenge::ABILITYBLACKLIST.include?(new_ab)
-      if RandomizedChallenge::DIFFERENT_FORMS_HAVE_DIFFERENT_ABILITIES && different_abs
-        $PokemonGlobal.random_abs_pokemon[@species][form] = [] unless $PokemonGlobal.random_abs_pokemon[@species][form]
-        $PokemonGlobal.random_abs_pokemon[@species][form].push([new_ab, i])
-        ret[i][0] = $PokemonGlobal.random_abs_pokemon[@species][form][ret[i][0]]
-      else
-        $PokemonGlobal.random_abs_pokemon[@species][0] = [] unless $PokemonGlobal.random_abs_pokemon[@species][0]
-        $PokemonGlobal.random_abs_pokemon[@species][0].push([new_ab, i])
-        ret[i][0] = $PokemonGlobal.random_abs_pokemon[@species][0][ret[i][0]]
-      end
+      new_ab = generate_random_ability
+      $PokemonGlobal.random_abs_pokemon[@species][form_index].push([new_ab, i])
+      ret[i][0] = new_ab # Update the ret array with the newly generated ability
     end
-    if RandomizedChallenge::DIFFERENT_FORMS_HAVE_DIFFERENT_ABILITIES && different_abs
-      $PokemonGlobal.random_abs_pokemon[@species][form]
-    else
-      $PokemonGlobal.random_abs_pokemon[@species][0]
-    end
+    $PokemonGlobal.random_abs_pokemon[@species][form_index] # Return the updated abilities list
+  end
+
+  def generate_random_ability
+    new_ab = rand(PBAbilities.maxValue - 1) + 1
+    new_ab = rand(PBAbilities.maxValue - 1) + 1 while !new_ab || RandomizedChallenge::ABILITYBLACKLIST.include?(new_ab)
+    new_ab
   end
 
   def ability_map(ret)
     (0...ret.length).each do |i|
-      unless $PokemonGlobal.ability_hash[ret[i][0]]
-        new_ab = rand(PBAbilities.maxValue - 1) + 1
-        new_ab = rand(PBAbilities.maxValue - 1) + 1 while RandomizedChallenge::ABILITYBLACKLIST.include?(new_ab) || !new_ab
-        $PokemonGlobal.ability_hash[ret[i][0]] = newAb
-      end
+      $PokemonGlobal.ability_hash[ret[i][0]] = generate_random_ability unless $PokemonGlobal.ability_hash[ret[i][0]]
       ret[i][0] = $PokemonGlobal.ability_hash[ret[i][0]]
     end
     ret
