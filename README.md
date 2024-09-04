@@ -175,7 +175,7 @@ Los valores por defecto para estas constantes son:
 En el evento de los iniciales se debe generar una nueva página con la condición de que el switch del random este activo
 
 1. En el evento hay que agregar una sentencia de tipo script con esta linea `SpeciesIntro.new(pbGet(803)).set_mark_as_seen(false).show` 803 es el id de la variable que se usa para guardar el primer inicial random, para el segundo inicial se usa la variable 804 y para el tercero 805, estas variables se pueden cambiar en la constante `STATERS_VARIABLES`
-3. Luego si el jugador confirma que quiere ese inicial
+2. Luego si el jugador confirma que quiere ese inicial
 
    1. Hay que desactivar el control switch del random
    2. Hay que agregar otra sentencia de tipo script con esta linea `pbAddPokemon(pbGet(803),5)` para que se le asigne el inicial random que se generó al activar el random y que el jugador no pueda reiniciar hasta que le salga el inicial que quiere
