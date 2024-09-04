@@ -205,7 +205,6 @@ module RandomizedChallenge
   #  PBSpecies::VENUSAUR    => PBItems::VENUSAURITE,
   #  PBSpecies::CHARIZARD   => [PBItems::CHARIZARDITEX, PBItems::CHARIZARDITEY],
   # }
-
 end
 
 ######################### Do not edit anything below here.
@@ -882,11 +881,11 @@ def pbCheckEvolutionEx(pokemon)
 end
 
 alias pbLoadTrainer_random pbLoadTrainer
-def pbLoadTrainer(trainerid,trainername,partyid=0)
-  trainer = pbLoadTrainer_random(trainerid,trainername,partyid)
-  return trainer unless random_enabled? && RandomizedChallenge::MEGAS_RANDOMIZE_TO_MEGAS
+def pbLoadTrainer(trainerid, trainername, partyid = 0)
+  trainer = pbLoadTrainer_random(trainerid, trainername, partyid)
+  megastones_mantained = defined?(RandomizedChallenge::POKEMON_MEGA_STONES) && RandomizedChallenge::POKEMON_MEGA_STONES.length > 0
 
-  return trainer unless defined?(RandomizedChallenge::POKEMON_MEGA_STONES) && RandomizedChallenge::POKEMON_MEGA_STONES.length > 0
+  return trainer unless random_enabled? && RandomizedChallenge::MEGAS_RANDOMIZE_TO_MEGAS && megastones_mantained
 
   return trainer if trainer.nil?
 

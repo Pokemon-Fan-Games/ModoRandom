@@ -30,6 +30,8 @@ También se randomizarán los objetos pueden leer la sección [Objetos Random](#
 - Se puede restringir qué pokémon salen en el random, para eso se debe modificar el script `Random.rb` en la variable `BlackListedPokemon` si se quiere restringir más de un pokémon se debe separar por comas, por ejemplo `[PBSpecies::ARTICUNO,PBSpecies::MOLTRES, PBSpecies::ZAPDOS]`
 - Si quieres desactivar que el random sea progresivo, en el script `Random.rb` hay una variable que se llama `PROGRESSIVE_RANDOM_DEFAULT_VALUE` por defecto está en `true` si la cambias a `false`, el random no será progresivo, por lo que desde la ruta 1 te podrian salir Pokémons legendarios a menos que esten inluídos en la blacklist
 - Si quieres cambiar las variables destinadas a los iniciales random puedes cambiarlas en la constante `STATERS_VARIABLES`
+- `ENABLE_RANDOM_FORM` esto permite que salgan formas alternas de los pokemon como las regionales (solo podrá salir la 1) y nunca podrán salir formas megas o primigenias en salvajes o entrenadores, por defecto es `true` algo importante a aclarar es que si no tienen bien mantenidas las formas alternas puede generar resultados inesperados.
+- `MEGAS_RANDOMIZE_TO_MEGAS` si se activa, los Pokémon de entrenadores que originalmente eran megas, tenian la megapiedra asignada, se convertirán en otro Pokémon con mega, requiere mantener el hash `POKEMON_MEGA_STONES` que relacione al Pokémon con su mega piedra, en el script `Random.rb` hay un ejemplo comentado.
 
 #### Evoluciones Random
 
@@ -50,7 +52,6 @@ También se randomizarán los objetos pueden leer la sección [Objetos Random](#
     - `random_types_enabled?` Devuelve true si los tipos random están activados, de lo contrario devuelve false
     - `toggle_random_types` Permite cambiar el estado de los tipos random, si estaba en true lo pone en false y viceversa
 
-
 ### Movimientos Random
 
 - Si quieres desactivar el randomizado de los movimientos, en el script `Random.rb` hay una variable que se llama `RANDOM_MOVES_DEFAULT_VALUE` por defecto está en `true` si la cambias a `false` no se randomizarán los movimientos
@@ -63,6 +64,8 @@ También se randomizarán los objetos pueden leer la sección [Objetos Random](#
 - `MTLIST_RANDOM` Listado de MTs que pueden salir como objetos random, si la lista está vacía cualquier MT podrá salir en el modo random
 - `UNRANDOMIZABLE_ITEMS` Listado de objetos que no pueden ser randomizados, es decir si son dados en un evento no se randomizarán
 - `MT_GET_RANDOMIZED_TO_ANOTHER_MT` Las MTs dadas en un evento son randomizadas por otra MT que el jugador no tenga ya.
+- `RANDOMIZE_WILD_ITEMS` Si se activa la constante se randomizará el objeto del pokémon salvaje
+- `HELD_ITEM_BLACKLIST` Listado de objetos que no pueden salir en objetos de Pokémon salvajes, es una inclusion adicional sería la blacklist base + este listado.
 
 ### Habilidades Random
 
