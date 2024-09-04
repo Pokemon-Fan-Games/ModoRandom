@@ -39,7 +39,7 @@ module RandomizedChallenge
   end
 
   def self.random_tm(check_allow_list = true, allow_duplicates = RandomizedChallenge::ALLOW_DUPLICATE_TMS)
-    if check_allow_list
+    if check_allow_list && !RandomizedChallenge::MTLIST_RANDOM.empty?
       random_tms = RandomizedChallenge::MTLIST_RANDOM.shuffle
       return random_tms.find { |tm_id| !$bag.has?(GameData::Item.get(tm_id)) }
     end

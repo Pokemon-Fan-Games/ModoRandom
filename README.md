@@ -42,6 +42,10 @@ Si este listado está vacío los iniciales serán 100% random respetando las res
   _Quiero agradecer a los creadores del Plugin Randomizer EX (Abilities), Golisopod User, CrimsonTY, Luka SJ, que es el utilizado para randomizar las habilidades._
 
 - Si quieres cambiar las variables destinadas a los iniciales random puedes cambiarlas en la constante `STATERS_VARIABLES`
+- Si no quieres que se randomicen los objetos debes cambiar la constante `RANDOMIZE_ITEMS` a false
+- Si quieres que se randomicen los objetos de los Pokémon salvajes debes cambiar la constante `RANDOMIZE_HELD_ITEMS` a true
+- Si no quieres que los Pokémon de los entrenadores que originalmente tenían megas, es decir, tenian su megapiedra asignada, se randomicen por otra mega debes cambiar la constante `MEGAS_RANDOMIZE_TO_MEGAS` a false.
+-  
 
 ### Opciones de randomización
 
