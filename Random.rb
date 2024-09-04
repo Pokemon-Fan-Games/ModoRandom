@@ -142,6 +142,8 @@ module RandomizedChallenge
   # Si la variable FULL_RANDOM_ABS esta en true esa sera la opcion determinada
   MAP_RANDOM_ABS = false
 
+  DIFFERENT_FORMS_HAVE_DIFFERENT_ABILITIES = true
+
   # Si ambas variables estan en false no se randomizaran las habilidades
   # Se puede cambiar el metodo de randomizado de habilidades
   # llamando al metodo choose_random_ability_mode a este metodo hay que pasarle el modo
@@ -568,7 +570,7 @@ class PokeBattle_Pokemon
     has_mega_form = MultipleForms.hasFunction?(self, 'getMegaForm')
     has_primal_form = MultipleForms.hasFunction?(self, 'getPrimalForm')
     on_set_form = MultipleForms.hasFunction?(self, 'onSetForm')
-    has_mega_form || has_primal_form || on_set_form
+    true if has_mega_form || has_primal_form || on_set_form
   end
 
   def random_form
@@ -770,16 +772,41 @@ class PokeBattle_Pokemon
 
   def ability_full_random(ret)
     $PokemonGlobal.random_abs_pokemon = {} unless $PokemonGlobal.random_abs_pokemon
-    unless $PokemonGlobal.random_abs_pokemon[@species]
-      $PokemonGlobal.random_abs_pokemon[@species] = []
-      (0...ret.length).each do |i|
-        new_ab = rand(PBAbilities.maxValue - 1) + 1
-        new_ab = rand(PBAbilities.maxValue - 1) + 1 while !new_ab || RandomizedChallenge::ABILITYBLACKLIST.include?(new_ab)
-        $PokemonGlobal.random_abs_pokemon[@species].push([new_ab, i])
-        ret[i][0] = $PokemonGlobal.random_abs_pokemon[@species][ret[i][0]]
+    different_abs = MultipleForms.hasFunction?(self, 'getAbilityList')
+    if !different_abs && $PokemonGlobal.random_abs_pokemon[@species] && $PokemonGlobal.random_abs_pokemon[@species][0]
+      return $PokemonGlobal.random_abs_pokemon[@species][0]
+    elsif different_abs && $PokemonGlobal.random_abs_pokemon[@species] && $PokemonGlobal.random_abs_pokemon[@species][form]
+      return $PokemonGlobal.random_abs_pokemon[@species][form]
+    end
+
+    $PokemonGlobal.random_abs_pokemon[@species] = {} unless $PokemonGlobal.random_abs_pokemon[@species]
+    if !RandomizedChallenge::DIFFERENT_FORMS_HAVE_DIFFERENT_ABILITIES
+      $PokemonGlobal.random_abs_pokemon[@species][0] = []
+    else
+      if !different_abs
+        $PokemonGlobal.random_abs_pokemon[@species][0] = []
+      else
+        $PokemonGlobal.random_abs_pokemon[@species][form] = []
       end
     end
-    $PokemonGlobal.random_abs_pokemon[@species]
+    (0...ret.length).each do |i|
+      new_ab = rand(PBAbilities.maxValue - 1) + 1
+      new_ab = rand(PBAbilities.maxValue - 1) + 1 while !new_ab || RandomizedChallenge::ABILITYBLACKLIST.include?(new_ab)
+      if RandomizedChallenge::DIFFERENT_FORMS_HAVE_DIFFERENT_ABILITIES && different_abs
+        $PokemonGlobal.random_abs_pokemon[@species][form] = [] unless $PokemonGlobal.random_abs_pokemon[@species][form]
+        $PokemonGlobal.random_abs_pokemon[@species][form].push([new_ab, i])
+        ret[i][0] = $PokemonGlobal.random_abs_pokemon[@species][form][ret[i][0]]
+      else
+        $PokemonGlobal.random_abs_pokemon[@species][0] = [] unless $PokemonGlobal.random_abs_pokemon[@species][0]
+        $PokemonGlobal.random_abs_pokemon[@species][0].push([new_ab, i])
+        ret[i][0] = $PokemonGlobal.random_abs_pokemon[@species][0][ret[i][0]]
+      end
+    end
+    if RandomizedChallenge::DIFFERENT_FORMS_HAVE_DIFFERENT_ABILITIES && different_abs
+      $PokemonGlobal.random_abs_pokemon[@species][form]
+    else
+      $PokemonGlobal.random_abs_pokemon[@species][0]
+    end
   end
 
   def ability_map(ret)
