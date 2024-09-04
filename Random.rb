@@ -570,7 +570,7 @@ class PokeBattle_Pokemon
     has_mega_form = MultipleForms.hasFunction?(self, 'getMegaForm')
     has_primal_form = MultipleForms.hasFunction?(self, 'getPrimalForm')
     on_set_form = MultipleForms.hasFunction?(self, 'onSetForm')
-    true if has_mega_form || has_primal_form || on_set_form
+    has_mega_form || has_primal_form || on_set_form ? true : false
   end
 
   def random_form
