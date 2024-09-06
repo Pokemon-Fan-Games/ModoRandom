@@ -236,9 +236,7 @@ def toggle_random_moves
 end
 
 def progressive_random_on?
-  return false unless $game_switches[RandomizedChallenge::SWITCH]
-
-  $PokemonGlobal.progressive_random ? true : false
+  random_enabled? && $PokemonGlobal.progressive_random ? true : false
 end
 
 def toggle_progressive_random
@@ -368,7 +366,7 @@ end
 def show_gens_chooser
   text = _INTL('Elige las generaciones para el random')
   gens = random_gens_choice_array
-  gen = Kernel.pbMessage(text, gens,  -1)
+  gen = Kernel.pbMessage(text, gens, -1)
   add_or_remove_random_gen(gen)
   gen
 end
