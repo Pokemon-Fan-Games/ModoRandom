@@ -225,7 +225,7 @@ class PokemonGlobalMetadata
 end
 
 def random_moves_on?
-  random_enabled? && random_moves_on? ? true : false
+  random_enabled? && $PokemonGlobal.enable_random_moves ? true : false
 end
 
 def toggle_random_moves
