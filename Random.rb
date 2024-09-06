@@ -3,7 +3,7 @@
 # por DPertierra y Skyflyer
 ########################## You may edit any settings below this freely.#########
 module RandomizedChallenge
-  Switch = 409 # switch ID to randomize a pokemon, if it's on then ALL
+  SWITCH = 409 # switch ID to randomize a pokemon, if it's on then ALL
   # pokemon will be randomized. No exceptions.
 
   BLACKLISTEDPOKEMON = []
@@ -225,9 +225,7 @@ class PokemonGlobalMetadata
 end
 
 def random_moves_on?
-  return false unless $game_switches[RandomizedChallenge::Switch]
-
-  $PokemonGlobal.enable_random_moves ? true : false
+  random_enabled? && random_moves_on? ? true : false
 end
 
 def toggle_random_moves
@@ -238,7 +236,7 @@ def toggle_random_moves
 end
 
 def progressive_random_on?
-  return false unless $game_switches[RandomizedChallenge::Switch]
+  return false unless $game_switches[RandomizedChallenge::SWITCH]
 
   $PokemonGlobal.progressive_random ? true : false
 end
@@ -248,7 +246,7 @@ def toggle_progressive_random
 end
 
 def random_tm_compat_on?
-  $PokemonGlobal.enable_random_tm_compat ? true : false
+  random_enabled? && $PokemonGlobal.enable_random_tm_compat ? true : false
 end
 
 def toggle_random_tm_compat
@@ -265,9 +263,7 @@ def toggle_random_evos
 end
 
 def random_evos_similar_bst_on?
-  return false unless $game_switches[RandomizedChallenge::Switch]
-
-  $PokemonGlobal.random_evos_similar_bst ? true : false
+  random_enabled? && $PokemonGlobal.random_evos_similar_bst ? true : false
 end
 
 def toggle_random_evos_similar_bst
@@ -415,7 +411,7 @@ def enable_random
   $PokemonGlobal.enable_random_types = RandomizedChallenge::RANDOM_TYPES_DEFAULT_VALUE
   $PokemonGlobal.random_types = {}
   generate_random_starters
-  $game_switches[RandomizedChallenge::Switch] = true
+  $game_switches[RandomizedChallenge::SWITCH] = true
 end
 
 def pokemon_in_gen_range?(species)
@@ -490,11 +486,11 @@ def not_in_allowed_bst_range?(bst)
 end
 
 def pause_random
-  $game_switches[RandomizedChallenge::Switch] = false
+  $game_switches[RandomizedChallenge::SWITCH] = false
 end
 
 def resume_random
-  $game_switches[RandomizedChallenge::Switch] = true
+  $game_switches[RandomizedChallenge::SWITCH] = true
 end
 
 def invalid_species?(species, bst, evo = false, evo_bst_range = [], previous_species = nil)
@@ -526,7 +522,7 @@ def random_species(evo = false, evo_bst_range = [])
 end
 
 def random_enabled?
-  $game_switches && $game_switches[RandomizedChallenge::Switch] ? true : false
+  $game_switches && $game_switches[RandomizedChallenge::SWITCH] ? true : false
 end
 
 def random_evo(_current_pokemon, expected_evo)
@@ -809,7 +805,7 @@ class PokeBattle_Pokemon
   alias random_getAbilityList getAbilityList
   def getAbilityList
     ret = random_getAbilityList
-    if $game_switches && $game_switches[RandomizedChallenge::Switch]
+    if random_enabled?
       if $PokemonGlobal.random_ability_mode == :FULL_RANDOM_ABS
         return ability_full_random(ret)
       elsif $PokemonGlobal.random_ability_mode == :MAP_RANDOM_ABS
