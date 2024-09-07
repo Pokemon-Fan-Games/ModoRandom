@@ -942,6 +942,14 @@ def give_starter(index = 0, var = nil, level = 5)
   pbAddPokemon(starter, level)
 end
 
+def random_pokemon_set(amount = 3)
+  pokemon = []
+  amount.times do
+    pokemon << random_species
+  end
+  pokemon
+end
+
 def create_ability_hash
   ability_hash = {}
   ability_arr = []
