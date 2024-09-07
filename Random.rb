@@ -936,10 +936,17 @@ def generate_random_starters
   end
 end
 
-def give_starter(index = 0, var = nil, level = 5)
+def show_random_starter_picture(index = 0, var = nil)
+  var ||= RandomizedChallenge::STATERS_VARIABLES[index]
+  SpeciesIntro.new(pbGet(var)).set_mark_as_seen(false).show
+end
+
+def give_starter_random(index = 0, var = nil, level = 5)
   var ||= RandomizedChallenge::STATERS_VARIABLES[index]
   starter = pbGet(var)
+  pause_random
   pbAddPokemon(starter, level)
+  resume_random
 end
 
 def random_pokemon_set(amount = 3)
