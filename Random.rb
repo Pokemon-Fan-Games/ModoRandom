@@ -329,6 +329,7 @@ def config_options
   commands = []
 
   commands.push(_INTL('Elegir modo de randomizar habilidades'))
+
   progressive_random_on? ? commands.push(_INTL('[X] Random progresivo')) : commands.push(_INTL('[  ] Random progresivo'))
 
   random_moves_on? ? commands.push(_INTL('[X] Movimientos random')) : commands.push(_INTL('[  ] Movimientos random'))
@@ -340,6 +341,10 @@ def config_options
   random_tm_compat_on? ? commands.push(_INTL('[X] Randomizar compatibilidad con MTs')) : commands.push(_INTL('[  ] Randomizar compatibilidad con MTs'))
 
   random_types_enabled? ? commands.push(_INTL('[X] Randomizar tipos')) : commands.push(_INTL('[  ] Randomizar tipos'))
+
+  random_items_enabled? ? commands.push(_INTL('[X] Randomizar objetos')) : commands.push(_INTL('[  ] Randomizar objetos'))
+
+  random_held_items_enabled? ? commands.push(_INTL('[X] Randomizar objetos de salvajes')) : commands.push(_INTL('[  ] Randomizar objetos de salvajes'))
 
   commands
 end
@@ -360,6 +365,10 @@ def change_config(index)
     toggle_random_tm_compat
   when 6
     toggle_random_types
+  when 7
+    toggle_random_items
+  when 8
+    toggle_random_held_items
   end
 end
 
