@@ -409,6 +409,7 @@ def enable_random
   $PokemonGlobal.enable_random_types = RandomizedChallenge::RANDOM_TYPES_DEFAULT_VALUE
   $PokemonGlobal.random_types = {}
   generate_random_starters
+  toggle_random_items
   $game_switches[RandomizedChallenge::SWITCH] = true
 end
 

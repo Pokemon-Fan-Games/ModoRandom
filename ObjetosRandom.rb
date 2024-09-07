@@ -1,7 +1,40 @@
 class PokemonGlobalMetadata
-  attr_accessor :tm_list
+  attr_accessor :tm_list, :random_items_enabled,
+                :random_held_items
 end
+
+def random_items_enabled?
+  random_enabled? && $PokemonGlobal.random_items_enabled ? true : false
+end
+
+def toggle_random_items
+  if $PokemonGlobal.random_items_enabled.nil?
+    $PokemonGlobal.random_items_enabled = RandomizedChallenge::RANDOM_ITEMS_DEFAULT_VALUE
+  end
+
+  if $PokemonGlobal.random_held_items.nil?
+    $PokemonGlobal.random_held_items = RandomizedChallenge::RANDOM_ITEMS_DEFAULT_VALUE
+  end
+
+  $PokemonGlobal.random_items_enabled = !$PokemonGlobal.random_items_enabled
+end
+
+def random_held_items_enabled?
+  random_enabled? && $PokemonGlobal.random_held_items ? true : false
+end
+
+def toggle_random_held_items
+  if $PokemonGlobal.random_held_items.nil?
+    $PokemonGlobal.random_held_items = RandomizedChallenge::RANDOM_HELD_ITEMS_DEFAULT_VALUE
+  end
+  $PokemonGlobal.random_held_items = !$PokemonGlobal.random_held_items
+end
+
 module RandomizedChallenge
+
+  RANDOM_ITEMS_DEFAULT_VALUE = true
+  RANDOM_HELD_ITEMS_DEFAULT_VALUE = true
+
   # Lista de objetos que no quieres que aparezcan entre los objetos Random
   ITEM_BLACK_LIST = []
   HELD_ITEM_BLACK_LIST = []
@@ -21,6 +54,7 @@ module RandomizedChallenge
 
   def self.initialize_tm_list
     return if $PokemonGlobal.tm_list && $PokemonGlobal.tm_list.length > 0
+
     $PokemonGlobal.tm_list = [] if !$PokemonGlobal.tm_list
 
     (0..PBItems.maxValue).each do |item|
@@ -100,16 +134,14 @@ module RandomizedChallenge
   end
 end
 
-if RandomizedChallenge::RANDOMIZE_WILD_ITEMS
-  alias pbGenerateWildPokemon_random pbGenerateWildPokemon
-  def pbGenerateWildPokemon(species, level, isroamer = false)
-    wild_poke = pbGenerateWildPokemon_random(species, level, isroamer)
-    if wild_poke.item && random_enabled?
-      item = RandomizedChallenge.random_item(false, true, true)
-      wild_poke.setItem(item)
-    end
-    wild_poke
+alias pbGenerateWildPokemon_random pbGenerateWildPokemon
+def pbGenerateWildPokemon(species, level, isroamer = false)
+  wild_poke = pbGenerateWildPokemon_random(species, level, isroamer)
+  if wild_poke.item > 0 && random_held_items_enabled?
+    item = RandomizedChallenge.random_item(false, true, true)
+    wild_poke.setItem(item)
   end
+  wild_poke
 end
 
 module Kernel
@@ -117,15 +149,16 @@ module Kernel
     alias pbItemBall_random pbItemBall
     def pbItemBall(item, quantity = 1)
       item = getID(PBItems, item) if item.is_a?(String) || item.is_a?(Symbol)
-      item = RandomizedChallenge.determine_random_item(item) if random_enabled?
+      item = RandomizedChallenge.determine_random_item(item) if random_items_enabled?
       pbItemBall_random(item, quantity)
     end
 
     alias pbReceiveItem_random pbReceiveItem
     def pbReceiveItem(item, quantity = 1)
       item = getID(PBItems, item) if item.is_a?(String) || item.is_a?(Symbol)
-      item = RandomizedChallenge.determine_random_item(item) if random_enabled?
+      item = RandomizedChallenge.determine_random_item(item) if random_items_enabled?
       pbReceiveItem_random(item, quantity)
     end
   end
 end
+
