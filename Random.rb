@@ -936,6 +936,12 @@ def generate_random_starters
   end
 end
 
+def give_starter(index = 0, var = nil, level = 5)
+  var ||= RandomizedChallenge::STATERS_VARIABLES[index]
+  starter = pbGet(var)
+  pbAddPokemon(starter, level)
+end
+
 def create_ability_hash
   ability_hash = {}
   ability_arr = []
