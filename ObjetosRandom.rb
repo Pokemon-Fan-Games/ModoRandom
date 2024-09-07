@@ -35,6 +35,8 @@ module RandomizedChallenge
   RANDOM_ITEMS_DEFAULT_VALUE = true
   RANDOM_HELD_ITEMS_DEFAULT_VALUE = true
 
+  HELD_ITEM_CAN_BE_A_TM = false
+
   # Lista de objetos que no quieres que aparezcan entre los objetos Random
   ITEM_BLACK_LIST = []
   HELD_ITEM_BLACK_LIST = []
@@ -138,7 +140,8 @@ alias pbGenerateWildPokemon_random pbGenerateWildPokemon
 def pbGenerateWildPokemon(species, level, isroamer = false)
   wild_poke = pbGenerateWildPokemon_random(species, level, isroamer)
   if wild_poke.item > 0 && random_held_items_enabled?
-    item = RandomizedChallenge.random_item(false, true, true)
+    no_tm = !RandomizedChallenge::HELD_ITEM_CAN_BE_A_TM
+    item = RandomizedChallenge.random_item(false, no_tm, true)
     wild_poke.setItem(item)
   end
   wild_poke
