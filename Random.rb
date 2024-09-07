@@ -777,18 +777,19 @@ class PokeBattle_Pokemon
 
     # Initialize the abilities array for the species and form if not yet set
     $PokemonGlobal.random_abs_pokemon[@species][form_index] = [] unless $PokemonGlobal.random_abs_pokemon[@species][form_index]
-
+    current_abs = []
     (0...ret.length).each do |i|
-      new_ab = generate_random_ability
+      new_ab = generate_random_ability(current_abs)
+      current_abs << new_ab
       $PokemonGlobal.random_abs_pokemon[@species][form_index].push([new_ab, i])
       ret[i][0] = new_ab # Update the ret array with the newly generated ability
     end
     $PokemonGlobal.random_abs_pokemon[@species][form_index] # Return the updated abilities list
   end
 
-  def generate_random_ability
+  def generate_random_ability(current_abs = [])
     new_ab = rand(PBAbilities.maxValue - 1) + 1
-    new_ab = rand(PBAbilities.maxValue - 1) + 1 while !new_ab || RandomizedChallenge::ABILITYBLACKLIST.include?(new_ab)
+    new_ab = rand(PBAbilities.maxValue - 1) + 1 while !new_ab || RandomizedChallenge::ABILITYBLACKLIST.include?(new_ab) || current_abs.include?(new_ab)
     new_ab
   end
 
