@@ -5,7 +5,7 @@
 #-------------------------------------------------------------------------------
 alias pbItemBall_random pbItemBall
 def pbItemBall(item, quantity = 1)
-  return pbItemBall_random(item, quantity) unless random_enabled? && randomize_items?
+  return pbItemBall_random(item, quantity) unless randomize_items?
 
   random_item = RandomizedChallenge.determine_random_item(item)
   pbItemBall_random(random_item, quantity)
@@ -13,7 +13,7 @@ end
 
 alias pbReceiveItem_random pbReceiveItem
 def pbReceiveItem(item, quantity = 1)
-  return pbReceiveItem_random(item, quantity) unless random_enabled? && randomize_items?
+  return pbReceiveItem_random(item, quantity) unless randomize_items?
 
   random_item = RandomizedChallenge.determine_random_item(item)
   pbReceiveItem_random(random_item, quantity)
@@ -21,7 +21,7 @@ end
 
 alias pbGenerateWildPokemon_randomized pbGenerateWildPokemon
 def pbGenerateWildPokemon(species, level, isRoamer = false)
-  return pbGenerateWildPokemon_randomized(species, level, isRoamer) unless random_enabled? && randomize_held_items?
+  return pbGenerateWildPokemon_randomized(species, level, isRoamer) unless randomize_held_items?
 
   wild_poke = pbGenerateWildPokemon_randomized(species, level, isRoamer)
   wild_poke.item = RandomizedChallenge.determine_random_item(wild_poke.item, true, true) if wild_poke.item
