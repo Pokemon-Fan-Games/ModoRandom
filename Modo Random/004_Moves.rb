@@ -3,7 +3,7 @@ module GameData
     def display_real_damage(pkmn, move = nil)
       case @function_code
       when "DoublePowerIfUserHasNoItem"
-        return power * 2 unless pkmn.hasItem?
+        return power * 2 unless pkmn&.hasItem?
       when "HitTwoTimes"
         return @power * 2
       when "HitThreeTimes"
@@ -15,11 +15,14 @@ module GameData
         end
         return dmg
       when "TypeDependsOnUserIVs"
-        return pbHiddenPower(pkmn)[1]
+        return @power unless pkmn&.iv
+
+        hidden_power = pbHiddenPower(pkmn)
+        return hidden_power[1] if hidden_power
       when "PowerHigherWithUserHP"
-        return [150 * pkmn.hp / pkmn.totalhp, 1].max
+        return [150 * pkmn&.hp / pkmn&.totalhp, 1].max
       when "PowerLowerWithUserHP"
-        n = 48 * pkmn.hp / pkmn.totalhp
+        n = 48 * (pkmn&.hp || 0) / (pkmn&.totalhp || 1)
         return 200 if n < 2
         return 150 if n < 5
         return 100 if n < 10
@@ -28,9 +31,9 @@ module GameData
 
         return 20
       when "PowerHigherWithUserHappiness"
-        return [(pkmn.happiness * 2 / 5).floor, 1].max
+        return [(pkmn&.happiness.try(:*, 2) / 5).floor, 1].max
       when "PowerLowerWithUserHappiness"
-        return [((255 - pkmn.happiness) * 2 / 5).floor, 1].max
+        return [((255 - (pkmn&.happiness || 0)) * 2 / 5).floor, 1].max
       when "PowerHigherWithLessPP"
         dmgs = [200, 80, 60, 50, 40]
         ppLeft = [[(move&.pp || @total_pp) - 1, 0].max, dmgs.length - 1].min

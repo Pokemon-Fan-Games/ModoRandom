@@ -32,7 +32,7 @@ module RandomizedChallenge
   def self.random_item(ignore_exclusions = false, no_tm = false, is_held_item = false)
     items = GameData::Item.keys # Get all item IDs
     item = GameData::Item.get(items.sample) # Return the item object
-    if !ignore_exclusions && excluded_item?(rand_item)
+    if !ignore_exclusions && excluded_item?(item)
       item = GameData::Item.get(items.sample) while excluded_item?(item, is_held_item) || (item.is_machine? && no_tm)
     end
     item

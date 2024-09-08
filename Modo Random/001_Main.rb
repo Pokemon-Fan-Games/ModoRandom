@@ -8,7 +8,7 @@ class PokemonGlobalMetadata
                 :enable_random_tm_compat, :tm_compatibility_random, :enable_random_evolutions,
                 :enable_random_evolutions_similar_bst,
                 :enable_random_evolutions_respect_restrictions, :enable_random_types,
-                :random_types
+                :random_types, :randomize_items, :randomize_held_items
   alias initialize_random initialize
   def initialize
     initialize_random
@@ -280,27 +280,42 @@ class Pokemon
     $PokemonGlobal.random_types[@species]
   end
 
-  def random_move
+  def random_move(min_damage = 0)
     moves = GameData::Move.keys
     move = moves[rand(moves.length - 1) + 1]
-    GameData::Move.get(move)
+    move = GameData::Move.get(move)
+    return move unless min_damage.positive? && move.display_real_damage(self, move) < min_damage
+
+    until move.display_real_damage(self, move) >= min_damage
+      move = moves[rand(moves.length - 1) + 1]
+      move = GameData::Move.get(move)
+    end
+
+    move
   end
 
   def invalid_move?(move, move_data)
     move_exists = $PokemonGlobal.random_moves[@species]&.detect { |elem| elem[1] == move }
-    RandomizedChallenge::MOVEBLACKLIST.include?(move) || move_exists || (move_data.ohko? && ohko_banned?)
+    RandomizedChallenge::MOVEBLACKLIST.include?(move) || move_exists || (move_data.ohko? && ohko_banned?) ? true : false
+  end
+
+  alias reset_moves_random reset_moves
+  def reset_moves
+    reset_moves_random
+    return if @moves.any? { |m| GameData::Move.get(m.id).display_real_damage(self) >= 25 }
+
+    @moves[@moves.length - 1] = Pokemon::Move.new(random_move(25).id)
   end
 
   def find_valid_move(move)
     badge_count = $player.badge_count
-
     loop do
       move_data = GameData::Move.get(move.id)
 
       if badge_count < 3
-        break unless move_data.display_real_damage > 70 || invalid_move?(move, move_data)
+        break unless move_data.display_real_damage(self) > 70 || invalid_move?(move, move_data)
       elsif badge_count >= 6
-        break unless move_data.display_real_damage < 55 || invalid_move?(move, move_data)
+        break unless move_data.display_real_damage(self) < 55 || invalid_move?(move, move_data)
       else
         break unless invalid_move?(move, move_data)
       end
@@ -313,7 +328,8 @@ class Pokemon
 
   alias random_getMoveList getMoveList
   def getMoveList
-    return random_getMoveList unless random_enabled? && random_moves_on?
+    moves = random_getMoveList
+    return moves unless random_enabled? && random_moves_on?
 
     $PokemonGlobal.random_moves = {} unless $PokemonGlobal.random_moves
     return $PokemonGlobal.random_moves[@species] if $PokemonGlobal.random_moves[@species]
@@ -406,6 +422,12 @@ def generate_random_starters
   end
 end
 
+def get_starter(index = 0, var = nil)
+  return pbGet(var) if var
+
+  pbGet(RandomizedChallenge::RANDOM_STARTER_VARIABLES[index])
+end
+
 
 # ********************************************************
 # MEGAS RANDOMIZE TO MEGAS
@@ -419,9 +441,9 @@ def pbLoadTrainer(tr_type, tr_name, tr_version = 0)
 
   trainer.party.map! do |pkmn|
     species_data = GameData::Species.get(pkmn.species)
-    if pkmn.item.is_mega_stone? && species_data.mega_stone
+    if pkmn&.item&.is_mega_stone? && species_data.mega_stone
       pkmn.item = species_data.mega_stone
-    elsif pkmn.item.is_mega_stone? && !species_data.mega_stone
+    elsif pkmn&.item&.is_mega_stone? && !species_data.mega_stone
       new_species = random_species(true)
       pause_random
       pkmn = Pokemon.new(new_species, pkmn.level, pkmn.owner)
