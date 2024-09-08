@@ -570,10 +570,10 @@ def bst_sum(species)
 end
 
 class PokeBattle_Pokemon
-  def reset_form?
-    has_mega_form = MultipleForms.hasFunction?(self, 'getMegaForm')
-    has_primal_form = MultipleForms.hasFunction?(self, 'getPrimalForm')
-    on_set_form = MultipleForms.hasFunction?(self, 'onSetForm')
+  def reset_form?(poke = self)
+    has_mega_form = MultipleForms.hasFunction?(poke, 'getMegaForm')
+    has_primal_form = MultipleForms.hasFunction?(poke, 'getPrimalForm')
+    on_set_form = MultipleForms.hasFunction?(poke, 'onSetForm')
     has_mega_form || has_primal_form || on_set_form ? true : false
   end
 
@@ -588,8 +588,10 @@ class PokeBattle_Pokemon
       pause_random
       evos.each do |evo|
         new_poke = PokeBattle_Pokemon.new(evo, 5)
-        has_mega_form = MultipleForms.hasFunction?(new_poke, 'getMegaForm')
-        break if has_mega_form
+        if reset_form?(new_poke)
+          form = 0
+          break
+        end
       end
       resume_random
     end
