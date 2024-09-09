@@ -35,6 +35,7 @@ module RandomizedChallenge
     if !ignore_exclusions && excluded_item?(item)
       item = GameData::Item.get(items.sample) while excluded_item?(item, is_held_item) || (item.is_machine? && no_tm)
     end
+    item.move = random_move if (item.is_TM? || item.is_TR?) && RandomizedChallenge::RANDOMIZE_TM_MOVES
     item
   end
 
@@ -45,6 +46,7 @@ module RandomizedChallenge
     end
     tm = random_item
     tm = random_item until tm.is_machine? && (allow_duplicates || !$bag.has?(tm))
+    tm.move = random_move if (tm.is_TM? || tm.is_TR?) && RandomizedChallenge::RANDOMIZE_TM_MOVES
     tm
   end
 

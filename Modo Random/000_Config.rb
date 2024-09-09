@@ -158,6 +158,10 @@ module RandomizedChallenge
   # Si el listado está vacío se randomizará por cualquier MT
   MT_GET_RANDOMIZED_TO_ANOTHER_MT = true
 
+  # Si el movimiento que enseña la MT se debe randomizar, es decir la MT24 ya no enseñara rayo
+  # si no cualquier otro movimiento.
+  RANDOMIZE_TM_MOVES = false
+
   # Lista de las MTs que pueden salir en el modo Random.
   # Elimina las que prefieras que se entreguen por NPCs y por tanto no
   # se puedan encontrar en objetos del suelo.
