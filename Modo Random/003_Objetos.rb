@@ -73,10 +73,10 @@ module RandomizedChallenge
   end
 
   def self.unrandomizable_item?(item)
-    UNRANDOMIZABLE_ITEMS.include?(item) || GameData::Item.get(item).is_key_item? || GameData::Item.get(item).is_HM?
+    UNRANDOMIZABLE_ITEMS.include?(item) || GameData::Item.get(item).is_key_item? || GameData::Item.get(item).is_HM? ? true : false
   end
 
   def self.excluded_item?(item, is_held_item = false)
-    ITEM_BLACK_LIST.include?(item.id) || (is_held_item && HELD_ITEM_BLACK_LIST.include?(item.id)) || GameData::Item.get(item.id).is_key_item?
+    ITEM_BLACK_LIST.include?(item.id) || (is_held_item && HELD_ITEM_BLACK_LIST.include?(item.id)) || GameData::Item.get(item.id).is_key_item? ? true : false
   end
 end
