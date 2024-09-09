@@ -145,6 +145,9 @@ module RandomizedChallenge
   # Randomizar objetos equipados en salvajes
   RANDOMIZE_HELD_ITEMS = false
 
+  # Los salvajes pueden tener MTs como objetos random
+  WILD_CAN_HAVE_TMS = false
+
   # Lista de objetos que no quieres que aparezcan entre los objetos Random.
   ITEM_BLACK_LIST = []
 
