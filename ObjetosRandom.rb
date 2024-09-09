@@ -51,6 +51,9 @@ module RandomizedChallenge
   # Si el listado está vacío se randomizará por cualquier MT
   MT_GET_RANDOMIZED_TO_ANOTHER_MT = true
 
+  # Randomizar el movimiento que enseña la MT
+  RANDOMIZE_TM_MOVES = false
+
   # Randomizar objetos de salvajes
   RANDOMIZE_WILD_ITEMS = true
 
@@ -128,11 +131,11 @@ module RandomizedChallenge
   end
 
   def self.unrandomizable_item?(item)
-    self::UNRANDOMIZABLE_ITEMS.include?(item) || pbIsKeyItem?(item)
+    self::UNRANDOMIZABLE_ITEMS.include?(item) || pbIsKeyItem?(item) || pbIsHiddenMachine?(item) ? true : false
   end
 
   def self.excluded_item?(item, is_held_item = false)
-    self::ITEM_BLACK_LIST.include?(item) || (is_held_item && HELD_ITEM_BLACK_LIST.include?(item)) || pbIsKeyItem?(item)
+    self::ITEM_BLACK_LIST.include?(item) || (is_held_item && HELD_ITEM_BLACK_LIST.include?(item)) || pbIsKeyItem?(item) ? true : false
   end
 end
 
@@ -152,14 +155,26 @@ module Kernel
     alias pbItemBall_random pbItemBall
     def pbItemBall(item, quantity = 1)
       item = getID(PBItems, item) if item.is_a?(String) || item.is_a?(Symbol)
-      item = RandomizedChallenge.determine_random_item(item) if random_items_enabled?
+      if random_items_enabled?
+        item = RandomizedChallenge.determine_random_item(item)
+        if pbIsTechnicalMachine?(item) && RandomizedChallenge::RANDOMIZE_TM_MOVES
+          move = rand(PBMoves::PBMoves.maxValue - 1) + 1
+          $ItemData[item][ITEMMACHINE] = move
+        end
+      end
       pbItemBall_random(item, quantity)
     end
 
     alias pbReceiveItem_random pbReceiveItem
     def pbReceiveItem(item, quantity = 1)
       item = getID(PBItems, item) if item.is_a?(String) || item.is_a?(Symbol)
-      item = RandomizedChallenge.determine_random_item(item) if random_items_enabled?
+      if random_items_enabled?
+        item = RandomizedChallenge.determine_random_item(item)
+        if pbIsTechnicalMachine?(item) && RandomizedChallenge::RANDOMIZE_TM_MOVES
+          move = rand(PBMoves::PBMoves.maxValue - 1) + 1
+          $ItemData[item][ITEMMACHINE] = move
+        end
+      end
       pbReceiveItem_random(item, quantity)
     end
   end
