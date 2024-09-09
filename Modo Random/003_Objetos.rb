@@ -8,6 +8,7 @@ def pbItemBall(item, quantity = 1)
   return pbItemBall_random(item, quantity) unless randomize_items?
 
   random_item = RandomizedChallenge.determine_random_item(item)
+  random_item.move = random_move if (random_item.is_TM? || random_item.is_TR?) && RandomizedChallenge::RANDOMIZE_TM_MOVES
   pbItemBall_random(random_item, quantity)
 end
 
@@ -16,6 +17,7 @@ def pbReceiveItem(item, quantity = 1)
   return pbReceiveItem_random(item, quantity) unless randomize_items?
 
   random_item = RandomizedChallenge.determine_random_item(item)
+  random_item.move = random_move if (random_item.is_TM? || random_item.is_TR?) && RandomizedChallenge::RANDOMIZE_TM_MOVES
   pbReceiveItem_random(random_item, quantity)
 end
 
@@ -35,7 +37,6 @@ module RandomizedChallenge
     if !ignore_exclusions && excluded_item?(item)
       item = GameData::Item.get(items.sample) while excluded_item?(item, is_held_item) || (item.is_machine? && no_tm)
     end
-    item.move = random_move if (item.is_TM? || item.is_TR?) && RandomizedChallenge::RANDOMIZE_TM_MOVES
     item
   end
 
@@ -46,7 +47,6 @@ module RandomizedChallenge
     end
     tm = random_item
     tm = random_item until tm.is_machine? && (allow_duplicates || !$bag.has?(tm))
-    tm.move = random_move if (tm.is_TM? || tm.is_TR?) && RandomizedChallenge::RANDOMIZE_TM_MOVES
     tm
   end
 
