@@ -73,7 +73,7 @@ module RandomizedChallenge
   end
 
   def self.unrandomizable_item?(item)
-    UNRANDOMIZABLE_ITEMS.include?(item) || GameData::Item.get(item).is_key_item?
+    UNRANDOMIZABLE_ITEMS.include?(item) || GameData::Item.get(item).is_key_item? || GameData::Item.get(item).is_HM?
   end
 
   def self.excluded_item?(item, is_held_item = false)
