@@ -158,7 +158,6 @@ module RandomizedChallenge
   end
 end
 
-
 alias pbAddPokemon_random pbAddPokemon
 def pbAddPokemon(pkmn, level = nil, seeform = true)
   return pbAddPokemon_random(pkmn, level, seeform) unless random_enabled? && RandomizedChallenge::GIFTED_POKEMON_CAN_HAVE_ITEMS
