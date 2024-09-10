@@ -834,7 +834,7 @@ class PokeBattle_Pokemon
     move = rand(PBMoves::PBMoves.maxValue) + 1
     movedata = PBMoveData.new(move)
     move_exists = $PokemonGlobal.random_moves[@species].detect { |elem| elem[1] == (move) }
-    while (progressive && movedata.basedamage > power) || (!types.empty? && !types.include?(movedata.type)) || RandomizedChallenge::MOVEBLACKLIST.include?(move) || move_exists
+    while (progressive && power > 0 && movedata.basedamage > power) || (!types.empty? && !types.include?(movedata.type)) || RandomizedChallenge::MOVEBLACKLIST.include?(move) || move_exists
       move = rand(PBMoves::PBMoves.maxValue) + 1
       movedata = PBMoveData.new(move)
       move_exists = $PokemonGlobal.random_moves[@species].detect { |elem| elem[1] == (move) }
@@ -914,7 +914,8 @@ class PokeBattle_Pokemon
     chance_of_stab = RandomizedChallenge::PROBABILITY_OF_STAB / 100
     return unless rand < chance_of_stab
 
-    stab_move = find_valid_move(progressive_random_on?, 0, types)
+    max_power = progressive_random_on? && $Trainer.numbadges < 3 ? 70 : 0
+    stab_move = find_valid_move(progressive_random_on?, max_power, types)
     if @moves.length < 4
       @moves.push(stab_move)
     else
