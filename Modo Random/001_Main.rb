@@ -120,108 +120,6 @@ module RandomizedChallenge
   end
 end
 
-# def random_moves_on?
-#   $PokemonGlobal.enable_random_moves ? true : false
-# end
-
-# def toggle_random_moves
-#   if $PokemonGlobal.enable_random_moves.nil?
-#     $PokemonGlobal.enable_random_moves = RandomizedChallenge::RANDOM_MOVES_DEFAULT_VALUE
-#   end
-#   $PokemonGlobal.enable_random_moves = !$PokemonGlobal.enable_random_moves
-# end
-
-# def random_tm_compat_on?
-#   $PokemonGlobal.enable_random_tm_compat ? true : false
-# end
-
-# def toggle_random_tm_compat
-#   $PokemonGlobal.enable_random_tm_compat = !$PokemonGlobal.enable_random_tm_compat
-# end
-
-# def progressive_random_on?
-#   $PokemonGlobal.progressive_random ? true : false
-# end
-
-# def toggle_progressive_random
-#   $PokemonGlobal.progressive_random = !$PokemonGlobal.progressive_random
-# end
-
-# def random_evolutions_on?
-#   $PokemonGlobal.enable_random_evolutions ? true : false
-# end
-
-# def toggle_random_evolutions
-#   $PokemonGlobal.enable_random_evolutions = !$PokemonGlobal.enable_random_evolutions
-# end
-
-# def random_evolutions_similar_bst_on?
-#   $PokemonGlobal.enable_random_evolutions_similar_bst ? true : false
-# end
-
-# def toggle_random_evolutions_similar_bst
-#   $PokemonGlobal.enable_random_evolutions_similar_bst = !$PokemonGlobal.enable_random_evolutions_similar_bst
-# end
-
-# def random_evos_respect_restrictions?
-#   $PokemonGlobal.enable_random_evolutions_respect_restrictions
-# end
-
-# def toggle_random_evolutions_respect_progressive
-#   $PokemonGlobal.enable_random_evolutions_respect_restrictions = !$PokemonGlobal.enable_random_evolutions_respect_restrictions
-# end
-
-# def set_random_gens(gens = [])
-#   $PokemonGlobal.random_gens = Array(gens)
-# end
-
-# def add_or_remove_random_gen(gen = nil)
-#   return unless gen
-
-#   $PokemonGlobal.random_gens = $PokemonGlobal.random_gens || []
-#   if !$PokemonGlobal.random_gens.include?(gen)
-#     $PokemonGlobal.random_gens.push(gen)
-#   else
-#     $PokemonGlobal.random_gens.delete(gen)
-#   end
-# end
-
-# def get_random_gens
-#   $PokemonGlobal.random_gens || []
-# end
-
-# def toggle_random_types
-#   $PokemonGlobal.enable_random_types = !$PokemonGlobal.enable_random_types
-# end
-
-# def random_types_on?
-#   $PokemonGlobal.enable_random_types ? true : false
-# end
-
-# def ohko_banned?
-#   $PokemonGlobal.banohko ? true : false
-# end
-
-# def toggle_ban_ohko
-#   $PokemonGlobal.banohko = !$PokemonGlobal.banohko
-# end
-
-# def randomize_items?
-#   $PokemonGlobal.randomize_items ? true : false
-# end
-
-# # def toggle_randomize_items
-# #   $PokemonGlobal.randomize_items = !$PokemonGlobal.randomize_items
-# # end
-
-# def randomize_held_items?
-#   $PokemonGlobal.randomize_held_items ? true : false
-# end
-
-# def toggle_randomize_held_items
-#   $PokemonGlobal.randomize_held_items = !$PokemonGlobal.randomize_held_items
-# end
-
 # BST máximo y mínimo de los Pokémon del Randomizado en base a cada medalla
 # del jugador.
 # Si necesitas más medallas o usar otro BST, puedes editarlo aquí.
@@ -318,15 +216,27 @@ class Pokemon
     $PokemonGlobal.random_types[@species]
   end
 
-  def random_move(min_damage = 0)
+  def random_move(min_damage = 0, types = [])
     moves = GameData::Move.keys
     move = moves[rand(moves.length - 1) + 1]
     move = GameData::Move.get(move)
-    return move unless min_damage.positive? && move.display_real_damage(self, move) < min_damage
+    return move unless (min_damage.positive? && move.display_real_damage(self, move) < min_damage) || (!types.empty? && !types.include?(move.type))
 
-    until move.display_real_damage(self, move) >= min_damage
-      move = moves[rand(moves.length - 1) + 1]
-      move = GameData::Move.get(move)
+    if min_damage.positive? && type
+      until move.display_real_damage(self, move) >= min_damage && types.include?(move.type)
+        move = moves[rand(moves.length - 1) + 1]
+        move = GameData::Move.get(move)
+      end
+    elsif min_damage.positive?
+      until move.display_real_damage(self, move) >= min_damage
+        move = moves[rand(moves.length - 1) + 1]
+        move = GameData::Move.get(move)
+      end
+    elsif type
+      until types.include?(move.type)
+        move = moves[rand(moves.length - 1) + 1]
+        move = GameData::Move.get(move)
+      end
     end
 
     move
@@ -342,10 +252,16 @@ class Pokemon
     reset_moves_random
     return if @moves.any? { |m| GameData::Move.get(m.id).display_real_damage(self) >= 25 }
 
-    @moves[@moves.length - 1] = Pokemon::Move.new(random_move(25).id)
+    @moves[@moves.length - 1] = Pokemon::Move.new(find_valid_move(25).id)
+
+    chance_of_stab = (RandomizedChallenge::PROBABILITY_OF_STAB || 25) / 100
+
+    return unless @moves.none? { |m| types.include?(GameData::Move.get(m.id).type) } && rand < chance_of_stab
+
+    @moves[@moves.length - 2] = Pokemon::Move.new(find_valid_move(0, types).id)
   end
 
-  def find_valid_move(move)
+  def find_valid_move(move, min_damage = 0, types = [])
     badge_count = $player.badge_count
     loop do
       move_data = GameData::Move.get(move.id)
@@ -358,7 +274,7 @@ class Pokemon
         break unless invalid_move?(move, move_data)
       end
 
-      move = random_move
+      move = random_move(min_damage, types)
     end
 
     move
