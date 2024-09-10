@@ -162,6 +162,10 @@ module RandomizedChallenge
   # Siempre se podra modificar esto llamando al metodo toggle_random_moves
   RANDOM_MOVES_DEFAULT_VALUE = true
 
+  # Probabilidad de que los pokemon tengan al menos 1 mov con stab
+  # Por defecto es 25, para desactivarlo ponerlo en un valor menor a 1, para asegurarlo ponerlo en 100
+  PROBABILITY_OF_STAB = 25
+
   # Randomizar compatibilidad con las MTs
   # Se podrá cambiar llamando al metodo toggle_tm_compat
   # Tengan en cuenta que de esa forma un jugador podria armarse el moveset como quiera
@@ -826,11 +830,11 @@ class PokeBattle_Pokemon
     ret
   end
 
-  def find_valid_move(progressive = false, power = 0)
+  def find_valid_move(progressive = false, power = 0, types=[])
     move = rand(PBMoves::PBMoves.maxValue) + 1
     movedata = PBMoveData.new(move)
     move_exists = $PokemonGlobal.random_moves[@species].detect { |elem| elem[1] == (move) }
-    while (progressive && movedata.basedamage > power) || RandomizedChallenge::MOVEBLACKLIST.include?(move) || move_exists
+    while (progressive && movedata.basedamage > power) || (!types.empty? && !types.include?(movedata.type)) || RandomizedChallenge::MOVEBLACKLIST.include?(move) || move_exists
       move = rand(PBMoves::PBMoves.maxValue) + 1
       movedata = PBMoveData.new(move)
       move_exists = $PokemonGlobal.random_moves[@species].detect { |elem| elem[1] == (move) }
@@ -867,6 +871,57 @@ class PokeBattle_Pokemon
     atkdata.close
     $PokemonGlobal.random_moves[@species] = list
     return list
+  end
+
+  alias resetMoves_random resetMoves
+  def resetMoves
+    resetMoves_random
+
+    has_stab = false
+    stab_index = 0
+    has_damage = false
+    damage_index = 0
+    types = [type1, type2]
+    @moves.each_with_index do |m, i|
+      movedata = PBMoveData.new(m)
+      has_stab = true if types.include?(movedata.type)
+      stab_index = i if has_stab
+      has_damage = true if movedata.basedamage > 10
+      damage_index = i if has_damage
+    end
+
+    unless has_damage
+      damage_move = find_valid_move(progressive_random_on?, 20)
+      if @moves.length < 4
+        @moves.push(damage_move)
+        has_damage = true
+        damage_index = 3
+      elsif has_stab && @moves.length == 4
+        possible_index = [0, 1, 2, 3].reject { |i| i == stab_index }
+        damage_index = possible_index[0]
+        has_damage = true
+        @moves[damage_index] = damage_move
+      elsif !has_stab && @moves.length == 4
+        @moves[3] = damage_move
+        has_damage = true
+        damage_index = 3
+      end
+    end
+
+    return if has_stab
+    return unless RandomizedChallenge::PROBABILITY_OF_STAB && RandomizedChallenge::PROBABILITY_OF_STAB > 0
+
+    chance_of_stab = RandomizedChallenge::PROBABILITY_OF_STAB / 100
+    return unless rand < chance_of_stab
+
+    stab_move = find_valid_move(progressive_random_on?, 0, types)
+    if @moves.length < 4
+      @moves.push(stab_move)
+    else
+      possible_index = [0, 1, 2, 3].reject { |i| i == damage_index }
+      stab_index = possible_index[0]
+      @moves[stab_index] = stab_move
+    end
   end
 end
 
