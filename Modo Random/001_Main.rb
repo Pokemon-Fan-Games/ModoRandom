@@ -46,143 +46,181 @@ class PokemonGlobalMetadata
   end
 end
 
-def random_moves_on?
-  $PokemonGlobal.enable_random_moves ? true : false
-end
+module RandomizedChallenge
+  def self.enable
+    return unless $game_switches
 
-def toggle_random_moves
-  if $PokemonGlobal.enable_random_moves.nil?
-    $PokemonGlobal.enable_random_moves = RandomizedChallenge::RANDOM_MOVES_DEFAULT_VALUE
+    $PokemonGlobal.initialize_random_params
+    case RandomizedChallenge::RANDOM_ABILITY_METHOD
+    when :FULLRANDOM, :MAPABILITIES
+      $game_switches[RandomizedChallenge::ABILITY_RANDOMIZER_SWITCH] = true
+      $game_switches[RandomizedChallenge::ABILITY_SWAP_RANDOMIZER_SWITCH] = RandomizedChallenge::RANDOM_ABILITY_METHOD == :MAPABILITIES
+    when :SAMEINEVOLUTION
+      $game_switches[RandomizedChallenge::ABILITY_RANDOMIZER_SWITCH] = true
+      $game_switches[RandomizedChallenge::ABILITY_SEMI_RANDOMIZER_SWITCH] = true
+    end
+    generate_random_starters
+    $game_switches[RandomizedChallenge::SWITCH] = true
   end
-  $PokemonGlobal.enable_random_moves = !$PokemonGlobal.enable_random_moves
-end
 
-def random_tm_compat_on?
-  $PokemonGlobal.enable_random_tm_compat ? true : false
-end
+  def self.disable
+    $game_switches[RandomizedChallenge::SWITCH] = false
+    $game_switches[RandomizedChallenge::ABILITY_RANDOMIZER_SWITCH] = false
+    $game_switches[RandomizedChallenge::ABILITY_SWAP_RANDOMIZER_SWITCH] = false
+    $game_switches[RandomizedChallenge::ABILITY_SEMI_RANDOMIZER_SWITCH] = false
+    $PokemonGlobal.disable_random_params
+  end
 
-def toggle_random_tm_compat
-  $PokemonGlobal.enable_random_tm_compat = !$PokemonGlobal.enable_random_tm_compat
-end
+  def self.pause
+    $game_switches[RandomizedChallenge::SWITCH] = false
+  end
 
-def progressive_random_on?
-  $PokemonGlobal.progressive_random ? true : false
-end
+  def self.resume
+    $game_switches[RandomizedChallenge::SWITCH] = true
+  end
 
-def toggle_progressive_random
-  $PokemonGlobal.progressive_random = !$PokemonGlobal.progressive_random
-end
+  def self.enabled?
+    $game_switches && $game_switches[RandomizedChallenge::SWITCH]
+  end
 
-def random_evolutions_on?
-  $PokemonGlobal.enable_random_evolutions ? true : false
-end
+  def self.moves_on?
+    $PokemonGlobal.enable_random_moves ? true : false
+  end
 
-def toggle_random_evolutions
-  $PokemonGlobal.enable_random_evolutions = !$PokemonGlobal.enable_random_evolutions
-end
+  def self.tm_compat_on?
+    $PokemonGlobal.enable_random_tm_compat ? true : false
+  end
 
-def random_evolutions_similar_bst_on?
-  $PokemonGlobal.enable_random_evolutions_similar_bst ? true : false
-end
+  def self.progressive?
+    $PokemonGlobal.progressive_random ? true : false
+  end
 
-def toggle_random_evolutions_similar_bst
-  $PokemonGlobal.enable_random_evolutions_similar_bst = !$PokemonGlobal.enable_random_evolutions_similar_bst
-end
+  def self.evolutions_on?
+    $PokemonGlobal.enable_random_evolutions ? true : false
+  end
 
-def random_evos_respect_restrictions?
-  $PokemonGlobal.enable_random_evolutions_respect_restrictions
-end
+  def self.evolutions_similar_bst_on?
+    $PokemonGlobal.enable_random_evolutions_similar_bst ? true : false
+  end
 
-def toggle_random_evolutions_respect_progressive
-  $PokemonGlobal.enable_random_evolutions_respect_restrictions = !$PokemonGlobal.enable_random_evolutions_respect_restrictions
-end
+  def self.evos_respect_restrictions?
+    $PokemonGlobal.enable_random_evolutions_respect_restrictions
+  end
 
-def set_random_gens(gens = [])
-  $PokemonGlobal.random_gens = Array(gens)
-end
+  def self.gens
+    $PokemonGlobal.random_gens || []
+  end
 
-def add_or_remove_random_gen(gen = nil)
-  return unless gen
+  def self.types_on?
+    $PokemonGlobal.enable_random_types ? true : false
+  end
 
-  $PokemonGlobal.random_gens = $PokemonGlobal.random_gens || []
-  if !$PokemonGlobal.random_gens.include?(gen)
-    $PokemonGlobal.random_gens.push(gen)
-  else
-    $PokemonGlobal.random_gens.delete(gen)
+  def self.ohko_banned?
+    $PokemonGlobal.banohko ? true : false
   end
 end
 
-def get_random_gens
-  $PokemonGlobal.random_gens || []
-end
+# def random_moves_on?
+#   $PokemonGlobal.enable_random_moves ? true : false
+# end
 
-def toggle_random_types
-  $PokemonGlobal.enable_random_types = !$PokemonGlobal.enable_random_types
-end
+# def toggle_random_moves
+#   if $PokemonGlobal.enable_random_moves.nil?
+#     $PokemonGlobal.enable_random_moves = RandomizedChallenge::RANDOM_MOVES_DEFAULT_VALUE
+#   end
+#   $PokemonGlobal.enable_random_moves = !$PokemonGlobal.enable_random_moves
+# end
 
-def random_types_on?
-  $PokemonGlobal.enable_random_types ? true : false
-end
+# def random_tm_compat_on?
+#   $PokemonGlobal.enable_random_tm_compat ? true : false
+# end
 
-def ohko_banned?
-  $PokemonGlobal.banohko ? true : false
-end
+# def toggle_random_tm_compat
+#   $PokemonGlobal.enable_random_tm_compat = !$PokemonGlobal.enable_random_tm_compat
+# end
 
-def toggle_ban_ohko
-  $PokemonGlobal.banohko = !$PokemonGlobal.banohko
-end
+# def progressive_random_on?
+#   $PokemonGlobal.progressive_random ? true : false
+# end
 
-def randomize_items?
-  $PokemonGlobal.randomize_items ? true : false
-end
+# def toggle_progressive_random
+#   $PokemonGlobal.progressive_random = !$PokemonGlobal.progressive_random
+# end
 
-def toggle_randomize_items
-  $PokemonGlobal.randomize_items = !$PokemonGlobal.randomize_items
-end
+# def random_evolutions_on?
+#   $PokemonGlobal.enable_random_evolutions ? true : false
+# end
 
-def randomize_held_items?
-  $PokemonGlobal.randomize_held_items ? true : false
-end
+# def toggle_random_evolutions
+#   $PokemonGlobal.enable_random_evolutions = !$PokemonGlobal.enable_random_evolutions
+# end
 
-def toggle_randomize_held_items
-  $PokemonGlobal.randomize_held_items = !$PokemonGlobal.randomize_held_items
-end
+# def random_evolutions_similar_bst_on?
+#   $PokemonGlobal.enable_random_evolutions_similar_bst ? true : false
+# end
 
-def enable_random
-  return unless $game_switches
+# def toggle_random_evolutions_similar_bst
+#   $PokemonGlobal.enable_random_evolutions_similar_bst = !$PokemonGlobal.enable_random_evolutions_similar_bst
+# end
 
-  $PokemonGlobal.initialize_random_params
-  case RandomizedChallenge::RANDOM_ABILITY_METHOD
-  when :FULLRANDOM, :MAPABILITIES
-    $game_switches[RandomizedChallenge::ABILITY_RANDOMIZER_SWITCH] = true
-    $game_switches[RandomizedChallenge::ABILITY_SWAP_RANDOMIZER_SWITCH] = RandomizedChallenge::RANDOM_ABILITY_METHOD == :MAPABILITIES
-  when :SAMEINEVOLUTION
-    $game_switches[RandomizedChallenge::ABILITY_RANDOMIZER_SWITCH] = true
-    $game_switches[RandomizedChallenge::ABILITY_SEMI_RANDOMIZER_SWITCH] = true
-  end
-  generate_random_starters
-  $game_switches[RandomizedChallenge::SWITCH] = true
-end
+# def random_evos_respect_restrictions?
+#   $PokemonGlobal.enable_random_evolutions_respect_restrictions
+# end
 
-def disable_random
-  $game_switches[RandomizedChallenge::SWITCH] = false
-  $game_switches[RandomizedChallenge::ABILITY_RANDOMIZER_SWITCH] = false
-  $game_switches[RandomizedChallenge::ABILITY_SWAP_RANDOMIZER_SWITCH] = false
-  $game_switches[RandomizedChallenge::ABILITY_SEMI_RANDOMIZER_SWITCH] = false
-  $PokemonGlobal.disable_random_params
-end
+# def toggle_random_evolutions_respect_progressive
+#   $PokemonGlobal.enable_random_evolutions_respect_restrictions = !$PokemonGlobal.enable_random_evolutions_respect_restrictions
+# end
 
-def pause_random
-  $game_switches[RandomizedChallenge::SWITCH] = false
-end
+# def set_random_gens(gens = [])
+#   $PokemonGlobal.random_gens = Array(gens)
+# end
 
-def resume_random
-  $game_switches[RandomizedChallenge::SWITCH] = true
-end
+# def add_or_remove_random_gen(gen = nil)
+#   return unless gen
 
-def random_enabled?
-  $game_switches && $game_switches[RandomizedChallenge::SWITCH]
-end
+#   $PokemonGlobal.random_gens = $PokemonGlobal.random_gens || []
+#   if !$PokemonGlobal.random_gens.include?(gen)
+#     $PokemonGlobal.random_gens.push(gen)
+#   else
+#     $PokemonGlobal.random_gens.delete(gen)
+#   end
+# end
+
+# def get_random_gens
+#   $PokemonGlobal.random_gens || []
+# end
+
+# def toggle_random_types
+#   $PokemonGlobal.enable_random_types = !$PokemonGlobal.enable_random_types
+# end
+
+# def random_types_on?
+#   $PokemonGlobal.enable_random_types ? true : false
+# end
+
+# def ohko_banned?
+#   $PokemonGlobal.banohko ? true : false
+# end
+
+# def toggle_ban_ohko
+#   $PokemonGlobal.banohko = !$PokemonGlobal.banohko
+# end
+
+# def randomize_items?
+#   $PokemonGlobal.randomize_items ? true : false
+# end
+
+# # def toggle_randomize_items
+# #   $PokemonGlobal.randomize_items = !$PokemonGlobal.randomize_items
+# # end
+
+# def randomize_held_items?
+#   $PokemonGlobal.randomize_held_items ? true : false
+# end
+
+# def toggle_randomize_held_items
+#   $PokemonGlobal.randomize_held_items = !$PokemonGlobal.randomize_held_items
+# end
 
 # BST máximo y mínimo de los Pokémon del Randomizado en base a cada medalla
 # del jugador.
@@ -232,12 +270,12 @@ def valid_pokemon?(species, ignore_bst = false)
   previous_species = GameData::Species.get(species.get_previous_species)
   valid_bst = ignore_bst || valid_bst?(bst)
   blacklisted = RandomizedChallenge::BLACKLISTED_POKEMON.include?(species)
-  valid_gen = $PokemonGlobal.random_gens.empty? || $PokemonGlobal.random_gens.include?(species.generation) || $PokemonGlobal.random_gens.include?(previous_species.generation)
+  valid_gen = RandomizedChallenge.gens.empty? || RandomizedChallenge.gens.include?(species.generation) || RandomizedChallenge.gens.include?(previous_species.generation)
   species && !blacklisted && valid_bst && valid_gen
 end
 
 def valid_bst?(bst)
-  return true unless $PokemonGlobal.progressive_random
+  return true unless RandomizedChallenge.progressive?
 
   bst.between?(min_bst_cap, max_bst_cap)
 end
@@ -246,11 +284,11 @@ class Pokemon
   alias randomized_init initialize
 
   def initialize(species, level, owner = $player, withMoves = true, recheck_form = true)
-    if random_enabled?
+    if RandomizedChallenge.enabled?
       species = RandomizedChallenge::WHITELISTED_POKEMON.sample
       if RandomizedChallenge::WHITELISTED_POKEMON.empty?
         species = random_species
-        $PokemonGlobal.random_gens = [] unless $PokemonGlobal.random_gens
+        $PokemonGlobal.random_gens = [] unless RandomizedChallenge.gens
         species = random_species until valid_pokemon?(species)
       end
     end
@@ -270,7 +308,7 @@ class Pokemon
 
   alias randomized_types types
   def types
-    return randomized_types unless random_enabled? && random_types_on?
+    return randomized_types unless RandomizedChallenge.enabled? && RandomizedChallenge.types_on?
 
     unless $PokemonGlobal.random_types[@species]
       types = random_types
@@ -329,7 +367,7 @@ class Pokemon
   alias random_getMoveList getMoveList
   def getMoveList
     moves = random_getMoveList
-    return moves unless random_enabled? && random_moves_on?
+    return moves unless RandomizedChallenge.enabled? && RandomizedChallenge.moves_on?
 
     $PokemonGlobal.random_moves = {} unless $PokemonGlobal.random_moves
     return $PokemonGlobal.random_moves[@species] if $PokemonGlobal.random_moves[@species]
@@ -346,7 +384,7 @@ class Pokemon
 
   alias compatible_with_move_random? compatible_with_move?
   def compatible_with_move?(move_id)
-    return compatible_with_move_random?(move_id) unless random_enabled? && random_tm_compat_on?
+    return compatible_with_move_random?(move_id) unless RandomizedChallenge.enabled? && RandomizedChallenge.tm_compat_on?
 
     # RAND Compatibility #TM
     $PokemonGlobal.tm_compatibility_random ||= {}
@@ -363,15 +401,15 @@ class Pokemon
   def get_random_evo(_current_species, new_species)
     species_list = GameData::Species.keys
     # species_list.shuffle!
-    return species_list.sample unless random_evolutions_similar_bst_on? || random_evos_respect_restrictions?
+    return species_list.sample unless RandomizedChallenge.evolutions_similar_bst_on? || RandomizedChallenge.evos_respect_restrictions?
 
     filtered_species = species_list.select do |species|
       species_bst = GameData::Species.get(species).base_stats.values.sum
 
-      if random_evolutions_similar_bst_on?
+      if RandomizedChallenge.evolutions_similar_bst_on?
         new_species_bst = GameData::Species.get(new_species).base_stats.values.sum
         species_bst.between?(new_species_bst * 0.9, new_species_bst * 1.1) && valid_pokemon?(species, true)
-      elsif random_evos_respect_restrictions?
+      elsif RandomizedChallenge.evos_respect_restrictions?
         valid_pokemon?(species)
       end
     end
@@ -387,7 +425,7 @@ class Pokemon
     species_data.get_evolutions(true).each do |evo| # [new_species, method, parameter, boolean]
       next if evo[3] # Prevolution
 
-      random_evo = random_evolutions_on? ? get_random_evo(self, evo[0]) : evo[0]
+      random_evo = RandomizedChallenge.evolutions_on? ? get_random_evo(self, evo[0]) : evo[0]
       ret = yield self, random_evo, evo[1], evo[2] # pkmn, new_species, method, parameter
       return ret if ret
     end
@@ -401,7 +439,7 @@ class PokemonEvolutionScene
     previous_level = @pokemon.level
     pbEvolutionSuccess_random
     @pokemon.form = GameData::Species.get(@pokemon.species).base_form
-    @pokemon.level = previous_level if random_evolutions_on? && @pokemon.level != previous_level
+    @pokemon.level = previous_level if RandomizedChallenge.evolutions_on? && @pokemon.level != previous_level
   end
 end
 
@@ -428,13 +466,34 @@ def get_starter(index = 0, var = nil)
   pbGet(RandomizedChallenge::RANDOM_STARTER_VARIABLES[index])
 end
 
+alias pbAddPokemon_random pbAddPokemon
+def pbAddPokemon(pkmn, level = 1, see_form = true)
+  return pbAddPokemon_random(pkmn, level, see_form) unless RandomizedChallenge::GIFTED_POKEMON_CAN_HAVE_ITEMS
+
+  poke = Pokemon.new(pkmn, level) unless pkmn.is_a?(Pokemon)
+  chance = RandomizedChallenge::GIFTED_POKEMON_ITEM_PROBABILITY.between?(0, 100) ? RandomizedChallenge::GIFTED_POKEMON_ITEM_PROBABILITY : 15
+  give_item = rand < (chance / 100)
+  poke.item = RandomizedChallenge.random_held_item if give_item
+  pbAddPokemon_random(poke, level, see_form)
+end
+
+alias pbAddPokemonSilent_random pbAddPokemonSilent
+def pbAddPokemonSilent(pkmn, level = 1, see_form = true)
+  return pbAddPokemonSilent_random(pkmn, level, see_form) unless RandomizedChallenge::GIFTED_POKEMON_CAN_HAVE_ITEMS
+
+  poke = Pokemon.new(pkmn, level) unless pkmn.is_a?(Pokemon)
+  chance = RandomizedChallenge::GIFTED_POKEMON_ITEM_PROBABILITY.between?(0, 100) ? RandomizedChallenge::GIFTED_POKEMON_ITEM_PROBABILITY : 15
+  give_item = rand < (chance / 100)
+  poke.item = RandomizedChallenge.random_held_item if give_item
+  pbAddPokemonSilent_random(poke, level, see_form)
+end
 
 # ********************************************************
 # MEGAS RANDOMIZE TO MEGAS
 # ********************************************************
 alias pbLoadTrainer_random pbLoadTrainer
 def pbLoadTrainer(tr_type, tr_name, tr_version = 0)
-  return pbLoadTrainer_random(tr_type, tr_name, tr_version) unless random_enabled? && RandomizedChallenge::MEGAS_RANDOMIZE_TO_MEGAS
+  return pbLoadTrainer_random(tr_type, tr_name, tr_version) unless RandomizedChallenge.enabled? && RandomizedChallenge::MEGAS_RANDOMIZE_TO_MEGAS
 
   trainer = pbLoadTrainer_random(tr_type, tr_name, tr_version)
   return trainer if trainer.nil?

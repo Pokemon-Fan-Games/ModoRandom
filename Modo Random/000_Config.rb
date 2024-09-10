@@ -148,6 +148,12 @@ module RandomizedChallenge
   # Los salvajes pueden tener MTs como objetos random
   WILD_CAN_HAVE_TMS = false
 
+
+  GIFTED_POKEMON_CAN_HAVE_ITEMS = true
+  # Probabilidad de objetos en pokemon regalados o de trade
+  # (entre 0 y 100)
+  GIFTED_POKEMON_ITEM_PROBABILITY = 15
+
   # Lista de objetos que no quieres que aparezcan entre los objetos Random.
   ITEM_BLACK_LIST = []
 
@@ -174,10 +180,86 @@ module RandomizedChallenge
   # Permitir que salgan MTs que el jugador ya tiene en los objetos random.
   ALLOW_DUPLICATE_TMS = false
 
+  # Hay una probabilidad de que al vencer a un entranador te den un objeto random
+  TRAINERS_CAN_GIVE_RANDOM_ITEMS = true
+
+  # Porcentaje de probabilidad de que un objeto random sea dado por un entrenador
+  # (entre 0 y 100)
+  PROBABILITY_OF_RANDOM_ITEMS_FROM_TRAINERS = 15
+
   # ********************************************************
   # TIPOS RANDOMIZADOS                                     *
   # ********************************************************
 
   RANDOM_TYPES_DEFAULT_VALUE = false
   INVALID_TYPES = [:QMARKS]
+end
+
+class PokemonGlobalMetadata
+  attr_accessor :progressive_random, :random_moves,
+                :enable_random_moves, :banohko, :random_gens,
+                :enable_random_tm_compat, :tm_compatibility_random, :enable_random_evolutions,
+                :enable_random_evolutions_similar_bst,
+                :enable_random_evolutions_respect_restrictions, :enable_random_types,
+                :random_types, :randomize_items, :randomize_held_items
+end
+class RandomConfigurator
+  def self.toggle_moves
+    if $PokemonGlobal.enable_random_moves.nil?
+      $PokemonGlobal.enable_random_moves = RandomizedChallenge::RANDOM_MOVES_DEFAULT_VALUE
+    end
+    $PokemonGlobal.enable_random_moves = !$PokemonGlobal.enable_random_moves
+  end
+
+  def self.toggle_tm_compat
+    $PokemonGlobal.enable_random_tm_compat = !$PokemonGlobal.enable_random_tm_compat
+  end
+
+  def self.toggle_progressive
+    $PokemonGlobal.progressive_random = !$PokemonGlobal.progressive_random
+  end
+
+  def self.toggle_evolutions
+    $PokemonGlobal.enable_random_evolutions = !$PokemonGlobal.enable_random_evolutions
+  end
+
+  def self.toggle_evolutions_similar_bst
+    $PokemonGlobal.enable_random_evolutions_similar_bst = !$PokemonGlobal.enable_random_evolutions_similar_bst
+  end
+
+  def self.toggle_evolutions_respect_progressive
+    $PokemonGlobal.enable_random_evolutions_respect_restrictions = !$PokemonGlobal.enable_random_evolutions_respect_restrictions
+  end
+
+  def self.set_gens(gens = [])
+    $PokemonGlobal.random_gens = Array(gens)
+  end
+
+  def self.add_or_remove_gen(gen = nil)
+    return unless gen
+
+    $PokemonGlobal.random_gens = $PokemonGlobal.random_gens || []
+    if !$PokemonGlobal.random_gens.include?(gen)
+      $PokemonGlobal.random_gens.push(gen)
+    else
+      $PokemonGlobal.random_gens.delete(gen)
+    end
+  end
+
+  def self.toggle_types
+    $PokemonGlobal.enable_random_types = !$PokemonGlobal.enable_random_types
+  end
+
+  def self.toggle_ban_ohko
+    $PokemonGlobal.banohko = !$PokemonGlobal.banohko
+  end
+
+  def self.toggle_items
+    $PokemonGlobal.randomize_items = !$PokemonGlobal.randomize_items
+  end
+
+  def self.toggle_held_items
+    $PokemonGlobal.randomize_held_items = !$PokemonGlobal.randomize_held_items
+  end
+
 end

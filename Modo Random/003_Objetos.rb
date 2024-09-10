@@ -5,7 +5,7 @@
 #-------------------------------------------------------------------------------
 alias pbItemBall_random pbItemBall
 def pbItemBall(item, quantity = 1)
-  return pbItemBall_random(item, quantity) unless randomize_items?
+  return pbItemBall_random(item, quantity) unless RandomizedChallenge.randomize_items?
 
   random_item = RandomizedChallenge.determine_random_item(item)
   pbItemBall_random(random_item, quantity)
@@ -13,7 +13,7 @@ end
 
 alias pbReceiveItem_random pbReceiveItem
 def pbReceiveItem(item, quantity = 1)
-  return pbReceiveItem_random(item, quantity) unless randomize_items?
+  return pbReceiveItem_random(item, quantity) unless RandomizedChallenge.randomize_items?
 
   random_item = RandomizedChallenge.determine_random_item(item)
   pbReceiveItem_random(random_item, quantity)
@@ -21,15 +21,39 @@ end
 
 alias pbGenerateWildPokemon_randomized pbGenerateWildPokemon
 def pbGenerateWildPokemon(species, level, isRoamer = false)
-  return pbGenerateWildPokemon_randomized(species, level, isRoamer) unless randomize_held_items?
+  return pbGenerateWildPokemon_randomized(species, level, isRoamer) unless RandomizedChallenge.randomize_held_items?
 
   wild_poke = pbGenerateWildPokemon_randomized(species, level, isRoamer)
-  no_tm = !RandomizedChallenge::WILD_CAN_HAVE_TMS
-  wild_poke.item = RandomizedChallenge.determine_random_item(wild_poke.item, no_tm, true) if wild_poke.item
+  wild_poke.item = RandomizedChallenge.random_held_item if wild_poke.item
   wild_poke
 end
 
+class TrainerBattle
+  class << self
+    alias start_random start
+    def start(*args)
+      outcome = start_random(*args)
+      return outcome == 1 unless RandomizedChallenge.enabled? && RandomizedChallenge::TRAINERS_CAN_GIVE_RANDOM_ITEMS
+
+      if outcome ==  1 && RandomizedChallenge.enabled? && RandomizedChallenge::TRAINERS_CAN_GIVE_RANDOM_ITEMS
+        chance = RandomizedChallenge::PROBABILITY_OF_RANDOM_ITEMS_FROM_TRAINERS || 15
+        give_item = rand < (chance / 100)
+        Kernel.pbReceiveItem(:POKEBALL) if give_item
+      end
+      outcome == 1
+    end
+  end
+end
+
 module RandomizedChallenge
+  def self.randomize_items?
+    $PokemonGlobal.randomize_items ? true : false
+  end
+
+  def self.randomize_held_items?
+    $PokemonGlobal.randomize_held_items ? true : false
+  end
+
   def self.random_item(ignore_exclusions = false, no_tm = false, is_held_item = false)
     items = GameData::Item.keys # Get all item IDs
     item = GameData::Item.get(items.sample) # Return the item object
@@ -38,6 +62,11 @@ module RandomizedChallenge
     end
     item.move = random_move if (item.is_TM? || item.is_TR?) && RandomizedChallenge::RANDOMIZE_TM_MOVES
     item
+  end
+
+  def self.random_held_item(item = :POKEBALL)
+    no_tm = !RandomizedChallenge::WILD_CAN_HAVE_TMS
+    RandomizedChallenge.determine_random_item(item, no_tm, true)
   end
 
   def self.random_tm(check_allow_list = true, allow_duplicates = RandomizedChallenge::ALLOW_DUPLICATE_TMS)
