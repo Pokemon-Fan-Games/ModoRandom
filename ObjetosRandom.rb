@@ -31,7 +31,6 @@ def toggle_random_held_items
 end
 
 module RandomizedChallenge
-
   RANDOM_ITEMS_DEFAULT_VALUE = true
   RANDOM_HELD_ITEMS_DEFAULT_VALUE = true
 
