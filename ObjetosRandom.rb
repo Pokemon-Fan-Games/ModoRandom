@@ -3,33 +3,7 @@ class PokemonGlobalMetadata
                 :random_held_items
 end
 
-def random_items_enabled?
-  random_enabled? && $PokemonGlobal.random_items_enabled ? true : false
-end
-
-def toggle_random_items
-  if $PokemonGlobal.random_items_enabled.nil?
-    $PokemonGlobal.random_items_enabled = RandomizedChallenge::RANDOM_ITEMS_DEFAULT_VALUE
-  end
-
-  if $PokemonGlobal.random_held_items.nil?
-    $PokemonGlobal.random_held_items = RandomizedChallenge::RANDOM_ITEMS_DEFAULT_VALUE
-  end
-
-  $PokemonGlobal.random_items_enabled = !$PokemonGlobal.random_items_enabled
-end
-
-def random_held_items_enabled?
-  random_enabled? && $PokemonGlobal.random_held_items ? true : false
-end
-
-def toggle_random_held_items
-  if $PokemonGlobal.random_held_items.nil?
-    $PokemonGlobal.random_held_items = RandomizedChallenge::RANDOM_HELD_ITEMS_DEFAULT_VALUE
-  end
-  $PokemonGlobal.random_held_items = !$PokemonGlobal.random_held_items
-end
-
+# Configuracion Objetos Random
 module RandomizedChallenge
   RANDOM_ITEMS_DEFAULT_VALUE = true
   RANDOM_HELD_ITEMS_DEFAULT_VALUE = true
@@ -69,7 +43,41 @@ module RandomizedChallenge
   # Porcentaje de probabilidad de que entrenador de un objeto random al vencerlo
   # Valor entre 1 y 100
   PROBABILITY_OF_ITEMS_FROM_BEATEN_TRAINERS = 10
+end
 
+def random_items_enabled?
+  random_enabled? && $PokemonGlobal.random_items_enabled ? true : false
+end
+
+def toggle_random_items
+  if $PokemonGlobal.random_items_enabled.nil?
+    $PokemonGlobal.random_items_enabled = RandomizedChallenge::RANDOM_ITEMS_DEFAULT_VALUE
+  else
+    $PokemonGlobal.random_items_enabled = !$PokemonGlobal.random_items_enabled
+  end
+
+  if $PokemonGlobal.random_held_items.nil?
+    $PokemonGlobal.random_held_items = RandomizedChallenge::RANDOM_HELD_ITEMS_DEFAULT_VALUE
+  else
+    $PokemonGlobal.random_held_items = !$PokemonGlobal.random_held_items
+  end
+
+  
+end
+
+def random_held_items_enabled?
+  random_enabled? && $PokemonGlobal.random_held_items ? true : false
+end
+
+def toggle_random_held_items
+  if $PokemonGlobal.random_held_items.nil?
+    $PokemonGlobal.random_held_items = RandomizedChallenge::RANDOM_HELD_ITEMS_DEFAULT_VALUE
+  else
+    $PokemonGlobal.random_held_items = !$PokemonGlobal.random_held_items
+  end
+end
+
+module RandomizedChallenge
   def self.initialize_tm_list
     return if $PokemonGlobal.tm_list && $PokemonGlobal.tm_list.length > 0
 
@@ -109,7 +117,7 @@ module RandomizedChallenge
 
   def self.random_item(ignore_exclusions = false, no_tm = false, is_held_item = false)
     rand_item = item
-    if !ignore_exclusions && excluded_item?(rand_item, is_held_item)
+    if !ignore_exclusions && (excluded_item?(rand_item, is_held_item) || (pbIsMachine?(rand_item) && no_tm))
       rand_item = item while excluded_item?(rand_item, is_held_item) || (pbIsMachine?(rand_item) && no_tm)
     end
 
@@ -161,7 +169,7 @@ alias pbAddPokemon_random pbAddPokemon
 def pbAddPokemon(pkmn, level = nil, seeform = true)
   return pbAddPokemon_random(pkmn, level, seeform) unless random_enabled? && RandomizedChallenge::GIFTED_POKEMON_CAN_HAVE_ITEMS
 
-  return if !pokemon || !$Trainer
+  return if !pkmn || !$Trainer
 
   if pbBoxesFull?
     Kernel.pbMessage(_INTL("¡No hay espacio para el Pokémon!\1"))
@@ -169,53 +177,60 @@ def pbAddPokemon(pkmn, level = nil, seeform = true)
     return false
   end
 
-  pokemon = getID(PBSpecies, pokemon) if pokemon.is_a?(String) || pokemon.is_a?(Symbol)
-  pokemon = PokeBattle_Pokemon.new(pokemon, level, $Trainer) if pokemon.is_a?(Integer) && level.is_a?(Integer)
+  pkmn = getID(PBSpecies, pkmn) if pkmn.is_a?(String) || pkmn.is_a?(Symbol)
+  pkmn = PokeBattle_Pokemon.new(pkmn, level, $Trainer) if pkmn.is_a?(Integer) && level.is_a?(Integer)
 
-  chance = (RandomizedChallenge::GIFTED_POKEMON_ITEM_PROBABILITY || 15) / 100
+  return false unless pkmn.is_a?(PokeBattle_Pokemon)
+
+  chance = (RandomizedChallenge::PROBABILITY_OF_ITEMS_IN_GIFTED_POKEMON || 15) / 100.0
 
   item = 0
   item = RandomizedChallenge.held_item if rand < chance
-  pokemon.setItem(item) if item > 0
-  pbAddPokemon_random(pokemon, level, seeform)
+  pkmn.setItem(item) if item > 0
+  pbAddPokemon_random(pkmn, level, seeform)
 end
 
 alias pbAddPokemonSilent_random pbAddPokemonSilent
 def pbAddPokemonSilent(pkmn, level = nil, seeform = true)
   return pbAddPokemonSilent_random(pkmn, level, seeform) unless random_enabled? && RandomizedChallenge::GIFTED_POKEMON_CAN_HAVE_ITEMS
 
-  return if !pokemon || !$Trainer
+  return if !pkmn || !$Trainer
 
-  pokemon = getID(PBSpecies, pokemon) if pokemon.is_a?(String) || pokemon.is_a?(Symbol)
-  pokemon = PokeBattle_Pokemon.new(pokemon, level, $Trainer) if pokemon.is_a?(Integer) && level.is_a?(Integer)
+  pkmn = getID(PBSpecies, pkmn) if pkmn.is_a?(String) || pkmn.is_a?(Symbol)
+  pkmn = PokeBattle_Pokemon.new(pkmn, level, $Trainer) if pkmn.is_a?(Integer) && level.is_a?(Integer)
 
-  chance = (RandomizedChallenge::GIFTED_POKEMON_ITEM_PROBABILITY || 15) / 100
+  return false unless pkmn.is_a?(PokeBattle_Pokemon)
+
+  chance = (RandomizedChallenge::PROBABILITY_OF_ITEMS_IN_GIFTED_POKEMON || 15) / 100.0
 
   item = 0
   item = RandomizedChallenge.held_item if rand < chance
-  pokemon.setItem(item) if item > 0
-  pbAddPokemonSilent_random(pokemon, level, seeform)
+  pkmn.setItem(item) if item > 0
+  pbAddPokemonSilent_random(pkmn, level, seeform)
 end
 
 alias pbGenerateWildPokemon_random pbGenerateWildPokemon
 def pbGenerateWildPokemon(species, level, isroamer = false)
   wild_poke = pbGenerateWildPokemon_random(species, level, isroamer)
   if wild_poke.item > 0 && random_held_items_enabled?
-    no_tm = !RandomizedChallenge::HELD_ITEM_CAN_BE_A_TM
-    item = RandomizedChallenge.random_item(false, no_tm, true)
+    item = RandomizedChallenge.held_item
     wild_poke.setItem(item)
   end
   wild_poke
 end
 
-alias pbTrainerBattleSuccess_random pbTrainerBattleSuccess
-def pbTrainerBattleSuccess
-  pbTrainerBattleSuccess_random
-  return unless random_enabled? && random_items_enabled? && RandomizedChallenge::BEATEN_TRAINERS_CAN_GIVE_ITEMS
 
-  chance = (RandomizedChallenge::BEATEN_TRAINERS_ITEM_PROBABILITY || 10) / 100
+alias pbTrainerBattle_random pbTrainerBattle
+def pbTrainerBattle(trainerid,trainername,endspeech,
+                    doublebattle=false,trainerparty=0,canlose=false,variable=nil)
+  won = pbTrainerBattle_random(trainerid,trainername,endspeech, doublebattle,
+                               trainerparty,canlose,variable)
+  return won unless random_enabled? && random_items_enabled? && RandomizedChallenge::BEATEN_TRAINERS_CAN_GIVE_ITEMS
+  chance = (RandomizedChallenge::PROBABILITY_OF_ITEMS_FROM_BEATEN_TRAINERS || 15) / 100.0
   Kernel.pbReceiveItem(PBItems::POKEBALL) if rand < chance
-end
+  return won
+end                    
+
 
 module Kernel
   class << self
