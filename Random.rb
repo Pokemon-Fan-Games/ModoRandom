@@ -694,15 +694,17 @@ class PokeBattle_Pokemon
       if $PokemonGlobal.enable_random_moves
         while movelist.length < 4
           move = rand(PBMoves::PBMoves.maxValue - 1) + 1
-          movedata = PBMoveData.new(move)
+          # movedata = PBMoveData.new(move)
           if $Trainer.numbadges < 3 && $PokemonGlobal.progressive_random
-            next if !move || movedata.basedamage > 70 || RandomizedChallenge::MOVEBLACKLIST.include?(move)
+            next if invalid_move?(progressive_random_on?, move, false, 70)
+            # next if !move || movedata.basedamage > 70 || RandomizedChallenge::MOVEBLACKLIST.include?(move)
           elsif !move || RandomizedChallenge::MOVEBLACKLIST.include?(move)
             next
           end
           movelist.push(move)
           movelist |= [] # Elimina duplicados
         end
+        movelist = improve_moves_with_stab_and_damage(movelist)
       # FIN generación de movimientos random
       else
         (0..length - 1).each do |k|
@@ -832,14 +834,18 @@ class PokeBattle_Pokemon
     ret
   end
 
-  def find_valid_move(progressive = false, power = 0, types=[])
-    move = rand(PBMoves::PBMoves.maxValue) + 1
+  def invalid_move?(progressive, move, move_exists = false, power = 0, types=[])
     movedata = PBMoveData.new(move)
-    move_exists = $PokemonGlobal.random_moves[@species].detect { |elem| elem[1] == (move) }
-    while (progressive && power > 0 && movedata.basedamage > power) || (!types.empty? && !types.include?(movedata.type)) || RandomizedChallenge::MOVEBLACKLIST.include?(move) || move_exists
+    (progressive && power > 0 && movedata.basedamage > power) || (!types.empty? && !types.include?(movedata.type)) || RandomizedChallenge::MOVEBLACKLIST.include?(move) || move_exists ? true : false
+  end
+
+  def find_valid_move(progressive = false, power = 0, types = [])
+    move = rand(PBMoves::PBMoves.maxValue) + 1
+    movelist = $PokemonGlobal.random_moves[@species]
+    move_exists = movelist ? movelist.detect { |elem| elem[1] == (move) } : false
+    while invalid_move?(progressive, move, move_exists, power, types)
       move = rand(PBMoves::PBMoves.maxValue) + 1
-      movedata = PBMoveData.new(move)
-      move_exists = $PokemonGlobal.random_moves[@species].detect { |elem| elem[1] == (move) }
+      move_exists = movelist ? movelist.detect { |elem| elem[1] == (move) } : false
     end
     move
   end
@@ -875,57 +881,85 @@ class PokeBattle_Pokemon
     return list
   end
 
-  # alias resetMoves_random resetMoves
-  # def resetMoves
-  #   resetMoves_random
+  alias resetMoves_random resetMoves
+  def resetMoves
+    reset_moves_random
+    movelist = improve_moves_with_stab_and_damage
 
-  #   has_stab = false
-  #   stab_index = 0
-  #   has_damage = false
-  #   damage_index = 0
-  #   types = [type1, type2]
-  #   @moves.each_with_index do |m, i|
-  #     movedata = PBMoveData.new(m)
-  #     has_stab = true if types.include?(movedata.type)
-  #     stab_index = i if has_stab
-  #     has_damage = true if movedata.basedamage > 10
-  #     damage_index = i if has_damage
-  #   end
+    movelist.each_with_index do |m, i|
+      @moves[i] = m
+    end
+  end
 
-  #   unless has_damage
-  #     damage_move = find_valid_move(progressive_random_on?, 20)
-  #     if @moves.length < 4
-  #       @moves.push(damage_move)
-  #       has_damage = true
-  #       damage_index = 3
-  #     elsif has_stab && @moves.length == 4
-  #       possible_index = [0, 1, 2, 3].reject { |i| i == stab_index }
-  #       damage_index = possible_index[0]
-  #       has_damage = true
-  #       @moves[damage_index] = damage_move
-  #     elsif !has_stab && @moves.length == 4
-  #       @moves[3] = damage_move
-  #       has_damage = true
-  #       damage_index = 3
-  #     end
-  #   end
+  def improve_moves_with_stab_and_damage(movelist = nil)
+    types = [type1, type2]
+    movelist ||= @moves
 
-  #   return if has_stab
-  #   return unless RandomizedChallenge::PROBABILITY_OF_STAB && RandomizedChallenge::PROBABILITY_OF_STAB > 0
+    stab_index, damage_index = find_stab_and_damage_indices(types, movelist)
 
-  #   chance_of_stab = RandomizedChallenge::PROBABILITY_OF_STAB / 100
-  #   return unless rand < chance_of_stab
+    return movelist if stab_index && damage_index
 
-  #   max_power = progressive_random_on? && $Trainer.numbadges < 3 ? 70 : 0
-  #   stab_move = find_valid_move(progressive_random_on?, max_power, types)
-  #   if @moves.length < 4
-  #     @moves.push(stab_move)
-  #   else
-  #     possible_index = [0, 1, 2, 3].reject { |i| i == damage_index }
-  #     stab_index = possible_index[0]
-  #     @moves[stab_index] = stab_move
-  #   end
-  # end
+    movelist = add_or_replace_damage_move(stab_index, movelist) unless damage_index
+
+    movelist = add_or_replace_stab_move(damage_index, types, movelist) unless stab_index
+
+    movelist
+  end
+
+  private
+
+  def find_stab_and_damage_indices(types, movelist = nil)
+    stab_index = nil
+    damage_index = nil
+
+    movelist.each_with_index do |m, i|
+      movedata = PBMoveData.new(m)
+      stab_index = i if types.include?(movedata.type) && !stab_index
+
+      damage_index = i if movedata.basedamage > 10 && !damage_index
+
+      break if stab_index && damage_index
+    end
+
+    [stab_index, damage_index]
+  end
+
+  def add_or_replace_damage_move(stab_index, movelist)
+    damage_move = find_valid_move(progressive_random_on?, 10)
+
+    if movelist.length < 4
+      movelist.push(damage_move)
+    else
+      movelist = replace_move(stab_index ? [stab_index] : [], damage_move, movelist)
+    end
+    movelist
+  end
+
+  def add_or_replace_stab_move(damage_index, types, movelist)
+    return unless RandomizedChallenge::PROBABILITY_OF_STAB && RandomizedChallenge::PROBABILITY_OF_STAB > 0
+
+    chance_of_stab = RandomizedChallenge::PROBABILITY_OF_STAB / 100.0
+    return movelist unless rand < chance_of_stab
+
+    max_power = progressive_random_on? && $Trainer.numbadges < 3 ? 70 : 0
+    stab_move = find_valid_move(progressive_random_on?, max_power, types)
+
+    if movelist.length < 4
+      movelist.push(stab_move)
+    else
+      movelist = replace_move(damage_index ? [damage_index] : [], stab_move, movelist)
+    end
+    movelist
+  end
+
+  def replace_move(index_to_avoid, move, movelist)
+    possible_indices = [0, 1, 2, 3] - index_to_avoid
+    return movelist if possible_indices.empty?
+
+    replace_index = possible_indices[0]
+    movelist[replace_index] = move
+    movelist
+  end
 end
 
 def get_evos(poke)
