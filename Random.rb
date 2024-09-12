@@ -164,6 +164,8 @@ module RandomizedChallenge
 
   # Probabilidad de que los pokemon tengan al menos 1 mov con stab
   # Por defecto es 25, para desactivarlo ponerlo en un valor menor a 1, para asegurarlo ponerlo en 100
+  # Si el pokemon no tenia un movimiento con stab, hay una probabilidad de que otro movimiento se reemplace
+  # Por otro que si lo tenga
   PROBABILITY_OF_STAB = 25
 
   # Randomizar compatibilidad con las MTs
