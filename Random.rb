@@ -707,7 +707,7 @@ class PokeBattle_Pokemon
         movelist = improve_moves_with_stab_and_damage(movelist)
       # FIN generación de movimientos random
       else
-        (0..length - 1).each do |k|
+        (0..length - 1).each do
           alevel = atkdata.fgetw
           move = atkdata.fgetw
           movelist[movelist.length] = move if alevel <= level
@@ -867,7 +867,7 @@ class PokeBattle_Pokemon
     atkdata.pos = offset
 
     list = []
-    (0..length - 1).each do |i|
+    (0..length - 1).each do
       level = atkdata.fgetw
       move = atkdata.fgetw
       next if move.nil?
@@ -1041,6 +1041,8 @@ def give_starter_random(index = 0, var = nil, level = 5)
   pause_random
   pbAddPokemon(starter, level)
   resume_random
+  # Re randomiza los movimientos, de lo contrario tendrá los primeros movimientos no randomizados.
+  $Trainer.party[0].resetMoves
 end
 
 def random_pokemon_set(amount = 3)
