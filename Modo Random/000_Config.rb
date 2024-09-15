@@ -193,6 +193,14 @@ module RandomizedChallenge
 
   RANDOM_TYPES_DEFAULT_VALUE = false
   INVALID_TYPES = [:QMARKS]
+
+  # Lista de entrenadores que no se randomizarán
+  # El listado debe contener el trainer.id
+  UNRANDOMIZABLE_TRAINERS = []
+
+  # Lista de entrenadores y pokemon especificos que no se randomizarán
+  # Es un hash que debe ser trainer.id => [:ESPECIE1, :ESPECIE2]
+  UNRANDOMIZABLE_TRAINER_POKEMON = {}
 end
 
 class PokemonGlobalMetadata

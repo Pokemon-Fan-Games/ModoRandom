@@ -359,8 +359,6 @@ class PokemonEvolutionScene
   end
 end
 
-# TODO: Agregar logica para que las megas se randomicen por otras megas
-
 # ********************************************************
 # STARTERS RANDOMIZADOS CON DOS ETAPAS EVOLUTIVAS
 # ********************************************************
@@ -409,22 +407,35 @@ end
 # ********************************************************
 alias pbLoadTrainer_random pbLoadTrainer
 def pbLoadTrainer(tr_type, tr_name, tr_version = 0)
-  return pbLoadTrainer_random(tr_type, tr_name, tr_version) unless RandomizedChallenge.enabled? && RandomizedChallenge::MEGAS_RANDOMIZE_TO_MEGAS
+  return pbLoadTrainer_random(tr_type, tr_name, tr_version) unless RandomizedChallenge.enabled?
 
   trainer = pbLoadTrainer_random(tr_type, tr_name, tr_version)
   return trainer if trainer.nil?
 
-  trainer.party.map! do |pkmn|
-    species_data = GameData::Species.get(pkmn.species)
-    if pkmn&.item&.is_mega_stone? && species_data.mega_stone
-      pkmn.item = species_data.mega_stone
-    elsif pkmn&.item&.is_mega_stone? && !species_data.mega_stone
-      new_species = random_species(true)
-      pause_random
-      pkmn = Pokemon.new(new_species, pkmn.level, pkmn.owner)
-      resume_random
-      pkmn.item = species_data.mega_stone
-      pkmn.reset_moves
+  trainer_data = GameData::Trainer.try_get(tr_type, tr_name, tr_version)
+  return trainer if RandomizedChallenge::UNRANDOMIZABLE_TRAINERS.include?(trainer_data.id)
+
+  unrandomizable_pokes = RandomizedChallenge::UNRANDOMIZABLE_TRAINER_POKEMON.fetch(trainer_data.id, {})
+
+  return trainer if unrandomizable_pokes.empty? && !RandomizedChallenge::MEGAS_RANDOMIZE_TO_MEGAS
+
+  trainer.party.map!.with_index do |pkmn, index|
+    if unrandomizable_pokes[index]
+      RandomizedChallenge.pause
+      pkmn = Pokemon.new(unrandomizable_pokes[index], pkmn.level, pkmn.owner)
+      RandomizedChallenge.resume
+    elsif pkmn&.item&.is_mega_stone?
+      species_data = GameData::Species.get(pkmn.species)
+      if species_data.mega_stone
+        pkmn.item = species_data.mega_stone
+      else
+        RandomizedChallenge.pause
+        new_species = random_species(true)
+        pkmn = Pokemon.new(new_species, pkmn.level, pkmn.owner)
+        pkmn.item = GameData::Species.get(new_species).mega_stone
+        pkmn.reset_moves
+        RandomizedChallenge.resume
+      end
     end
     pkmn
   end
