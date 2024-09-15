@@ -110,3 +110,26 @@ module RandomizedChallenge
     ITEM_BLACK_LIST.include?(item.id) || (is_held_item && HELD_ITEM_BLACK_LIST.include?(item.id)) || GameData::Item.get(item.id).is_key_item? ? true : false
   end
 end
+
+alias pbAddPokemon_random pbAddPokemon
+def pbAddPokemon(pkmn, level = 1, see_form = true)
+  return pbAddPokemon_random(pkmn, level, see_form) unless RandomizedChallenge::GIFTED_POKEMON_CAN_HAVE_ITEMS
+
+  poke = Pokemon.new(pkmn, level) unless pkmn.is_a?(Pokemon)
+  chance = RandomizedChallenge::GIFTED_POKEMON_ITEM_PROBABILITY.between?(0, 100) ? RandomizedChallenge::GIFTED_POKEMON_ITEM_PROBABILITY : 15
+  give_item = rand < (chance / 100)
+  poke.item = RandomizedChallenge.random_held_item if give_item
+  pbAddPokemon_random(poke, level, see_form)
+end
+
+alias pbAddPokemonSilent_random pbAddPokemonSilent
+def pbAddPokemonSilent(pkmn, level = 1, see_form = true)
+  return pbAddPokemonSilent_random(pkmn, level, see_form) unless RandomizedChallenge::GIFTED_POKEMON_CAN_HAVE_ITEMS
+
+  poke = Pokemon.new(pkmn, level) unless pkmn.is_a?(Pokemon)
+  chance = RandomizedChallenge::GIFTED_POKEMON_ITEM_PROBABILITY.between?(0, 100) ? RandomizedChallenge::GIFTED_POKEMON_ITEM_PROBABILITY : 15
+  give_item = rand < (chance / 100)
+  poke.item = RandomizedChallenge.random_held_item if give_item
+  pbAddPokemonSilent_random(poke, level, see_form)
+end
+
