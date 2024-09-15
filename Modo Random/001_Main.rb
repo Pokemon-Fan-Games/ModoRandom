@@ -250,15 +250,78 @@ class Pokemon
   alias reset_moves_random reset_moves
   def reset_moves
     reset_moves_random
-    return if @moves.any? { |m| GameData::Move.get(m.id).display_real_damage(self) >= 25 }
+    movelist = improve_moves_with_stab_and_damage
 
-    @moves[@moves.length - 1] = Pokemon::Move.new(find_valid_move(25).id)
+    movelist.each_with_index do |m, i|
+      @moves[i] = m
+    end
+  end
 
-    chance_of_stab = (RandomizedChallenge::PROBABILITY_OF_STAB || 25) / 100
+  def improve_moves_with_stab_and_damage(movelist = nil)
+    movelist ||= @moves
 
-    return unless @moves.none? { |m| types.include?(GameData::Move.get(m.id).type) } && rand < chance_of_stab
+    stab_index, damage_index = find_stab_and_damage_indices(types, movelist)
 
-    @moves[@moves.length - 2] = Pokemon::Move.new(find_valid_move(0, types).id)
+    return movelist if stab_index && damage_index
+
+    movelist = add_or_replace_damage_move(stab_index, movelist) unless damage_index
+
+    movelist = add_or_replace_stab_move(damage_index, types, movelist) unless stab_index
+
+    movelist
+  end
+
+  def find_stab_and_damage_indices(types, movelist = nil)
+    stab_index = nil
+    damage_index = nil
+
+    movelist.each_with_index do |m, i|
+      movedata = GameData::Move.get(m.id)
+      stab_index = i if types.include?(movedata.type) && !stab_index
+
+      damage_index = i if movedata.display_real_damage(self) > 10 && !damage_index
+
+      break if stab_index && damage_index
+    end
+
+    [stab_index, damage_index]
+  end
+
+  def add_or_replace_damage_move(stab_index, movelist)
+    damage_move = find_valid_move(RandomizedChallenge.progressive?, 10)
+
+    if movelist.length < 4
+      movelist.push(damage_move)
+    else
+      movelist = replace_move(stab_index ? [stab_index] : [], damage_move, movelist)
+    end
+    movelist
+  end
+
+  def add_or_replace_stab_move(damage_index, types, movelist)
+    return movelist unless RandomizedChallenge::PROBABILITY_OF_STAB.positive?
+
+    chance_of_stab = RandomizedChallenge::PROBABILITY_OF_STAB / 100.0
+    return movelist unless rand < chance_of_stab
+
+    max_power = RandomizedChallenge.progressive? && $player.badge_count < 3 ? 70 : 0
+    stab_move = find_valid_move(RandomizedChallenge.progressive?, max_power, types)
+
+    if movelist.length < 4
+      movelist.push(stab_move)
+    else
+      movelist = replace_move(damage_index ? [damage_index] : [], stab_move, movelist)
+    end
+    movelist
+  end
+
+  def replace_move(index_to_avoid, move, movelist)
+    possible_indices = [0, 1, 2, 3] - index_to_avoid
+    return movelist if possible_indices.empty?
+
+    replace_index = possible_indices.sample
+    movelist[replace_index] = Pokemon::Move.new(move.id)
+    movelist
   end
 
   def find_valid_move(move, min_damage = 0, types = [])
@@ -378,6 +441,14 @@ def get_starter(index = 0, var = nil)
   return pbGet(var) if var
 
   pbGet(RandomizedChallenge::RANDOM_STARTER_VARIABLES[index])
+end
+
+def give_starter_random(index = 0, var = nil, level = 5)
+  species = get_starter(index, var)
+  RandomizedChallenge.pause
+  pbAddPokemon(species, level)
+  RandomizedChallenge.resume
+  $player.party.first.reset_moves
 end
 
 alias pbAddPokemon_random pbAddPokemon

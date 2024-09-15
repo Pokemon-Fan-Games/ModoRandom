@@ -94,6 +94,10 @@ module RandomizedChallenge
   # Debes añadirlos con el nombre interno que aparece en el PBS moves.txt.
   MOVEBLACKLIST = [:CHATTER, :DIG, :TELEPORT, :SONICBOOM, :DRAGONRAGE, :STRUGGLE]
 
+  # Si el pokemon no tiene un movimiento con stab en su moveset base, hay una probabilidad de que se le añada uno
+  # Este valor puede ir entre 1 y 100 o cualquier valor menor 1 para desactivarlo
+  PROBABILITY_OF_STAB = 25
+
   # Lista de posibles Pokémon que aparecerán como Pokémon Iniciales.
   RANDOM_STARTERS_LIST = [
     :BULBASAUR, :CHARMANDER, :SQUIRTLE, :PIDGEY, :NIDORANmA, :NIDORANfE, :ZUBAT, :MANKEY, :POLIWAG, :ABRA, :MACHOP, :BELLSPROUT, :GEODUDE,
