@@ -113,7 +113,7 @@ end
 
 alias pbAddPokemon_random pbAddPokemon
 def pbAddPokemon(pkmn, level = 1, see_form = true)
-  return pbAddPokemon_random(pkmn, level, see_form) unless RandomizedChallenge::GIFTED_POKEMON_CAN_HAVE_ITEMS
+  return pbAddPokemon_random(pkmn, level, see_form) unless RandomizedChallenge::GIFTED_POKEMON_CAN_HAVE_ITEMS && RandomizedChallenge.enabled? && RandomizedChallenge.randomize_held_items?
 
   poke = Pokemon.new(pkmn, level) unless pkmn.is_a?(Pokemon)
   chance = RandomizedChallenge::GIFTED_POKEMON_ITEM_PROBABILITY.between?(0, 100) ? RandomizedChallenge::GIFTED_POKEMON_ITEM_PROBABILITY : 15
@@ -124,7 +124,7 @@ end
 
 alias pbAddPokemonSilent_random pbAddPokemonSilent
 def pbAddPokemonSilent(pkmn, level = 1, see_form = true)
-  return pbAddPokemonSilent_random(pkmn, level, see_form) unless RandomizedChallenge::GIFTED_POKEMON_CAN_HAVE_ITEMS
+  return pbAddPokemonSilent_random(pkmn, level, see_form) unless RandomizedChallenge::GIFTED_POKEMON_CAN_HAVE_ITEMS && RandomizedChallenge.enabled? && RandomizedChallenge.randomize_held_items?
 
   poke = Pokemon.new(pkmn, level) unless pkmn.is_a?(Pokemon)
   chance = RandomizedChallenge::GIFTED_POKEMON_ITEM_PROBABILITY.between?(0, 100) ? RandomizedChallenge::GIFTED_POKEMON_ITEM_PROBABILITY : 15
