@@ -8,7 +8,8 @@ class PokemonGlobalMetadata
                 :enable_random_tm_compat, :tm_compatibility_random, :enable_random_evolutions,
                 :enable_random_evolutions_similar_bst,
                 :enable_random_evolutions_respect_restrictions, :enable_random_types,
-                :random_types, :randomize_items, :randomize_held_items
+                :random_types, :randomize_items, :randomize_held_items,
+                :random_encounter_table, :consistent_wild_encounters, :dont_randomize, :wild_paused
   alias initialize_random initialize
   def initialize
     initialize_random
@@ -29,6 +30,10 @@ class PokemonGlobalMetadata
     @banohko = RandomizedChallenge::BAN_OHKO_MOVES
     @randomize_items = RandomizedChallenge::RANDOMIZE_ITEMS
     @randomize_held_items = RandomizedChallenge::RANDOMIZE_HELD_ITEMS
+    @random_encounter_table = {}
+    @consistent_wild_encounters = RandomizedChallenge::CONSISTENT_WILD_ENCOUNTERS
+    @wild_paused = false
+    @dont_randomize = []
   end
 
   def disable_random_params
@@ -43,6 +48,10 @@ class PokemonGlobalMetadata
     @banohko = false
     @randomize_items = false
     @randomize_held_items = false
+    @random_encounter_table = {}
+    @consistent_wild_encounters = false
+    @wild_paused = true
+    @dont_randomize = []
   end
 end
 
@@ -73,6 +82,18 @@ module RandomizedChallenge
 
   def self.pause
     $game_switches[RandomizedChallenge::SWITCH] = false
+  end
+
+  def self.pause_wild_species
+    $PokemonGlobal.wild_paused = true
+  end
+
+  def self.resume_wild_species
+    $PokemonGlobal.wild_paused = false
+  end
+
+  def self.wild_paused?
+    $PokemonGlobal.wild_paused ? true : false
   end
 
   def self.resume
@@ -117,6 +138,10 @@ module RandomizedChallenge
 
   def self.ohko_banned?
     $PokemonGlobal.banohko ? true : false
+  end
+
+  def self.consistent_wild_encounters?
+    enabled? && $PokemonGlobal.keep_wild_encounters ? true : false
   end
 end
 
@@ -172,6 +197,12 @@ def valid_pokemon?(species, ignore_bst = false)
   species && !blacklisted && valid_bst && valid_gen
 end
 
+def valid_random_species
+  species = random_species
+  species = random_species until valid_pokemon?(species)
+  species
+end
+
 def valid_bst?(bst)
   return true unless RandomizedChallenge.progressive?
 
@@ -183,11 +214,10 @@ class Pokemon
 
   def initialize(species, level, owner = $player, withMoves = true, recheck_form = true)
     if RandomizedChallenge.enabled?
-      species = RandomizedChallenge::WHITELISTED_POKEMON.sample
-      if RandomizedChallenge::WHITELISTED_POKEMON.empty?
-        species = random_species
+      species = RandomizedChallenge::WHITELISTED_POKEMON.sample || species unless RandomizedChallenge.wild_paused?
+      if RandomizedChallenge::WHITELISTED_POKEMON.empty? && !RandomizedChallenge.wild_paused?
         $PokemonGlobal.random_gens = [] unless RandomizedChallenge.gens
-        species = random_species until valid_pokemon?(species)
+        species = valid_random_species
       end
     end
     randomized_init(species, level, owner, withMoves, recheck_form)
@@ -222,7 +252,7 @@ class Pokemon
     move = GameData::Move.get(move)
     return move unless (min_damage.positive? && move.display_real_damage(self, move) < min_damage) || (!types.empty? && !types.include?(move.type))
 
-    if min_damage.positive? && type
+    if min_damage.positive? && !types.empty?
       until move.display_real_damage(self, move) >= min_damage && types.include?(move.type)
         move = moves[rand(moves.length - 1) + 1]
         move = GameData::Move.get(move)
@@ -239,7 +269,7 @@ class Pokemon
       end
     end
 
-    move
+    Pokemon::Move.new(move.id)
   end
 
   def invalid_move?(move, move_data)
@@ -253,7 +283,7 @@ class Pokemon
     movelist = improve_moves_with_stab_and_damage
 
     movelist.each_with_index do |m, i|
-      @moves[i] = m
+      @moves[i] = Pokemon::Move.new(m.id)
     end
   end
 
@@ -288,7 +318,7 @@ class Pokemon
   end
 
   def add_or_replace_damage_move(stab_index, movelist)
-    damage_move = find_valid_move(RandomizedChallenge.progressive?, 10)
+    damage_move = find_valid_move(10)
 
     if movelist.length < 4
       movelist.push(damage_move)
@@ -305,7 +335,7 @@ class Pokemon
     return movelist unless rand < chance_of_stab
 
     max_power = RandomizedChallenge.progressive? && $player.badge_count < 3 ? 70 : 0
-    stab_move = find_valid_move(RandomizedChallenge.progressive?, max_power, types)
+    stab_move = find_valid_move(max_power, types)
 
     if movelist.length < 4
       movelist.push(stab_move)
@@ -324,14 +354,15 @@ class Pokemon
     movelist
   end
 
-  def find_valid_move(move, min_damage = 0, types = [])
+  def find_valid_move(min_damage = 0, types = [])
     badge_count = $player.badge_count
+    move = random_move(min_damage, types)
     loop do
       move_data = GameData::Move.get(move.id)
 
-      if badge_count < 3
+      if RandomizedChallenge.progressive? && badge_count < 3
         break unless move_data.display_real_damage(self) > 70 || invalid_move?(move, move_data)
-      elsif badge_count >= 6
+      elsif RandomizedChallenge.progressive? && badge_count >= 6
         break unless move_data.display_real_damage(self) < 55 || invalid_move?(move, move_data)
       else
         break unless invalid_move?(move, move_data)
@@ -355,7 +386,7 @@ class Pokemon
 
     moves.each do |item|
       level = item[0]
-      move = find_valid_move(random_move)
+      move = find_valid_move
       $PokemonGlobal.random_moves[@species].push([level, move])
     end
     $PokemonGlobal.random_moves[@species]
@@ -491,4 +522,47 @@ def pbLoadTrainer(tr_type, tr_name, tr_version = 0)
   end
 
   trainer
+end
+
+class PokemonEncounters
+  alias choose_wild_pokemon_random choose_wild_pokemon
+  def choose_wild_pokemon(enc_type, chance_rolls = 1)
+    return choose_wild_pokemon_random(enc_type, chance_rolls) unless RandomizedChallenge.consistent_wild_encounters?
+
+    if !enc_type || !GameData::EncounterType.exists?(enc_type)
+      raise ArgumentError.new(_INTL("El tipo de encuentro {1} no existe", enc_type))
+    end
+
+    enc_list = @encounter_tables[enc_type]
+    return nil if !enc_list || enc_list.empty?
+
+    if !$PokemonGlobal.random_encounter_table[enc_type] || $PokemonGlobal.random_encounter_table[enc_type].empty?
+      $PokemonGlobal.random_encounter_table[enc_type] = enc_list.map do |enc|
+        enc[1] = valid_random_species.id
+        enc
+      end
+    end
+    @encounter_tables[enc_type] = $PokemonGlobal.random_encounter_table[enc_type]
+
+    wild = choose_wild_pokemon_random(enc_type, chance_rolls)
+    RandomizedChallenge.pause_wild_species
+    $PokemonGlobal.dont_randomize << wild[0]
+    wild
+  end
+end
+
+class EncounterList_Scene
+  alias initialize_random initialize
+  def initialize
+    initialize_random
+    return unless RandomizedChallenge.enabled?
+
+    if RandomizedChallenge.consistent_wild_encounters?
+      @encounter_tables = $PokemonGlobal.random_encounter_table || {}
+      @max_enc, @eLength = @encounter_tables.empty? ? [1, 1] : getMaxEncounters(@encounter_tables)
+      Kernel.pbMessage(_INTL('En el modo random el busca salvajes estará vacío hasta que entres al menos en 1 combate con salvajes por ruta'))
+    else
+      Kernel.pbMessage(_INTL('En el modo random donde los Pokémon de las rutas son 100% aleatorios el busca salvajes no mostrará información correcta'))
+    end
+  end
 end

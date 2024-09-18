@@ -21,10 +21,10 @@ end
 
 alias pbGenerateWildPokemon_randomized pbGenerateWildPokemon
 def pbGenerateWildPokemon(species, level, isRoamer = false)
-  return pbGenerateWildPokemon_randomized(species, level, isRoamer) unless RandomizedChallenge.randomize_held_items?
-
   wild_poke = pbGenerateWildPokemon_randomized(species, level, isRoamer)
-  wild_poke.item = RandomizedChallenge.random_held_item if wild_poke.item
+  $PokemonGlobal.dont_randomize.delete_at($PokemonGlobal.dont_randomize.index(species)) if $PokemonGlobal.dont_randomize.include?(species)
+  RandomizedChallenge.resume_wild_species if RandomizedChallenge.keep_wild_encounters? && $PokemonGlobal.dont_randomize.empty?
+  wild_poke.item = RandomizedChallenge.random_held_item if wild_poke.item && RandomizedChallenge.randomize_held_items?
   wild_poke
 end
 

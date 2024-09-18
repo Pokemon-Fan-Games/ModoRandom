@@ -110,6 +110,9 @@ module RandomizedChallenge
     :FRIGIBAX
   ]
 
+  # Mantener los salvajes de las rutas, se randomizan solo 1 vez y siempre saldran los mismos Pokémon en ese mapa
+  CONSISTENT_WILD_ENCOUNTERS = true
+
   # ********************************************************
   # HABILIDADES RANDOMIZADAS                               *
   # ********************************************************
@@ -213,9 +216,10 @@ class PokemonGlobalMetadata
                 :enable_random_tm_compat, :tm_compatibility_random, :enable_random_evolutions,
                 :enable_random_evolutions_similar_bst,
                 :enable_random_evolutions_respect_restrictions, :enable_random_types,
-                :random_types, :randomize_items, :randomize_held_items
+                :random_types, :randomize_items, :randomize_held_items,
+                :consistent_wild_encounters
 end
-class RandomConfigurator
+class RandomizerConfigurator
   def self.toggle_moves
     if $PokemonGlobal.enable_random_moves.nil?
       $PokemonGlobal.enable_random_moves = RandomizedChallenge::RANDOM_MOVES_DEFAULT_VALUE
@@ -274,4 +278,11 @@ class RandomConfigurator
     $PokemonGlobal.randomize_held_items = !$PokemonGlobal.randomize_held_items
   end
 
+  def self.turn_on_consistent_wild_encounters
+    $PokemonGlobal.keep_wild_encounters = true
+  end
+
+  def self.turn_off_consistent_wild_encounters
+    $PokemonGlobal.keep_wild_encounters = false
+  end
 end
