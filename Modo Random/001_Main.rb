@@ -145,10 +145,8 @@ module RandomizedChallenge
   end
 end
 
-# BST máximo y mínimo de los Pokémon del Randomizado en base a cada medalla
-# del jugador.
-# Si necesitas más medallas o usar otro BST, puedes editarlo aquí.
-def max_bst_cap
+def max_bst_cap(badge_count = nil)
+  badge_count ||= $player.badge_count
   max_caps = {
     1 => 400,
     2 => 440,
@@ -160,12 +158,14 @@ def max_bst_cap
   }
   min_key = max_caps.keys.min
   max_key = max_caps.keys.max
+
   # Si el jugador tiene menos medallas que las definidas en max_caps se devuelve el valor de la mas baja
   # Si el jugador tiene mas medallas que las definidas en max_caps se devuelve el valor de la mas alta
-  $player.badge_count < min_key ? max_caps[min_key] : max_caps.fetch($player.badge_count, max_caps[max_key])
+  badge_count < min_key ? max_caps[min_key] : max_caps.fetch(badge_count, max_caps[max_key])
 end
 
-def min_bst_cap
+def min_bst_cap(badge_count = nil)
+  badge_count ||= $player.badge_count
   min_caps = {
     7 => 440,
     6 => 425,
@@ -174,8 +174,9 @@ def min_bst_cap
     3 => 350
   }
   max_key = min_caps.keys.max
+
   # Si el jugador tiene mas medallas que las definidas en min_caps se devuelve el valor de la mas alta
-  $player.badge_count > max_key ? min_caps[max_key] : min_caps.fetch($player.badge_count, 0)
+  badge_count > max_key ? min_caps[max_key] : min_caps.fetch(badge_count, 0)
 end
 
 def random_species(with_mega = false)
@@ -188,25 +189,28 @@ def random_species(with_mega = false)
   GameData::Species.get(species)
 end
 
-def valid_pokemon?(species, ignore_bst = false)
+def valid_pokemon?(species, ignore_bst = false, badge_count = nil)
   bst = species.base_stats.values.sum
+  badge_count ||= $player.badge_count
   previous_species = GameData::Species.get(species.get_previous_species)
-  valid_bst = ignore_bst || valid_bst?(bst)
+  valid_bst = ignore_bst || valid_bst?(bst, badge_count)
   blacklisted = RandomizedChallenge::BLACKLISTED_POKEMON.include?(species)
   valid_gen = RandomizedChallenge.gens.empty? || RandomizedChallenge.gens.include?(species.generation) || RandomizedChallenge.gens.include?(previous_species.generation)
   species && !blacklisted && valid_bst && valid_gen
 end
 
-def valid_random_species
+def valid_random_species(badge_count = nil)
+  badge_count ||= $player.badge_count
   species = random_species
-  species = random_species until valid_pokemon?(species)
+  species = random_species until valid_pokemon?(species, false, badge_count)
   species
 end
 
-def valid_bst?(bst)
+def valid_bst?(bst, badge_count = nil)
   return true unless RandomizedChallenge.progressive?
 
-  bst.between?(min_bst_cap, max_bst_cap)
+  badge_count ||= $player.badge_count
+  bst.between?(min_bst_cap(badge_count), max_bst_cap(badge_count))
 end
 
 class Pokemon
@@ -525,6 +529,33 @@ def pbLoadTrainer(tr_type, tr_name, tr_version = 0)
 end
 
 class PokemonEncounters
+  alias setup_random setup
+  def setup(map_ID)
+    setup_random(map_ID)
+    badges_max_levels = if defined?(RandomizedChallenge::BADGES_MAX_LEVELS)
+                          RandomizedChallenge::BADGES_MAX_LEVELS
+                        else
+                          {}
+                        end
+    return unless RandomizedChallenge.consistent_wild_encounters? && !badges_max_levels.empty?
+
+    encounter_data = GameData::Encounter.get(map_ID, $PokemonGlobal.encounter_version)
+    if encounter_data
+      encounter_data.types.each do |enc_type|
+        next unless @encounter_tables[enc_type]
+
+        @encounter_tables[enc_type].map! do |enc|
+          level, = enc
+          level_range = (level - 5)..(level + 5)
+          badge_count = badges_max_levels.find { |_, max_level| level_range.include?(max_level) }&.first || 0
+          new_species = valid_random_species(badge_count)
+          [level, new_species.id]
+        end
+        $PokemonGlobal.random_encounter_table[enc_type] = @encounter_tables[enc_type]
+      end
+    end
+  end
+
   alias choose_wild_pokemon_random choose_wild_pokemon
   def choose_wild_pokemon(enc_type, chance_rolls = 1)
     return choose_wild_pokemon_random(enc_type, chance_rolls) unless RandomizedChallenge.consistent_wild_encounters?

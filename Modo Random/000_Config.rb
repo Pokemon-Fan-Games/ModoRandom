@@ -111,7 +111,18 @@ module RandomizedChallenge
   ]
 
   # Mantener los salvajes de las rutas, se randomizan solo 1 vez y siempre saldran los mismos Pokémon en ese mapa
-  CONSISTENT_WILD_ENCOUNTERS = true
+  # El PokéRadar funciona con este tipo de randomizado
+  CONSISTENT_WILD_ENCOUNTERS = false
+
+  # Esta configuracion se usará si se elige el randomizado de salvajes que es constante en la ruta.
+  # De esta forma se podrán generar los pokemon de las rutas al activar el modo random y que se mantengan
+  # Si esta constante no está mantenida se tendrá que entrar al menos 1 vez a un combate de salvaje y en ese momento
+  # Se generaran los salvajes de esa ruta y en futuras ocasiones saldrán los mismos
+  # BADGES_MAX_LEVELS = { 
+  # 1 => 14,
+  # 2 => 30,
+  # }
+
 
   # ********************************************************
   # HABILIDADES RANDOMIZADAS                               *
