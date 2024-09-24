@@ -222,11 +222,12 @@ class PokemonGlobalMetadata
                 :valid_num_ranges, :random_abs_pokemon, :ability_hash,
                 :random_moves, :enable_random_moves, :random_ability_mode,
                 :progressive_random, :enable_random_tm_compat, :random_evos, :random_evos_similar_bst,
-                :enable_random_types, :random_types
+                :enable_random_types, :random_types, :given_tm_moves
   alias random_abil_init initialize
   def initialize
     random_abil_init
     @ability_hash = nil
+    @given_tm_moves = []
   end
 end
 
@@ -423,6 +424,7 @@ def enable_random
   $PokemonGlobal.random_evos_similar_bst = RandomizedChallenge::RANDOM_EVOS_SIMILAR_BST_DEFAULT_VALUE
   $PokemonGlobal.enable_random_types = RandomizedChallenge::RANDOM_TYPES_DEFAULT_VALUE
   $PokemonGlobal.random_types = {}
+  $PokemonGlobal.given_tm_moves = []
   generate_random_starters
   toggle_random_items
   $game_switches[RandomizedChallenge::SWITCH] = true
@@ -574,6 +576,24 @@ def bst_sum(species)
   end
   bst
 end
+
+def invalid_move?(progressive, move, move_exists = false, power = 0, types=[], for_tm = false)
+  movedata = PBMoveData.new(move)
+  given_tm = for_tm && RandomizedChallenge::RANDOMIZE_TM_MOVES && $PokemonGlobal.given_tm_moves.include?(move)
+  (progressive && power > 0 && movedata.basedamage > power) || (!types.empty? && !types.include?(movedata.type)) || RandomizedChallenge::MOVEBLACKLIST.include?(move) || move_exists || given_tm ? true : false
+end
+
+def find_valid_move(progressive = false, power = 0, types = [], for_tm = false)
+  move = rand(PBMoves::PBMoves.maxValue - 1) + 1
+  movelist = for_tm ? nil : $PokemonGlobal.random_moves[@species]
+  move_exists = movelist ? movelist.detect { |elem| elem[1] == (move) } : false
+  while invalid_move?(progressive, move, move_exists, power, types, for_tm)
+    move = rand(PBMoves::PBMoves.maxValue - 1) + 1
+    move_exists = movelist ? movelist.detect { |elem| elem[1] == (move) } : false
+  end
+  move
+end
+
 
 class PokeBattle_Pokemon
   def reset_form?(poke = self)
@@ -834,21 +854,6 @@ class PokeBattle_Pokemon
     ret
   end
 
-  def invalid_move?(progressive, move, move_exists = false, power = 0, types=[])
-    movedata = PBMoveData.new(move)
-    (progressive && power > 0 && movedata.basedamage > power) || (!types.empty? && !types.include?(movedata.type)) || RandomizedChallenge::MOVEBLACKLIST.include?(move) || move_exists ? true : false
-  end
-
-  def find_valid_move(progressive = false, power = 0, types = [])
-    move = rand(PBMoves::PBMoves.maxValue) + 1
-    movelist = $PokemonGlobal.random_moves[@species]
-    move_exists = movelist ? movelist.detect { |elem| elem[1] == (move) } : false
-    while invalid_move?(progressive, move, move_exists, power, types)
-      move = rand(PBMoves::PBMoves.maxValue) + 1
-      move_exists = movelist ? movelist.detect { |elem| elem[1] == (move) } : false
-    end
-    move
-  end
 
   alias random_getMoveList getMoveList
   def getMoveList

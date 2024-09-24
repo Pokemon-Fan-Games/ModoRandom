@@ -1,5 +1,5 @@
 class PokemonGlobalMetadata
-  attr_accessor :tm_list, :random_items_enabled,
+  attr_accessor :tm_list, :given_tm_moves, :random_items_enabled,
                 :random_held_items
 end
 
@@ -65,8 +65,6 @@ def toggle_random_items
   else
     $PokemonGlobal.random_held_items = !$PokemonGlobal.random_held_items
   end
-
-  
 end
 
 def random_held_items_enabled?
@@ -251,7 +249,8 @@ module Kernel
       if random_items_enabled?
         item = RandomizedChallenge.determine_random_item(item)
         if pbIsTechnicalMachine?(item) && RandomizedChallenge::RANDOMIZE_TM_MOVES
-          move = rand(PBMoves::PBMoves.maxValue - 1) + 1
+          move = find_valid_move(false, 0, [], true)
+          $PokemonGlobal.given_tm_moves << move
           $ItemData[item][ITEMMACHINE] = move
         end
       end
@@ -264,7 +263,8 @@ module Kernel
       if random_items_enabled?
         item = RandomizedChallenge.determine_random_item(item)
         if pbIsTechnicalMachine?(item) && RandomizedChallenge::RANDOMIZE_TM_MOVES
-          move = rand(PBMoves::PBMoves.maxValue - 1) + 1
+          move = find_valid_move(false, 0, [], true)
+          $PokemonGlobal.given_tm_moves << move
           $ItemData[item][ITEMMACHINE] = move
         end
       end
