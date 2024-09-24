@@ -166,7 +166,6 @@ module RandomizedChallenge
   # Los salvajes pueden tener MTs como objetos random
   WILD_CAN_HAVE_TMS = false
 
-
   GIFTED_POKEMON_CAN_HAVE_ITEMS = true
   # Probabilidad de objetos en pokemon regalados o de trade
   # (entre 0 y 100)

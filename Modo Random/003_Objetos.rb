@@ -1,3 +1,7 @@
+class PokemonGlobalMetadata
+  attr_accessor :given_tm_moves
+end
+
 #-------------------------------------------------------------------------------
 # Overrides of pbItemBall and pbReceiveItem
 #-------------------------------------------------------------------------------
@@ -60,7 +64,11 @@ module RandomizedChallenge
     if !ignore_exclusions && excluded_item?(item)
       item = GameData::Item.get(items.sample) while excluded_item?(item, is_held_item) || (item.is_machine? && no_tm)
     end
-    item.move = random_move if (item.is_TM? || item.is_TR?) && RandomizedChallenge::RANDOMIZE_TM_MOVES
+    if (item.is_TM? || item.is_TR?) && RandomizedChallenge::RANDOMIZE_TM_MOVES
+      move = find_valid_move(0, [], true)
+      item.move = move
+      $PokemonGlobal.given_tm_moves << move
+    end
     item
   end
 

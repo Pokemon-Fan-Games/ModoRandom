@@ -9,7 +9,8 @@ class PokemonGlobalMetadata
                 :enable_random_evolutions_similar_bst,
                 :enable_random_evolutions_respect_restrictions, :enable_random_types,
                 :random_types, :randomize_items, :randomize_held_items,
-                :random_encounter_table, :consistent_wild_encounters, :dont_randomize, :wild_paused
+                :random_encounter_table, :consistent_wild_encounters, :dont_randomize, :wild_paused, 
+                :given_tm_moves
   alias initialize_random initialize
   def initialize
     initialize_random
@@ -34,6 +35,7 @@ class PokemonGlobalMetadata
     @consistent_wild_encounters = RandomizedChallenge::CONSISTENT_WILD_ENCOUNTERS
     @wild_paused = false
     @dont_randomize = []
+    @given_tm_moves = []
   end
 
   def disable_random_params
@@ -52,6 +54,7 @@ class PokemonGlobalMetadata
     @consistent_wild_encounters = false
     @wild_paused = true
     @dont_randomize = []
+    @given_tm_moves = []
   end
 end
 
@@ -250,7 +253,7 @@ class Pokemon
     $PokemonGlobal.random_types[@species]
   end
 
-  def random_move(min_damage = 0, types = [])
+  def random_move(min_damage = 0, types = [], for_tm = false)
     moves = GameData::Move.keys
     move = moves[rand(moves.length - 1) + 1]
     move = GameData::Move.get(move)
@@ -276,9 +279,10 @@ class Pokemon
     Pokemon::Move.new(move.id)
   end
 
-  def invalid_move?(move, move_data)
+  def invalid_move?(move, move_data, for_tm = false)
     move_exists = $PokemonGlobal.random_moves[@species]&.detect { |elem| elem[1] == move }
-    RandomizedChallenge::MOVEBLACKLIST.include?(move) || move_exists || (move_data.ohko? && ohko_banned?) ? true : false
+    given_tm = for_tm && RandomizedChallenge::RANDOMIZE_TM_MOVES && $PokemonGlobal.given_tm_moves.include?(move)
+    RandomizedChallenge::MOVEBLACKLIST.include?(move) || move_exists || (move_data.ohko? && ohko_banned?) || given_tm ? true : false
   end
 
   alias reset_moves_random reset_moves
@@ -358,18 +362,17 @@ class Pokemon
     movelist
   end
 
-  def find_valid_move(min_damage = 0, types = [])
+  def find_valid_move(min_damage = 0, types = [], for_tm = false)
     badge_count = $player.badge_count
     move = random_move(min_damage, types)
     loop do
       move_data = GameData::Move.get(move.id)
-
       if RandomizedChallenge.progressive? && badge_count < 3
-        break unless move_data.display_real_damage(self) > 70 || invalid_move?(move, move_data)
+        break unless move_data.display_real_damage(self) > 70 || invalid_move?(move, move_data, for_tm)
       elsif RandomizedChallenge.progressive? && badge_count >= 6
-        break unless move_data.display_real_damage(self) < 55 || invalid_move?(move, move_data)
+        break unless move_data.display_real_damage(self) < 55 || invalid_move?(move, move_data, for_tm)
       else
-        break unless invalid_move?(move, move_data)
+        break unless invalid_move?(move, move_data, for_tm)
       end
 
       move = random_move(min_damage, types)
