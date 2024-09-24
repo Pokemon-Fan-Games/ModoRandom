@@ -547,10 +547,19 @@ class PokemonEncounters
       encounter_data.types.each do |enc_type|
         next unless @encounter_tables[enc_type]
 
+        highest_level = @encounter_tables[enc_type].max_by { |enc| enc[0] }[0]
+
         @encounter_tables[enc_type].map! do |enc|
           level, = enc
-          level_range = (level - 5)..(level + 5)
-          badge_count = badges_max_levels.find { |_, max_level| level_range.include?(max_level) }&.first || 0
+          # level_range = (level - 5)..(level + 5)
+
+          badge_count = 0
+          badges_max_levels.each_pair do |badge, max_level|
+            badge_count = badge if highest_level >= max_level
+            break if badge_count != 0 || highest_level < max_level
+          end
+
+          # badge_count = badges_max_levels.find { |_, max_level| level_range.include?(max_level) }&.first || 0
           new_species = valid_random_species(badge_count)
           [level, new_species.id]
         end
