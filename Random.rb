@@ -174,6 +174,10 @@ module RandomizedChallenge
   # Activando y desactivando esta opción
   RANDOM_TM_COMPAT_DEFAULT_VALUE = true
 
+  # Simplificar las evoluciones raras, como intercambios o saber algun movmiento especifico a que sean por nivel
+  SIMPLIFY_EVOLUTION = true
+  SIMPLIFIED_EVOLUTION_LEVEL = 36
+
   # Randomizar evoluciones de los pokemones
   # Se podrá cambiar llamando al metodo toggle_random_evos
   RANDOM_EVOS_DEFAULT_VALUE = false
@@ -978,6 +982,31 @@ def get_evos(poke)
   end
   evolutions
 end
+
+alias pbGetEvolvedFormDataRandom pbGetEvolvedFormData
+def pbGetEvolvedFormData(species)
+  ret = pbGetEvolvedFormDataRandom(species)
+  if random_enabled? && RandomizedChallenge::SIMPLIFY_EVOLUTION
+    ret.map! do |data|
+      if [PBEvolution::Trade, PBEvolution::TradeItem,PBEvolution::HasMove, PBEvolution::TradeSpecies, PBEvolution::HappinessMoveType].include?(data[0])
+        if data[0] == PBEvolution::HappinessMoveType
+          case data[1]
+          when PBTypes::FAIRY 
+            data[0] = PBEvolution::LevelDay
+          when PBTypes::DARK
+            data[0] = PBEvolution::LevelNight
+          end
+        else
+          data[0] = PBEvolution::Level
+        end
+        data[1] = RandomizedChallenge::SIMPLIFIED_EVOLUTION_LEVEL
+      end
+      data
+    end
+  end
+  return ret
+end
+
 
 def pbCheckEvolutionEx(pokemon)
   return -1 if pokemon.species <= 0 || pokemon.isEgg?
