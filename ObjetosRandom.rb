@@ -6,7 +6,7 @@ end
 
 class PokemonGlobalMetadata
   attr_accessor :tm_list, :given_tm_moves, :random_items_enabled,
-                :random_held_items, :tm_moves, :radom_tm_item_used,
+                :random_held_items, :tm_moves, :random_tm_item_used,
                 :wild_paused, :dont_randomize
   alias initialize_item_random initialize
   def initialize
@@ -52,7 +52,7 @@ module RandomizedChallenge
   RANDOMIZE_TM_MOVES = true
 
   # Ataques de MTs que no se pueden randomizar aunque el RANDOMIZE_TM_MOVES esté activo
-  UNRANDOMIZABLE_TMS = []
+  UNRANDOMIZABLE_TMS = [PBItems::TM94]
 
   # Randomizar objetos de salvajes
   RANDOMIZE_WILD_ITEMS = true
@@ -74,6 +74,8 @@ module RandomizedChallenge
   # Si la constante está en true y la siguiente contante tiene un valor que no este entre 1 y 100
   # se pondra por defecto en 10
   PROBABILITY_OF_ITEMS_FROM_BEATEN_TRAINERS = 10
+
+  MT_MOVES_RESPECT_PROGRESSIVE_RANDOM = true
 end
 
 def random_items_enabled?
@@ -197,7 +199,7 @@ module RandomizedChallenge
   def self.unrandomizable_item?(item)
     item_id = item.is_a?(String) || item.is_a?(Symbol) ? getID(PBItems, item) : item
 
-    return true if self::UNRANDOMIZABLE_ITEMS.include?(item) || pbIsKeyItem?(item_id) || pbIsHiddenMachine?(item_id) #|| pbIsMegaStone?(item_id)
+    return true if self::UNRANDOMIZABLE_ITEMS.include?(item_id) || pbIsKeyItem?(item_id) || pbIsHiddenMachine?(item_id) #|| pbIsMegaStone?(item_id)
 
     false
   end
@@ -205,7 +207,7 @@ module RandomizedChallenge
   def self.excluded_item?(item, is_held_item = false)
     item_id = item.is_a?(String) || item.is_a?(Symbol) ? getID(PBItems, item) : item
 
-    return true if self::ITEM_BLACK_LIST.include?(item) || (is_held_item && HELD_ITEM_BLACK_LIST.include?(item)) || pbIsKeyItem?(item_id) || pbIsMegaStone?(item_id)
+    return true if self::ITEM_BLACK_LIST.include?(item_id) || (is_held_item && HELD_ITEM_BLACK_LIST.include?(item_id)) || pbIsKeyItem?(item_id) || pbIsMegaStone?(item_id)
 
     false
   end
@@ -266,6 +268,8 @@ def pbTrainerBattle(trainerid, trainername, endspeech,
                     doublebattle = false, trainerparty = 0, canlose = false, variable = nil)
   won = pbTrainerBattle_random(trainerid, trainername, endspeech, doublebattle,
                                trainerparty, canlose, variable)
+
+  return won unless won
   return won unless random_enabled? && random_items_enabled? && RandomizedChallenge::BEATEN_TRAINERS_CAN_GIVE_ITEMS
 
   probability = RandomizedChallenge::PROBABILITY_OF_ITEMS_FROM_BEATEN_TRAINERS
@@ -292,7 +296,8 @@ module Kernel
         item = getID(PBItems, item) if item.is_a?(String) || item.is_a?(Symbol)
 
         if pbIsTechnicalMachine?(item) && RandomizedChallenge::RANDOMIZE_TM_MOVES && !RandomizedChallenge::UNRANDOMIZABLE_TMS.include?(new_item)
-          move = find_valid_move(false, 0, [], true)
+          progresive = progressive_random_on? && $Trainer.numbadges < 3 && RandomizedChallenge::MT_MOVES_RESPECT_PROGRESSIVE_RANDOM ? true : false
+          move = progresive ? find_valid_move(true, 70, [], true) : find_valid_move(false, 0, [], true)
           $PokemonGlobal.given_tm_moves << move
           $PokemonGlobal.tm_moves ||= {}
           $ItemData[item][ITEMMACHINE] = move
@@ -311,17 +316,19 @@ module Kernel
         item = getID(PBItems, item) if item.is_a?(String) || item.is_a?(Symbol)
 
         if pbIsTechnicalMachine?(item) && RandomizedChallenge::RANDOMIZE_TM_MOVES && !RandomizedChallenge::UNRANDOMIZABLE_TMS.include?(new_item)
-          move = find_valid_move(false, 0, [], true)
+          progresive = progressive_random_on? && $Trainer.numbadges < 3 && RandomizedChallenge::MT_MOVES_RESPECT_PROGRESSIVE_RANDOM ? true : false
+          move = progresive ? find_valid_move(true, 70, [], true) : find_valid_move(false, 0, [], true)
           $PokemonGlobal.given_tm_moves << move
           $PokemonGlobal.tm_moves ||= {}
           $ItemData[item][ITEMMACHINE] = move
           $PokemonGlobal.tm_moves[item] = move
         end
-      elsif !random_items_enabled? && $PokemonGlobal.radom_tm_item_used
+      elsif !random_items_enabled? && $PokemonGlobal.random_tm_item_used
         item = getID(PBItems, item) if item.is_a?(String) || item.is_a?(Symbol)
 
         if pbIsTechnicalMachine?(item) && RandomizedChallenge::RANDOMIZE_TM_MOVES && !RandomizedChallenge::UNRANDOMIZABLE_TMS.include?(item)
-          move = find_valid_move(false, 0, [], true)
+          progresive = progressive_random_on? && $Trainer.numbadges < 3 && RandomizedChallenge::MT_MOVES_RESPECT_PROGRESSIVE_RANDOM ? true : false
+          move = progresive ? find_valid_move(true, 70, [], true) : find_valid_move(false, 0, [], true)
           $PokemonGlobal.given_tm_moves << move
           $PokemonGlobal.tm_moves ||= {}
           $ItemData[item][ITEMMACHINE] = move
@@ -343,6 +350,20 @@ class PokemonLoad
       $PokemonGlobal.tm_moves.each_pair do |item, move|
         $ItemData[item][ITEMMACHINE] = move
       end
+    end
+  end
+end
+
+def randomize_tm_moves(tms)
+  tms.each do |tm|
+    tm = getID(PBItems, tm) if tm.is_a?(String) || tm.is_a?(Symbol)
+    $PokemonGlobal.tm_moves ||= {}
+    if $PokemonGlobal.tm_moves && !$PokemonGlobal.tm_moves[tm]
+      progresive = progressive_random_on? && $Trainer.numbadges < 3 && RandomizedChallenge::MT_MOVES_RESPECT_PROGRESSIVE_RANDOM ? true : false
+      move = progresive ? find_valid_move(true, 70, [], true) : find_valid_move(false, 0, [], true)
+      $PokemonGlobal.given_tm_moves << move
+      $ItemData[tm][ITEMMACHINE] = move
+      $PokemonGlobal.tm_moves[tm] = move
     end
   end
 end
