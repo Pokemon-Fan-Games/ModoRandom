@@ -172,13 +172,7 @@ module RandomizedChallenge
   # Si una forma alterna tiene un movepool distinto a la original
   # En el random también tendran movesets distintos
   DIFFERENT_FORMS_HAVE_DIFFERENT_MOVEPOOLS = true
-
-  # Probabilidad de que los pokemon tengan al menos 1 mov con stab
-  # Por defecto es 25, para desactivarlo ponerlo en un valor menor a 1, para asegurarlo ponerlo en 100
-  # Si el pokemon no tenia un movimiento con stab, hay una probabilidad de que otro movimiento se reemplace
-  # Por otro que si lo tenga
-  PROBABILITY_OF_STAB = 35
-
+  
   # Randomizar compatibilidad con las MTs
   # Se podrá cambiar llamando al metodo toggle_tm_compat
   # Tengan en cuenta que de esa forma un jugador podria armarse el moveset como quiera
