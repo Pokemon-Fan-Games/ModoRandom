@@ -246,28 +246,6 @@ module RandomizedChallenge
   # Lista de entrenadores y pokemon especificos que no se randomizarán
   # Es un hash que debe ser trainer.id => { partyid => [PBSpecies::ESPECIE1, PBSpecies::ESPECIE2] }
   UNRANDOMIZABLE_TRAINER_POKEMON = {
-    PBTrainers::LIDER1 => { 1 => [PBSpecies::LEDIAN] },
-    PBTrainers::LIDER2 => { 1 => [PBSpecies::METANG] },
-    PBTrainers::LIDER3 => { 1 => [PBSpecies::PIKACHU] },
-    PBTrainers::LIDER4 => { 1 => [PBSpecies::CRYOGONAL] },
-    PBTrainers::LIDER5 => { 1 => [PBSpecies::MUK] },
-    PBTrainers::LIDER6 => { 1 => [PBSpecies::ALAKAZAM] },
-    PBTrainers::LIDER7 => { 1 => [PBSpecies::TYRANTRUM] },
-    PBTrainers::LIDER8 => { 1 => [PBSpecies::CHARIZARD] },
-    PBTrainers::GIOVANNI1 => { 1 => [PBSpecies::ELECTIVIRE] },
-    PBTrainers::GIOVANNI2 => { 1 => [PBSpecies::ELECTIVIRE] },
-    PBTrainers::GIOVANNI3 => { 1 => [PBSpecies::ELECTIVIRE] },
-    PBTrainers::ALTOMANDO1 => { 1 => [PBSpecies::GARCHOMP] },
-    PBTrainers::ALTOMANDO2 => { 1 => [PBSpecies::INFERNAPE] },
-    PBTrainers::ALTOMANDO3 => { 1 => [PBSpecies::MACHAMP] },
-    PBTrainers::ALTOMANDO4 => { 1 => [PBSpecies::DRAGONITE] },
-    PBTrainers::CAMPEON    => { 1 => [PBSpecies::SCIZOR],
-                                2 => [PBSpecies::SCIZOR],
-                                3 => [PBSpecies::SCIZOR],
-                                4 => [PBSpecies::SCIZOR],
-                                5 => [PBSpecies::SCIZOR],
-                                6 => [PBSpecies::SCIZOR]
-                              },
   }
 
   # Mantener encuentros de rutas
