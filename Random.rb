@@ -15,12 +15,13 @@ module RandomizedChallenge
   # Leave this empty if all pokemon are allowed, otherwise only pokemon listed
   # above will be selected.
 
-  #Lista de movimientos baneados para el random
-  MOVEBLACKLIST=[]
-    
-  #Lista de habilidades baneados para el random
+  # Lista de movimientos baneados para el random
+  MOVEBLACKLIST = []
+
+  # Lista de habilidades baneados para el random
   ABILITYBLACKLIST = []
 
+  # LISTA DE STARTERS PARA EL RANDOM
   RANDOM_STARTER_LIST = [
     PBSpecies::BULBASAUR,
     PBSpecies::CHARMANDER,
@@ -171,7 +172,7 @@ module RandomizedChallenge
   # Si una forma alterna tiene un movepool distinto a la original
   # En el random también tendran movesets distintos
   DIFFERENT_FORMS_HAVE_DIFFERENT_MOVEPOOLS = true
-
+  
   # Randomizar compatibilidad con las MTs
   # Se podrá cambiar llamando al metodo toggle_tm_compat
   # Tengan en cuenta que de esa forma un jugador podria armarse el moveset como quiera
