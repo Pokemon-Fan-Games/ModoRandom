@@ -15,125 +15,111 @@ module RandomizedChallenge
   # Leave this empty if all pokemon are allowed, otherwise only pokemon listed
   # above will be selected.
 
-  # Lista de movimientos baneados para el random
-  MOVEBLACKLIST = [PBMoves::BRUMAEXPLOSIVA, PBMoves::AMORPOSTUMO, PBMoves::TRIPLEGOLPE, PBMoves::ATRAPAMOSCAS, PBMoves::ELECTROPUNZADA, 
-                   PBMoves::SONICBOOM, PBMoves::DRAGONRAGE, PBMoves::TELEPORT, 
-                   PBMoves::FISSURE, PBMoves::SHEERCOLD, PBMoves::GUILLOTINE, PBMoves::HORNDRILL,
-                   PBMoves::ESCALOFRIO, PBMoves::STRUGGLE, PBMoves::DESLIZAMIENTO]
+  #Lista de movimientos baneados para el random
+  MOVEBLACKLIST=[]
+    
+  #Lista de habilidades baneados para el random
+  ABILITYBLACKLIST = []
 
-  # Lista de habilidades baneados para el random
-  ABILITYBLACKLIST = [PBAbilities::MULTITYPE, PBAbilities::HONEYGATHER, PBAbilities::ZENMODE, PBAbilities::COLEOPTERO,
-                      PBAbilities::PODERSABIO, PBAbilities::PIELMALDITA, PBAbilities::PIELELECTRICA, PBAbilities::ESPANTO, PBAbilities::CABEZAHIELO, 
-                      PBAbilities::INFLAMABLE, PBAbilities::SOBRECARGA, PBAbilities::ALBINISMO, PBAbilities::DISGUISE, PBAbilities::STANCECHANGE,
-                      PBAbilities::PIELHERBACEA, PBAbilities::FLORACION, PBAbilities::PODERGELIDO, PBAbilities::SILVANO, PBAbilities::ACOMETIDA, 
-                      PBAbilities::TINTINEO, PBAbilities::REALEZA, PBAbilities::WONDERGUARD, PBAbilities::SHADOWTAG, PBAbilities::ARENATRAP,
-                      PBAbilities::ILLUMINATE]
-
-  # LISTA DE STARTERS PARA EL RANDOM
   RANDOM_STARTER_LIST = [
     PBSpecies::BULBASAUR,
     PBSpecies::CHARMANDER,
-    PBSpecies::SQUIRTLE
+    PBSpecies::SQUIRTLE,
+    PBSpecies::PIDGEY,
+    PBSpecies::NIDORANmA,
+    PBSpecies::NIDORANfE,
+    PBSpecies::ZUBAT,
+    PBSpecies::MANKEY,
+    PBSpecies::POLIWAG,
+    PBSpecies::ABRA,
+    PBSpecies::MACHOP,
+    PBSpecies::BELLSPROUT,
+    PBSpecies::GEODUDE,
+    PBSpecies::MAGNEMITE,
+    PBSpecies::GASTLY,
+    PBSpecies::RHYHORN,
+    PBSpecies::HORSEA,
+    PBSpecies::ELEKID,
+    PBSpecies::MAGBY,
+    PBSpecies::PORYGON,
+    PBSpecies::ODDISH,
+    PBSpecies::DRATINI,
+    PBSpecies::CHIKORITA,
+    PBSpecies::CYNDAQUIL,
+    PBSpecies::TOTODILE,
+    PBSpecies::MAREEP,
+    PBSpecies::HOPPIP,
+    PBSpecies::SWINUB,
+    PBSpecies::TEDDIURSA,
+    PBSpecies::LARVITAR,
+    PBSpecies::TREECKO,
+    PBSpecies::TORCHIC,
+    PBSpecies::MUDKIP,
+    PBSpecies::LOTAD,
+    PBSpecies::SEEDOT,
+    PBSpecies::RALTS,
+    PBSpecies::ARON,
+    PBSpecies::BUDEW,
+    PBSpecies::TRAPINCH,
+    PBSpecies::DUSKULL,
+    PBSpecies::SHUPPET,
+    PBSpecies::BAGON,
+    PBSpecies::BELDUM,
+    PBSpecies::SPHEAL,
+    PBSpecies::TURTWIG,
+    PBSpecies::CHIMCHAR,
+    PBSpecies::PIPLUP,
+    PBSpecies::STARLY,
+    PBSpecies::SHINX,
+    PBSpecies::GIBLE,
+    PBSpecies::SNIVY,
+    PBSpecies::TEPIG,
+    PBSpecies::OSHAWOTT,
+    PBSpecies::LILLIPUP,
+    PBSpecies::SEWADDLE,
+    PBSpecies::VENIPEDE,
+    PBSpecies::ROGGENROLA,
+    PBSpecies::TIMBURR,
+    PBSpecies::SOLOSIS,
+    PBSpecies::GOTHITA,
+    PBSpecies::SANDILE,
+    PBSpecies::VANILLITE,
+    PBSpecies::KLINK,
+    PBSpecies::TYNAMO,
+    PBSpecies::LITWICK,
+    PBSpecies::AXEW,
+    PBSpecies::DEINO,
+    PBSpecies::PAWNIARD,
+    PBSpecies::CHESPIN,
+    PBSpecies::FENNEKIN,
+    PBSpecies::FROAKIE,
+    PBSpecies::FLETCHLING,
+    PBSpecies::FLABEBE,
+    PBSpecies::GOOMY,
+    PBSpecies::HONEDGE,
+    PBSpecies::ROWLET,
+    PBSpecies::LITTEN,
+    PBSpecies::POPPLIO,
+    PBSpecies::GRUBBIN,
+    PBSpecies::JANGMOO,
+    PBSpecies::GROOKEY,
+    PBSpecies::SCORBUNNY,
+    PBSpecies::SOBBLE,
+    PBSpecies::ROLYCOLY,
+    PBSpecies::BLIPBUG,
+    PBSpecies::ROOKIDEE,
+    PBSpecies::HATENNA,
+    PBSpecies::IMPIDIMP,
+    PBSpecies::DREEPY,
+    PBSpecies::SPRIGATITO,
+    PBSpecies::FUECOCO,
+    PBSpecies::QUAXLY,
+    PBSpecies::PAWMI,
+    PBSpecies::SMOLIV,
+    PBSpecies::NACLI,
+    PBSpecies::TINKATINK,
+    PBSpecies::FRIGIBAX
   ]
-  # RANDOM_STARTER_LIST = [
-  #   PBSpecies::BULBASAUR,
-  #   PBSpecies::CHARMANDER,
-  #   PBSpecies::SQUIRTLE,
-  #   PBSpecies::PIDGEY,
-  #   PBSpecies::NIDORANmA,
-  #   PBSpecies::NIDORANfE,
-  #   PBSpecies::ZUBAT,
-  #   PBSpecies::MANKEY,
-  #   PBSpecies::POLIWAG,
-  #   PBSpecies::ABRA,
-  #   PBSpecies::MACHOP,
-  #   PBSpecies::BELLSPROUT,
-  #   PBSpecies::GEODUDE,
-  #   PBSpecies::MAGNEMITE,
-  #   PBSpecies::GASTLY,
-  #   PBSpecies::RHYHORN,
-  #   PBSpecies::HORSEA,
-  #   PBSpecies::ELEKID,
-  #   PBSpecies::MAGBY,
-  #   PBSpecies::PORYGON,
-  #   PBSpecies::ODDISH,
-  #   PBSpecies::DRATINI,
-  #   PBSpecies::CHIKORITA,
-  #   PBSpecies::CYNDAQUIL,
-  #   PBSpecies::TOTODILE,
-  #   PBSpecies::MAREEP,
-  #   PBSpecies::HOPPIP,
-  #   PBSpecies::SWINUB,
-  #   PBSpecies::TEDDIURSA,
-  #   PBSpecies::LARVITAR,
-  #   PBSpecies::TREECKO,
-  #   PBSpecies::TORCHIC,
-  #   PBSpecies::MUDKIP,
-  #   PBSpecies::LOTAD,
-  #   PBSpecies::SEEDOT,
-  #   PBSpecies::RALTS,
-  #   PBSpecies::ARON,
-  #   PBSpecies::BUDEW,
-  #   PBSpecies::TRAPINCH,
-  #   PBSpecies::DUSKULL,
-  #   PBSpecies::SHUPPET,
-  #   PBSpecies::BAGON,
-  #   PBSpecies::BELDUM,
-  #   PBSpecies::SPHEAL,
-  #   PBSpecies::TURTWIG,
-  #   PBSpecies::CHIMCHAR,
-  #   PBSpecies::PIPLUP,
-  #   PBSpecies::STARLY,
-  #   PBSpecies::SHINX,
-  #   PBSpecies::GIBLE,
-  #   PBSpecies::SNIVY,
-  #   PBSpecies::TEPIG,
-  #   PBSpecies::OSHAWOTT,
-  #   PBSpecies::LILLIPUP,
-  #   PBSpecies::SEWADDLE,
-  #   PBSpecies::VENIPEDE,
-  #   PBSpecies::ROGGENROLA,
-  #   PBSpecies::TIMBURR,
-  #   PBSpecies::SOLOSIS,
-  #   PBSpecies::GOTHITA,
-  #   PBSpecies::SANDILE,
-  #   PBSpecies::VANILLITE,
-  #   PBSpecies::KLINK,
-  #   PBSpecies::TYNAMO,
-  #   PBSpecies::LITWICK,
-  #   PBSpecies::AXEW,
-  #   PBSpecies::DEINO,
-  #   PBSpecies::PAWNIARD,
-  #   PBSpecies::CHESPIN,
-  #   PBSpecies::FENNEKIN,
-  #   PBSpecies::FROAKIE,
-  #   PBSpecies::FLETCHLING,
-  #   PBSpecies::FLABEBE,
-  #   PBSpecies::GOOMY,
-  #   PBSpecies::HONEDGE,
-  #   PBSpecies::ROWLET,
-  #   PBSpecies::LITTEN,
-  #   PBSpecies::POPPLIO,
-  #   PBSpecies::GRUBBIN,
-  #   PBSpecies::JANGMOO,
-  #   PBSpecies::GROOKEY,
-  #   PBSpecies::SCORBUNNY,
-  #   PBSpecies::SOBBLE,
-  #   PBSpecies::ROLYCOLY,
-  #   PBSpecies::BLIPBUG,
-  #   PBSpecies::ROOKIDEE,
-  #   PBSpecies::HATENNA,
-  #   PBSpecies::IMPIDIMP,
-  #   PBSpecies::DREEPY,
-  #   PBSpecies::SPRIGATITO,
-  #   PBSpecies::FUECOCO,
-  #   PBSpecies::QUAXLY,
-  #   PBSpecies::PAWMI,
-  #   PBSpecies::SMOLIV,
-  #   PBSpecies::NACLI,
-  #   PBSpecies::TINKATINK,
-  #   PBSpecies::FRIGIBAX
-  # ]
 
   # Ingrese las variables en las que se guardaran lo inciales random, luego deberá utilizar esta variable
   # para el evento de elección de iniciales.
@@ -186,12 +172,6 @@ module RandomizedChallenge
   # En el random también tendran movesets distintos
   DIFFERENT_FORMS_HAVE_DIFFERENT_MOVEPOOLS = true
 
-  # Probabilidad de que los pokemon tengan al menos 1 mov con stab
-  # Por defecto es 25, para desactivarlo ponerlo en un valor menor a 1, para asegurarlo ponerlo en 100
-  # Si el pokemon no tenia un movimiento con stab, hay una probabilidad de que otro movimiento se reemplace
-  # Por otro que si lo tenga
-  PROBABILITY_OF_STAB = 35
-
   # Randomizar compatibilidad con las MTs
   # Se podrá cambiar llamando al metodo toggle_tm_compat
   # Tengan en cuenta que de esa forma un jugador podria armarse el moveset como quiera
@@ -219,12 +199,6 @@ module RandomizedChallenge
   # El tipo QMARKS es para los pokemones que no tienen tipos
   INVALID_TYPES = [PBTypes::QMARKS]
 
-  # Randomizar forma de los pokémon
-  # No podrán salir formas megas ni primigenias, pero si no tienen bien
-  # hecha la logica de los MultipleForms se pueden dar cosas raras
-  # La unica forma alterna que podra salir es la forma 1
-  ENABLE_RANDOM_FORM = true
-
   ### MEGA STONES for each pokemon
   MEGAS_RANDOMIZE_TO_MEGAS = true
   # Para que esto funciona se debe mantener el hash de abajo con la relacion
@@ -232,11 +206,10 @@ module RandomizedChallenge
   # con distintas megapiedras, como el caso de Charizard, se deben mantener los
   # items en un array, dejo un ejemplo del hash.
 
-  # NO OLVIDEN ELIMINAR LOS # que comentan el hash
-  # POKEMON_MEGA_STONES = {
-  #  PBSpecies::VENUSAUR    => PBItems::VENUSAURITE,
-  #  PBSpecies::CHARIZARD   => [PBItems::CHARIZARDITEX, PBItems::CHARIZARDITEY],
-  # }
+  POKEMON_MEGA_STONES = {
+    # PBSpecies::VENUSAUR    => PBItems::VENUSAURITE,
+    # PBSpecies::CHARIZARD   => [PBItems::CHARIZARDITEX, PBItems::CHARIZARDITEY],
+  }
 
   # Lista de entrenadores que no se randomizarán
   # solo se randomizarán las habilidades
@@ -246,32 +219,14 @@ module RandomizedChallenge
   # Lista de entrenadores y pokemon especificos que no se randomizarán
   # Es un hash que debe ser trainer.id => { partyid => [PBSpecies::ESPECIE1, PBSpecies::ESPECIE2] }
   UNRANDOMIZABLE_TRAINER_POKEMON = {
-    PBTrainers::LIDER1 => { 1 => [PBSpecies::LEDIAN] },
-    PBTrainers::LIDER2 => { 1 => [PBSpecies::METANG] },
-    PBTrainers::LIDER3 => { 1 => [PBSpecies::PIKACHU] },
-    PBTrainers::LIDER4 => { 1 => [PBSpecies::CRYOGONAL] },
-    PBTrainers::LIDER5 => { 1 => [PBSpecies::MUK] },
-    PBTrainers::LIDER6 => { 1 => [PBSpecies::ALAKAZAM] },
-    PBTrainers::LIDER7 => { 1 => [PBSpecies::TYRANTRUM] },
-    PBTrainers::LIDER8 => { 1 => [PBSpecies::CHARIZARD] },
-    PBTrainers::GIOVANNI1 => { 1 => [PBSpecies::ELECTIVIRE] },
-    PBTrainers::GIOVANNI2 => { 1 => [PBSpecies::ELECTIVIRE] },
-    PBTrainers::GIOVANNI3 => { 1 => [PBSpecies::ELECTIVIRE] },
-    PBTrainers::ALTOMANDO1 => { 1 => [PBSpecies::GARCHOMP] },
-    PBTrainers::ALTOMANDO2 => { 1 => [PBSpecies::INFERNAPE] },
-    PBTrainers::ALTOMANDO3 => { 1 => [PBSpecies::MACHAMP] },
-    PBTrainers::ALTOMANDO4 => { 1 => [PBSpecies::DRAGONITE] },
-    PBTrainers::CAMPEON    => { 1 => [PBSpecies::SCIZOR],
-                                2 => [PBSpecies::SCIZOR],
-                                3 => [PBSpecies::SCIZOR],
-                                4 => [PBSpecies::SCIZOR],
-                                5 => [PBSpecies::SCIZOR],
-                                6 => [PBSpecies::SCIZOR]
-                              },
   }
 
   # Mantener encuentros de rutas
   KEEP_SAME_WILD_IN_ROUTES = true
+
+  # Mostrar los pokemon randomizados en el pokeradar.
+  SHOW_WILD_IN_RADAR = true
+  
   BADGES_MAX_LEVELS = {
     0 => LEVELGYM0,
     1 => LEVELGYM1,
@@ -285,59 +240,27 @@ module RandomizedChallenge
     9 => LEVELGYM9
   }
 
+  # Randomizar forma de los pokémon
+  # No podrán salir formas megas ni primigenias, pero si no tienen bien
+  # hecha la logica de los MultipleForms se pueden dar cosas raras
+  # La unica forma alterna que podra salir es la forma 1
+  ENABLE_RANDOM_FORM = true
+
   # Definir los pokemon que tienen posibles formas alternas
+  # Si el siguiente hash está vacio podran salir formas 1 de cualquier pokemon a menos que ese pokemon tenga mega.
+  # Siempre y cuando no tengan los graficos de formas que no tienen realmente implementadas no deberia suponer
+  # ningun problema que un pokemon salga con una forma incorrecta.
   POKEMON_WITH_FORMS = {
-    PBSpecies::RAPIDASH => [0, 1],
-    PBSpecies::TYPHLOSION => [0, 1],
-    PBSpecies::DEOXYS => [0, 1, 2, 3],
-    PBSpecies::MRMIME => [0, 1],
-    PBSpecies::SHAYMIN => [0, 1],
-    PBSpecies::BASCULIN => [0, 1, 2],
-    PBSpecies::AVALUGG => [0, 1],
-    PBSpecies::DECIDUEYE => [0, 1],
-    PBSpecies::SAMUROTT => [0, 1],
-    PBSpecies::GOODRA => [0, 1],
-    PBSpecies::STUNFISK => [0, 1],
-    PBSpecies::SLOWKING => [0, 1],
-    PBSpecies::SLOWBRO => [0, 1],
-    PBSpecies::SANDSLASH => [0, 1],
-    PBSpecies::NINETALES => [0, 1],
-    PBSpecies::ARCANINE => [0, 1],
-    PBSpecies::ELECTRODE => [0, 1],
-    PBSpecies::LILLIGANT => [0, 1],
-    PBSpecies::GOLEM => [0, 1],
-    PBSpecies::MUK => [0, 1],
-    PBSpecies::EXEGGUTOR => [0, 1],
-    PBSpecies::MAROWAK => [0, 1],
-    PBSpecies::WEEZING => [0, 1],
-    PBSpecies::TORNADUS => [0, 1],
-    PBSpecies::THUNDURUS => [0, 1],
-    PBSpecies::LANDORUS => [0, 1],
-    PBSpecies::KYUREM => [0, 1, 2],
-    PBSpecies::MELOETTA => [0, 1],
-    PBSpecies::MEOWSTIC => [0, 1, 2],
-    PBSpecies::AEGISLASH => [0, 1],
-    PBSpecies::DUGTRIO => [0, 1],
-    PBSpecies::BRAVIARY => [0, 1],
-    PBSpecies::DONPHAN => [0, 1],
-    PBSpecies::ZOROARK => [0, 1],
-    PBSpecies::TAUROS => [0, 1],
-    PBSpecies::DELIBIRD => [0, 1],
-    PBSpecies::MAGNEZONE => [0, 1],
-    PBSpecies::VOLCARONA => [0, 1],
-    PBSpecies::HARIYAMA => [0, 1],
-    PBSpecies::TENTACRUEL => [0, 1],
-    PBSpecies::PERSIAN => [0, 1],
-    PBSpecies::RATICATE => [0, 1],
-    PBSpecies::ARTICUNO => [0, 1],
-    PBSpecies::ZAPDOS => [0, 1],
-    PBSpecies::MOLTRES => [0, 1]
+    # Aqui pueden ver 2 ejemplos de como definir las distintas formas de este hash
+    # PBSpecies::RAPIDASH => [0, 1],
+    # PBSpecies::TYPHLOSION => [0, 1],
   }
+
   # Si se revive el mismo fossil mas de 1 vez siempre dará el mismo Pokémon
   KEEP_SAME_FOSSIL_POKEMON = true
 
   # Salvajes a los que no se les randomizan los objetos
-  SPECIES_UNRAN_HELD_ITEMS = []
+  SPECIES_UNRAN_HELD_ITEMS = [PBSpecies::PARAS, PBSpecies::PARASECT]
 end
 
 class PokemonGlobalMetadata
@@ -348,7 +271,8 @@ class PokemonGlobalMetadata
                 :enable_random_types, :random_types, :given_tm_moves,
                 :last_used_id, :random_abs_pokes, :random_encounter_table,
                 :wild_paused, :dont_randomize, :wild_held_items,
-                :reviving_fossil, :fossil_species, :pause_random_species
+                :reviving_fossil, :fossil_species, :pause_random_species,
+                :ev_train, :refreshed_moves
   alias random_abil_init initialize
   def initialize
     random_abil_init
@@ -555,6 +479,7 @@ def enable_random
   $PokemonGlobal.dont_randomize = []
   $PokemonGlobal.wild_held_items = {}
   $PokemonGlobal.pause_random_species = false
+  $PokemonGlobal.ev_train = false
   generate_random_starters
   toggle_random_items
   $game_switches[RandomizedChallenge::SWITCH] = true
@@ -577,6 +502,26 @@ end
 
 def random_types_enabled?
   $PokemonGlobal.enable_random_types ? true : false
+end
+
+
+def toggle_ev_train
+  $PokemonGlobal.ev_train ||= false
+  $PokemonGlobal.ev_train = !$PokemonGlobal.ev_train
+  if $PokemonGlobal.ev_train
+    pause_random_items_from_trainers
+  else
+    resume_random_items_from_trainers 
+  end
+end
+
+def turn_off_ev_train
+  $PokemonGlobal.ev_train = false
+  resume_random_items_from_trainers
+end
+
+def ev_train?
+  $PokemonGlobal.ev_train ? true : false
 end
 
 # AQUI SE DEFINE EL BST QUE VAN A TENER LOS POKEMON EN EL RANDOMIZADO.
@@ -748,26 +693,33 @@ def check_tm_move_in_bag(move)
   false
 end
 
-def invalid_move?(progressive, move, move_exists = false, power = 0, types = [], for_tm = false)
+def invalid_move?(progressive, move, move_exists = false, power = 0, for_tm = false, types=[])
+  move = move.id if move.is_a?(PBMove)
   movedata = PBMoveData.new(move)
-  return true if !movedata || !movedata.totalpp || !PBMoves.getName(move.id) || PBMoves.getName(move.id) == ''
 
-  given_tm = for_tm && RandomizedChallenge::RANDOMIZE_TM_MOVES && $PokemonGlobal.given_tm_moves.include?(move) && check_tm_move_in_bag(move)
-  (progressive && power > 0 && movedata.basedamage > power) || (!types.empty? && !types.include?(movedata.type)) || RandomizedChallenge::MOVEBLACKLIST.include?(move) || move_exists || given_tm ? true : false
+  return true if !movedata || !movedata.totalpp || !PBMoves.getName(move) || PBMoves.getName(move) == ''
+  return true if !types.empty? && !types.any? { |type| isConst?(movedata.type, PBTypes, type) }
+  given_tm = for_tm && RandomizedChallenge::RANDOMIZE_TM_MOVES && ($PokemonGlobal.given_tm_moves.include?(move) || check_tm_move_in_bag(move))
+  ((progressive && power > 0 && movedata.basedamage > power) || RandomizedChallenge::MOVEBLACKLIST.include?(move) || move_exists || given_tm) ? true : false
 end
 
-def find_valid_move(progressive = false, power = 0, types = [], for_tm = false, movelist = nil)
+def find_valid_move(progressive = false, power = 0, for_tm = false, movelist = nil, types=[])
   move = rand(PBMoves.maxValue - 1) + 1
+  different_moves = MultipleForms.hasFunction?(self, 'getMoveList') unless for_tm
+  form_index = different_moves && RandomizedChallenge::DIFFERENT_FORMS_HAVE_DIFFERENT_MOVEPOOLS ? form : 0 unless for_tm
   movelist_aux = if for_tm
                nil
              else
-               $PokemonGlobal.random_moves ? $PokemonGlobal.random_moves[@species] : nil
+               $PokemonGlobal.random_moves && $PokemonGlobal.random_moves[@species] ? $PokemonGlobal.random_moves[@species][form_index] : nil
              end
   movelist_aux = movelist if movelist
-  move_exists = movelist_aux ? movelist_aux.detect { |elem| elem[1] == (move) } : false
-  while invalid_move?(progressive, move, move_exists, power, types, for_tm)
+  move_exists = movelist_aux ? movelist_aux.detect { |elem| elem[1] == move } : false
+  move_exists = move_exists.nil? || !move_exists ? false : true
+
+  while invalid_move?(progressive, move, move_exists, power, for_tm, types)
     move = rand(PBMoves.maxValue - 1) + 1
     move_exists = movelist_aux ? movelist_aux.detect { |elem| elem[1] == (move) } : false
+    move_exists = move_exists.nil? || !move_exists ? false : true
   end
   move
 end
@@ -787,7 +739,9 @@ class PokeBattle_Pokemon
   end
 
   def reset_form?(poke = self)
-    return RandomizedChallenge::POKEMON_WITH_FORMS[@species] ? false : true if RandomizedChallenge::POKEMON_WITH_FORMS[@species]
+    if defined?(RandomizedChallenge::POKEMON_WITH_FORMS) && !RandomizedChallenge::POKEMON_WITH_FORMS.empty?
+      return RandomizedChallenge::POKEMON_WITH_FORMS[@species] ? false : true
+    end
     has_mega_form = MultipleForms.hasFunction?(poke, 'getMegaForm')
     has_primal_form = MultipleForms.hasFunction?(poke, 'getPrimalForm')
     on_set_form = MultipleForms.hasFunction?(poke, 'onSetForm')
@@ -797,7 +751,9 @@ class PokeBattle_Pokemon
   def random_form
     return 0 if reset_form?
 
-    return RandomizedChallenge::POKEMON_WITH_FORMS[@species][rand(RandomizedChallenge::POKEMON_WITH_FORMS[@species].length)] if RandomizedChallenge::POKEMON_WITH_FORMS[@species]
+    if defined?(RandomizedChallenge::POKEMON_WITH_FORMS) && !RandomizedChallenge::POKEMON_WITH_FORMS.empty?  
+      return RandomizedChallenge::POKEMON_WITH_FORMS[@species][rand(RandomizedChallenge::POKEMON_WITH_FORMS[@species].length)] || 0
+    end
 
     form = rand(2)
     return form if form == 0
@@ -825,7 +781,7 @@ class PokeBattle_Pokemon
   alias randomized_init initialize
   def initialize(species, level, player = nil, withMoves = true)
     return randomized_init(species, level, player, withMoves) unless random_enabled?
-
+    
     species = random_species unless wild_paused? || random_species_paused?
     species = getID(PBSpecies, species) if species.is_a?(String) || species.is_a?(Symbol)
 
@@ -869,7 +825,6 @@ class PokeBattle_Pokemon
   def type1
     return type1_random unless random_enabled? && random_types_enabled?
 
-    # Ensure that a random type is generated and stored if it doesn't exist
     unless $PokemonGlobal.random_types[@species]
       random_type1 = rand(PBTypes.maxValue - 1) + 1 while RandomizedChallenge::INVALID_TYPES.include?(random_type1)
       $PokemonGlobal.random_types[@species] = [random_type1]
@@ -881,13 +836,10 @@ class PokeBattle_Pokemon
   def type2
     return type2_random unless random_enabled? && random_types_enabled?
 
-    # Ensure that the second type is set, either the same as type1 or different
     stored_types = $PokemonGlobal.random_types[@species]
     if stored_types.nil? || stored_types.length < 2
-      # Fetch or generate type1 to ensure it's in the stored_types
       type1_random = type1
 
-      # If type1 and type2 are originally the same, keep them the same
       if type2_random == type1_random
         $PokemonGlobal.random_types[@species].push(type1_random)
       else
@@ -925,7 +877,7 @@ class PokeBattle_Pokemon
 
     if $PokemonGlobal.random_abs_pokemon[@species][form_index]
       $PokemonGlobal.random_abs_pokemon[@species][form_index].map! do |ab|
-        ab[0] = generate_random_ability unless ab[0].is_a?(Integer) && ab[0] < PBAbilities.maxValue
+        ab[0] = generate_random_ability unless ab[0].is_a?(Integer) && ab[0] < PBAbilities.maxValue && !RandomizedChallenge::ABILITYBLACKLIST.include?(ab[0])
         ab
       end
       return $PokemonGlobal.random_abs_pokemon[@species][form_index]
@@ -991,14 +943,6 @@ class PokeBattle_Pokemon
     $PokemonGlobal.random_moves[@species][form_index] = [] unless $PokemonGlobal.random_moves[@species][form_index]
     list = $PokemonGlobal.random_moves[@species][form_index]
 
-    return list unless list.nil? || list.empty?
-
-    atkdata = pbRgssOpen('Data/attacksRS.dat', 'rb')
-    offset = atkdata.getOffset(@species - 1)
-    length = atkdata.getLength(@species - 1) >> 1
-    atkdata.pos = offset
-
-    list = []
 
     badges_max_levels = if defined?(RandomizedChallenge::BADGES_MAX_LEVELS)
       RandomizedChallenge::BADGES_MAX_LEVELS
@@ -1008,18 +952,50 @@ class PokeBattle_Pokemon
 
     badge3_level = badges_max_levels.fetch(3)
 
+    $PokemonGlobal.refreshed_moves ||={}
+    $PokemonGlobal.refreshed_moves[@species] ||= {}
+    $PokemonGlobal.refreshed_moves[@species][form_index] ||= false
+
+    if list && !list.empty? && !$PokemonGlobal.refreshed_moves[@species][form_index]
+      chance = $PokemonGlobal.refreshed_moves[@species].size > 150 ? 2 : 4
+      list.each_with_index do |item, i|
+        level = item[0]
+        progresive = ((!badge3_level && $Trainer.numbadges < 3) || level <= badge3_level) && progressive_random_on?
+        if i < list.length - 1
+          next_move = list[i + 1]
+          if level + 1 < next_move[0] && rand(chance) < 1 
+            move_types = [:WATER, :FAIRY, :STEEL, :ROCK, :POISON]
+            new_move = progresive ? find_valid_move(true, 70, false, list, move_types) : find_valid_move(false, 0, false, list, move_types)
+            list.insert(i, [level+1, new_move])
+          end
+        end
+      end
+      $PokemonGlobal.refreshed_moves[@species][form_index] = true
+      $PokemonGlobal.random_moves[@species][form_index] = list
+    end
+
+
+    return list unless list.nil? || list.empty?
+
+    atkdata = pbRgssOpen('Data/attacksRS.dat', 'rb')
+    offset = atkdata.getOffset(@species - 1)
+    length = atkdata.getLength(@species - 1) >> 1
+    atkdata.pos = offset
+
+    list = []
+
     (0..length - 1).each do
       level = atkdata.fgetw
       move = atkdata.fgetw
       next if move.nil?
-      progresive = ((!badge3_level && $Trainer.numbadges < 3) || (level <= badge3_level && $Trainer.numbadges < 3) ) && progressive_random_on?
-      # move = $Trainer.numbadges < 3 && progressive_random_on? ? find_valid_move(true, 70, [], false, list) : find_valid_move
-      move = progresive ? find_valid_move(true, 70, [], false, list) : find_valid_move(false, 0, [], false, list)
+      progresive = ((!badge3_level && $Trainer.numbadges < 3) || level <= badge3_level) && progressive_random_on?
 
-      list.push([level, move]) #unless isConst?(move, PBMoves, :CHATTER) && !isConst?(species, PBSpecies, :CHATOT)
+      move = progresive ? find_valid_move(true, 70, false, list) : find_valid_move(false, 0, false, list)
+      list.push([level, move])
     end
     atkdata.close
     $PokemonGlobal.random_moves[@species][form_index] = list
+    $PokemonGlobal.refreshed_moves[@species][form_index] = true
     list
   end
 end
@@ -1055,16 +1031,31 @@ end
 
 alias pbLoadTrainer_random pbLoadTrainer
 def pbLoadTrainer(trainerid, trainername, partyid = 0)
-  return pbLoadTrainer_random(trainerid, trainername, partyid) unless random_enabled?
+  return pbLoadTrainer_random(trainerid, trainername, partyid) if !random_enabled?
+  resume_wild_species
 
-  pause_random
-  original_trainer = pbLoadTrainer_random(trainerid, trainername, partyid)
-  resume_random
+  if RandomizedChallenge::UNRANDOMIZABLE_TRAINERS.include?(trainerid) || RandomizedChallenge::UNRANDOMIZABLE_TRAINER_POKEMON[trainerid] || ev_train?
+    pause_random_species
+    original_trainer = pbLoadTrainer_random(trainerid, trainername, partyid)
+    resume_random_species
+    return original_trainer if ev_train?
+  end
   trainer = pbLoadTrainer_random(trainerid, trainername, partyid)
-  return trainer if trainer.nil?
+  return trainer if !trainer || trainer.empty?
+
+  species_in_party = Hash.new(0)
+  trainer[2].each do |poke|
+    species_in_party[poke.species] += 1  
+  end
 
   trainer[2].map! do |pkmn|
     pkmn.form = 0 if pkmn.reset_form?
+    if species_in_party[pkmn.species] > 1
+      new_poke = PokeBattle_Pokemon.new(pkmn.species, pkmn.level, trainer[0])
+      new_poke = PokeBattle_Pokemon.new(pkmn.species, pkmn.level, trainer[0]) while pkmn.species == new_poke.species
+      species_in_party[pkmn.species] -= 1
+      pkmn = new_poke
+    end
     pkmn
   end
 
@@ -1083,8 +1074,8 @@ def pbLoadTrainer(trainerid, trainername, partyid = 0)
   end
 
   trainer[2].map!.with_index do |pkmn, index|
-    original_poke = original_trainer[2][index]
-    if unrandomizable_pokes.include?(original_poke.species)
+    original_poke = original_trainer[2][index] if original_trainer
+    if original_poke && unrandomizable_pokes.include?(original_poke.species)
       pkmn = original_poke
       pkmn.resetMoves
       pkmn.calcStats
@@ -1111,7 +1102,7 @@ end
 ################################################################################
 
 def generate_random_starters
-  starters = RandomizedChallenge::RANDOM_STARTER_LIST#.shuffle
+  starters = RandomizedChallenge::RANDOM_STARTER_LIST.shuffle
   RandomizedChallenge::STATERS_VARIABLES.each_with_index do |var, i|
     $game_variables[var] = starters[i]
   end
@@ -1151,6 +1142,20 @@ def create_ability_hash
     ability_hash[i] = ability_arr[i]
   end
   $PokemonGlobal.ability_hash = ability_hash
+end
+
+def generate_non_random_pokemon(species, level = 5, form = 0, shiny = false) 
+  pause_random_species
+  pokemon = PokeBattle_Pokemon.new(species, level, $Trainer)
+  resume_random_species
+  pokemon.makeShiny if shiny
+  pokemon.form = form if form != 0
+  return pokemon
+end
+
+def give_non_random_egg(shiny = false, species = nil, form = 0, text = '')
+  pokemon = generate_non_random_pokemon(species, EGGINITIALLEVEL, form, shiny)
+  pbGenerateEgg(pokemon, text)
 end
 
 alias pbGenerateWildPokemon_random pbGenerateWildPokemon
@@ -1263,8 +1268,7 @@ class EncounterListUI
   def pbListOfEncounters(encounter)
     return pbListOfEncounters_random(encounter) unless random_enabled?
 
-    return [] unless RandomizedChallenge::KEEP_SAME_WILD_IN_ROUTES
-    return [] unless $DEBUG
+    return [] unless (RandomizedChallenge::KEEP_SAME_WILD_IN_ROUTES && RandomizedChallenge::SHOW_WILD_IN_RADAR) || $DEBUG
 
     encable = []
     if !encounter || !$PokemonGlobal.random_encounter_table || !$PokemonGlobal.random_encounter_table[$game_map.map_id]

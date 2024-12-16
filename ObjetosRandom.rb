@@ -1,17 +1,14 @@
-# Al llamar a esta función, si el interruptor ITEMS_RANDOM está activo, el objeto
-# que encontramos es uno al azar.
-def getItemRandomFromPokeball()
-  Kernel.pbItemBall(PBItems::POKEBALL)
-end
-
 class PokemonGlobalMetadata
   attr_accessor :tm_list, :given_tm_moves, :random_items_enabled,
                 :random_held_items, :tm_moves, :random_tm_item_used,
-                :wild_paused, :dont_randomize
+                :wild_paused, :dont_randomize, :tm_mart,
+                :random_items_from_trainers
   alias initialize_item_random initialize
   def initialize
     initialize_item_random
     @tm_moves = {}
+    @tm_mart = {}
+    @random_items_from_trainers = false
   end
 end
 
@@ -23,12 +20,14 @@ module RandomizedChallenge
   HELD_ITEM_CAN_BE_A_TM = false
 
   # Lista de objetos que no quieres que aparezcan entre los objetos Random
+  # Ningun objeto clave podrá salir en el random a pesar de que no se incluya en este listado.
   ITEM_BLACK_LIST = []
 
   HELD_ITEM_BLACK_LIST = []
 
   
   # Objetos que no se randomizarán si son dados en algun evento.
+  # Cualquier objeto clave que den en un evento, jamás será randomizado
   UNRANDOMIZABLE_ITEMS = []
 
   # Si en un evento se da una MT se randomizará por otra MT del listado de abajo, a menos que el listado esté vacío
@@ -36,17 +35,8 @@ module RandomizedChallenge
   MT_GET_RANDOMIZED_TO_ANOTHER_MT = true
 
   # Lista de MTs que se pueden generar en el random, si la lista está vacia se randomizará por cualquier MT
-  # MTLIST_RANDOM = [PBItems::TM01, PBItems::TM02, PBItems::TM03, PBItems::TM04, PBItems::TM05, PBItems::TM06, PBItems::TM07, PBItems::TM08, PBItems::TM09, PBItems::TM10,
-  #                  PBItems::TM11, PBItems::TM12, PBItems::TM13, PBItems::TM14, PBItems::TM15, PBItems::TM16, PBItems::TM17, PBItems::TM18, PBItems::TM19, PBItems::TM20, PBItems::TM21,
-  #                  PBItems::TM22, PBItems::TM23, PBItems::TM24, PBItems::TM25, PBItems::TM26, PBItems::TM27, PBItems::TM28, PBItems::TM29, PBItems::TM30, PBItems::TM31, PBItems::TM32,
-  #                  PBItems::TM33, PBItems::TM34, PBItems::TM35, PBItems::TM36, PBItems::TM37, PBItems::TM38, PBItems::TM39, PBItems::TM40, PBItems::TM41, PBItems::TM42, PBItems::TM43,
-  #                  PBItems::TM44, PBItems::TM45, PBItems::TM46, PBItems::TM47, PBItems::TM48, PBItems::TM49, PBItems::TM50, PBItems::TM51, PBItems::TM52, PBItems::TM53, PBItems::TM54,
-  #                  PBItems::TM55, PBItems::TM56, PBItems::TM57, PBItems::TM58, PBItems::TM59, PBItems::TM60, PBItems::TM61, PBItems::TM62, PBItems::TM63, PBItems::TM64, PBItems::TM65,
-  #                  PBItems::TM66, PBItems::TM67, PBItems::TM68, PBItems::TM69, PBItems::TM70, PBItems::TM71, PBItems::TM72, PBItems::TM73, PBItems::TM74, PBItems::TM75, PBItems::TM76,
-  #                  PBItems::TM77, PBItems::TM78, PBItems::TM79, PBItems::TM80, PBItems::TM81, PBItems::TM82, PBItems::TM83, PBItems::TM84, PBItems::TM85, PBItems::TM86, PBItems::TM87,
-  #                  PBItems::TM88, PBItems::TM89, PBItems::TM90, PBItems::TM91, PBItems::TM92, PBItems::TM93, PBItems::TM94, PBItems::TM95, PBItems::TM96, PBItems::TM97, PBItems::TM98,
-  #                  PBItems::TM99, PBItems::TM100, PBItems::TM101, PBItems::TM102, PBItems::TM103, PBItems::TM104, PBItems::TM105, PBItems::TM106, PBItems::TM107, PBItems::TM108]
   MTLIST_RANDOM = []
+
 
   # Randomizar el movimiento que enseña la MT
   RANDOMIZE_TM_MOVES = true
@@ -94,6 +84,12 @@ def toggle_random_items
   else
     $PokemonGlobal.random_held_items = !$PokemonGlobal.random_held_items
   end
+
+  if $PokemonGlobal.random_items_from_trainers.nil?
+    $PokemonGlobal.random_items_from_trainers = RandomizedChallenge::BEATEN_TRAINERS_CAN_GIVE_ITEMS
+  else
+    $PokemonGlobal.random_items_from_trainers = !$PokemonGlobal.random_items_from_trainers
+  end
 end
 
 def pause_random_items
@@ -114,6 +110,18 @@ def toggle_random_held_items
   else
     $PokemonGlobal.random_held_items = !$PokemonGlobal.random_held_items
   end
+end
+
+def random_items_from_trainers?
+  $PokemonGlobal.random_items_from_trainers ? true : false
+end
+
+def pause_random_items_from_trainers
+  $PokemonGlobal.random_items_from_trainers = false
+end 
+
+def resume_random_items_from_trainers
+  $PokemonGlobal.random_items_from_trainers = true
 end
 
 module RandomizedChallenge
@@ -143,11 +151,11 @@ module RandomizedChallenge
 
   def self.random_tm
     initialize_tm_list
-    tm_index = rand($PokemonGlobal.tm_list.length - 1)
+    tm_index = rand($PokemonGlobal.tm_list.length)
     tm = $PokemonGlobal.tm_list[tm_index]
     count = 0
-    while $PokemonBag.pbHasItem?(tm) && count < $PokemonGlobal.tm_list.length - 1
-      tm_index = rand($PokemonGlobal.tm_list.length - 1)
+    while $PokemonBag.pbHasItem?(tm) && count < $PokemonGlobal.tm_list.length
+      tm_index = rand($PokemonGlobal.tm_list.length)
       tm = $PokemonGlobal.tm_list[tm_index]
       count += 1
     end
@@ -211,12 +219,56 @@ module RandomizedChallenge
 
     false
   end
+
+
+  def self.get_random_tms(amount = 5)
+    tms = []
+    tms_hash = {}
+    timeout = 10
+    try_count = 0
+    amount.times do |i|
+      tm = RandomizedChallenge.random_tm
+      try_count = 0
+      while tms_hash[tm] && try_count < timeout
+        tm = RandomizedChallenge.random_tm
+        try_count += 1
+      end
+      tms << tm
+      tms_hash[tm] = true
+    end
+    return tms.uniq
+  end
+  
+  def self.tm_mart(id, amount = 5, types=[])
+    $PokemonGlobal.tm_mart ||= {}
+    tms = $PokemonGlobal.tm_mart[id]
+    return tms if tms
+    tms = get_random_tms(amount)
+    randomize_tm_moves(tms, types) if RandomizedChallenge::RANDOMIZE_TM_MOVES
+    $PokemonGlobal.tm_mart[id] = tms
+    return tms
+  end
+  
+  def self.randomize_tm_moves(tms, types = [])
+    $PokemonGlobal.tm_moves ||= {}
+    tms.each do |tm|
+      tm = getID(PBItems, tm) if tm.is_a?(String) || tm.is_a?(Symbol)
+      next if UNRANDOMIZABLE_TMS.include?(tm)
+      if $PokemonGlobal.tm_moves && !$PokemonGlobal.tm_moves[tm]
+        progresive = progressive_random_on? && $Trainer.numbadges < 3 && RandomizedChallenge::MT_MOVES_RESPECT_PROGRESSIVE_RANDOM ? true : false
+        move = progresive ? find_valid_move(true, 70, true, nil, types) : find_valid_move(false, 0, true, nil, types)
+        $PokemonGlobal.given_tm_moves << move
+        $ItemData[tm][ITEMMACHINE] = move
+        $PokemonGlobal.tm_moves[tm] = move
+      end
+    end
+  end
+
 end
 
 alias pbAddPokemon_random pbAddPokemon
 def pbAddPokemon(pkmn, level = nil, seeform = true)
   return pbAddPokemon_random(pkmn, level, seeform) unless random_enabled? && RandomizedChallenge::GIFTED_POKEMON_CAN_HAVE_ITEMS
-
   return if !pkmn || !$Trainer
 
   if pbBoxesFull?
@@ -226,6 +278,7 @@ def pbAddPokemon(pkmn, level = nil, seeform = true)
   end
 
   pkmn = getID(PBSpecies, pkmn) if pkmn.is_a?(String) || pkmn.is_a?(Symbol)
+  resume_wild_species
   pkmn = PokeBattle_Pokemon.new(pkmn, level, $Trainer) if pkmn.is_a?(Integer) && level.is_a?(Integer)
 
   return false unless pkmn.is_a?(PokeBattle_Pokemon)
@@ -270,7 +323,7 @@ def pbTrainerBattle(trainerid, trainername, endspeech,
                                trainerparty, canlose, variable)
 
   return won unless won
-  return won unless random_enabled? && random_items_enabled? && RandomizedChallenge::BEATEN_TRAINERS_CAN_GIVE_ITEMS
+  return won unless random_enabled? && random_items_enabled? && random_items_from_trainers?
 
   probability = RandomizedChallenge::PROBABILITY_OF_ITEMS_FROM_BEATEN_TRAINERS
   probability = (probability.to_f / 100) if probability.between?(1, 100)
@@ -295,9 +348,9 @@ module Kernel
         item = new_item
         item = getID(PBItems, item) if item.is_a?(String) || item.is_a?(Symbol)
 
-        if pbIsTechnicalMachine?(item) && RandomizedChallenge::RANDOMIZE_TM_MOVES && !RandomizedChallenge::UNRANDOMIZABLE_TMS.include?(new_item)
+        if pbIsTechnicalMachine?(item) && RandomizedChallenge::RANDOMIZE_TM_MOVES && !RandomizedChallenge::UNRANDOMIZABLE_TMS.include?(item)
           progresive = progressive_random_on? && $Trainer.numbadges < 3 && RandomizedChallenge::MT_MOVES_RESPECT_PROGRESSIVE_RANDOM ? true : false
-          move = progresive ? find_valid_move(true, 70, [], true) : find_valid_move(false, 0, [], true)
+          move = progresive ? find_valid_move(true, 70, true) : find_valid_move(false, 0, true)
           $PokemonGlobal.given_tm_moves << move
           $PokemonGlobal.tm_moves ||= {}
           $ItemData[item][ITEMMACHINE] = move
@@ -317,7 +370,7 @@ module Kernel
 
         if pbIsTechnicalMachine?(item) && RandomizedChallenge::RANDOMIZE_TM_MOVES && !RandomizedChallenge::UNRANDOMIZABLE_TMS.include?(new_item)
           progresive = progressive_random_on? && $Trainer.numbadges < 3 && RandomizedChallenge::MT_MOVES_RESPECT_PROGRESSIVE_RANDOM ? true : false
-          move = progresive ? find_valid_move(true, 70, [], true) : find_valid_move(false, 0, [], true)
+          move = progresive ? find_valid_move(true, 70, true) : find_valid_move(false, 0, true)
           $PokemonGlobal.given_tm_moves << move
           $PokemonGlobal.tm_moves ||= {}
           $ItemData[item][ITEMMACHINE] = move
@@ -328,7 +381,7 @@ module Kernel
 
         if pbIsTechnicalMachine?(item) && RandomizedChallenge::RANDOMIZE_TM_MOVES && !RandomizedChallenge::UNRANDOMIZABLE_TMS.include?(item)
           progresive = progressive_random_on? && $Trainer.numbadges < 3 && RandomizedChallenge::MT_MOVES_RESPECT_PROGRESSIVE_RANDOM ? true : false
-          move = progresive ? find_valid_move(true, 70, [], true) : find_valid_move(false, 0, [], true)
+          move = progresive ? find_valid_move(true, 70, true) : find_valid_move(false, 0, true)
           $PokemonGlobal.given_tm_moves << move
           $PokemonGlobal.tm_moves ||= {}
           $ItemData[item][ITEMMACHINE] = move
@@ -354,16 +407,4 @@ class PokemonLoad
   end
 end
 
-def randomize_tm_moves(tms)
-  tms.each do |tm|
-    tm = getID(PBItems, tm) if tm.is_a?(String) || tm.is_a?(Symbol)
-    $PokemonGlobal.tm_moves ||= {}
-    if $PokemonGlobal.tm_moves && !$PokemonGlobal.tm_moves[tm]
-      progresive = progressive_random_on? && $Trainer.numbadges < 3 && RandomizedChallenge::MT_MOVES_RESPECT_PROGRESSIVE_RANDOM ? true : false
-      move = progresive ? find_valid_move(true, 70, [], true) : find_valid_move(false, 0, [], true)
-      $PokemonGlobal.given_tm_moves << move
-      $ItemData[tm][ITEMMACHINE] = move
-      $PokemonGlobal.tm_moves[tm] = move
-    end
-  end
-end
+
