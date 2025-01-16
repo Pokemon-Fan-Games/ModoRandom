@@ -15,13 +15,16 @@ module RandomizedChallenge
   # Leave this empty if all pokemon are allowed, otherwise only pokemon listed
   # above will be selected.
 
-  # Lista de movimientos baneados para el random
-  MOVEBLACKLIST = []
+  #Lista de movimientos baneados para el random
+  MOVEBLACKLIST=[PBMoves::ELECTROPALMAS, PBMoves::BURNUP, PBMoves::CHATTERI, PBMoves::DIG, PBMoves::TELEPORT, 
+                 PBMoves::SONICBOOM, PBMoves::DRAGONRAGE,PBMoves::STRUGGLE]
+    
+  #Lista de habilidades baneados para el random
+  ABILITYBLACKLIST = [PBAbilities::IMPOSTER, PBAbilities::PLUS, PBAbilities::MINUS, 
+                      PBAbilities::ZENMODE, PBAbilities::WONDERGUARD, PBAbilities::STANCECHANGE, PBAbilities::DISGUISE, 
+                      PBAbilities::FORECAST, PBAbilities::ILLUSION, PBAbilities::HARVEST, PBAbilities::MULTITYPE, 
+                      PBAbilities::HONEYGATHER, PBAbilities::ZEROTOHERO]
 
-  # Lista de habilidades baneados para el random
-  ABILITYBLACKLIST = []
-
-  # LISTA DE STARTERS PARA EL RANDOM
   RANDOM_STARTER_LIST = [
     PBSpecies::BULBASAUR,
     PBSpecies::CHARMANDER,
@@ -172,7 +175,7 @@ module RandomizedChallenge
   # Si una forma alterna tiene un movepool distinto a la original
   # En el random también tendran movesets distintos
   DIFFERENT_FORMS_HAVE_DIFFERENT_MOVEPOOLS = true
-  
+
   # Randomizar compatibilidad con las MTs
   # Se podrá cambiar llamando al metodo toggle_tm_compat
   # Tengan en cuenta que de esa forma un jugador podria armarse el moveset como quiera
@@ -200,17 +203,27 @@ module RandomizedChallenge
   # El tipo QMARKS es para los pokemones que no tienen tipos
   INVALID_TYPES = [PBTypes::QMARKS]
 
+  # Randomizar forma de los pokémon
+  # No podrán salir formas megas ni primigenias, pero si no tienen bien
+  # hecha la logica de los MultipleForms se pueden dar cosas raras
+  # La unica forma alterna que podra salir es la forma 1
+  ENABLE_RANDOM_FORM = true
+
   ### MEGA STONES for each pokemon
   MEGAS_RANDOMIZE_TO_MEGAS = true
   # Para que esto funciona se debe mantener el hash de abajo con la relacion
   # entre las especies y su mega piedra, si el pokemon tiene mas de 1 forma mega
   # con distintas megapiedras, como el caso de Charizard, se deben mantener los
   # items en un array, dejo un ejemplo del hash.
+  
+  # Ejemplo
+  # POKEMON_MEGA_STONES = {
+  #   PBSpecies::VENUSAUR    => PBItems::VENUSAURITE,
+  #   PBSpecies::CHARIZARD   => [PBItems::CHARIZARDITEX, PBItems::CHARIZARDITEY],
+  #   PBSpecies::BLASTOISE   => PBItems::BLASTOISINITE,
+  # }
+  POKEMON_MEGA_STONES = {}
 
-  POKEMON_MEGA_STONES = {
-    # PBSpecies::VENUSAUR    => PBItems::VENUSAURITE,
-    # PBSpecies::CHARIZARD   => [PBItems::CHARIZARDITEX, PBItems::CHARIZARDITEY],
-  }
 
   # Lista de entrenadores que no se randomizarán
   # solo se randomizarán las habilidades
@@ -219,40 +232,27 @@ module RandomizedChallenge
 
   # Lista de entrenadores y pokemon especificos que no se randomizarán
   # Es un hash que debe ser trainer.id => { partyid => [PBSpecies::ESPECIE1, PBSpecies::ESPECIE2] }
-  UNRANDOMIZABLE_TRAINER_POKEMON = {
-  }
+  UNRANDOMIZABLE_TRAINER_POKEMON = {}
 
   # Mantener encuentros de rutas
-  KEEP_SAME_WILD_IN_ROUTES = true
+  KEEP_SAME_WILD_IN_ROUTES = false
 
   # Mostrar los pokemon randomizados en el pokeradar.
-  SHOW_WILD_IN_RADAR = true
+  SHOW_WILD_IN_RADAR = false
   
+  # Necesario para un random progresivo manteniendo a los pokemon de ruta
+  # Se debe mantener el nivel maximo del lider para cada medalla, dejo un ejemplo debajo
   BADGES_MAX_LEVELS = {
-    0 => LEVELGYM0,
-    1 => LEVELGYM1,
-    2 => LEVELGYM2,
-    3 => LEVELGYM3,
-    4 => LEVELGYM4,
-    5 => LEVELGYM5,
-    6 => LEVELGYM6,
-    7 => LEVELGYM7,
-    8 => LEVELGYM8,
-    9 => LEVELGYM9
+    # 0 => 14,
+    # 1 => 23,
+    # 2 => 35,
   }
 
-  # Randomizar forma de los pokémon
-  # No podrán salir formas megas ni primigenias, pero si no tienen bien
-  # hecha la logica de los MultipleForms se pueden dar cosas raras
-  # La unica forma alterna que podra salir es la forma 1
-  ENABLE_RANDOM_FORM = true
-
   # Definir los pokemon que tienen posibles formas alternas
-  # Si el siguiente hash está vacio podran salir formas 1 de cualquier pokemon a menos que ese pokemon tenga mega.
-  # Siempre y cuando no tengan los graficos de formas que no tienen realmente implementadas no deberia suponer
-  # ningun problema que un pokemon salga con una forma incorrecta.
+  # Hay que definir la especie del pokemon y un array de formas posibles
+  # Esto es para poder hacer que salgan formas regionales sin que salgan permamegas
+  # Y a su vez evitar errores si tienen graficos de formas que luego no tienen definidas correctamente
   POKEMON_WITH_FORMS = {
-    # Aqui pueden ver 2 ejemplos de como definir las distintas formas de este hash
     # PBSpecies::RAPIDASH => [0, 1],
     # PBSpecies::TYPHLOSION => [0, 1],
   }
@@ -261,7 +261,7 @@ module RandomizedChallenge
   KEEP_SAME_FOSSIL_POKEMON = true
 
   # Salvajes a los que no se les randomizan los objetos
-  SPECIES_UNRAN_HELD_ITEMS = [PBSpecies::PARAS, PBSpecies::PARASECT]
+  SPECIES_UNRAN_HELD_ITEMS = []
 end
 
 class PokemonGlobalMetadata
@@ -482,7 +482,7 @@ def enable_random
   $PokemonGlobal.pause_random_species = false
   $PokemonGlobal.ev_train = false
   generate_random_starters
-  toggle_random_items
+  enable_random_items
   $game_switches[RandomizedChallenge::SWITCH] = true
 end
 
@@ -615,15 +615,19 @@ def resume_random
   $game_switches[RandomizedChallenge::SWITCH] = true
 end
 
-def invalid_species?(species, bst, evo = false, evo_bst_range = [], previous_species = nil, badges = nil)
+def invalid_species?(species, bst, evo = false, evo_bst_range = [], previous_species = nil, badges = $Trainer.numbadges)
   blacklisted = RandomizedChallenge::BLACKLISTEDPOKEMON.include?(species)
   not_in_bst_range = not_in_allowed_bst_range?(bst, badges)
   not_in_gen_range = $PokemonGlobal.random_gens.length > 0 && !pokemon_in_gen_range?(species) && !pokemon_in_gen_range?(previous_species)
-  not_in_evo_bst_range = evo && evo_bst_range.length > 0 && !bst.between?(
+  not_in_evo_bst_range = evo && evo_bst_range.length > 1 && !bst.between?(
     evo_bst_range[0], evo_bst_range[1]
   )
-
-  blacklisted || not_in_bst_range || not_in_gen_range || not_in_evo_bst_range
+  
+  return true if blacklisted
+  return true if not_in_gen_range
+  return true if evo && not_in_evo_bst_range
+  return false if evo && !not_in_evo_bst_range
+  return true if not_in_bst_range
 end
 
 def random_species(evo = false, evo_bst_range = [], badges = nil)
@@ -740,9 +744,7 @@ class PokeBattle_Pokemon
   end
 
   def reset_form?(poke = self)
-    if defined?(RandomizedChallenge::POKEMON_WITH_FORMS) && !RandomizedChallenge::POKEMON_WITH_FORMS.empty?
-      return RandomizedChallenge::POKEMON_WITH_FORMS[@species] ? false : true
-    end
+    return RandomizedChallenge::POKEMON_WITH_FORMS[@species] ? false : true
     has_mega_form = MultipleForms.hasFunction?(poke, 'getMegaForm')
     has_primal_form = MultipleForms.hasFunction?(poke, 'getPrimalForm')
     on_set_form = MultipleForms.hasFunction?(poke, 'onSetForm')
@@ -752,9 +754,7 @@ class PokeBattle_Pokemon
   def random_form
     return 0 if reset_form?
 
-    if defined?(RandomizedChallenge::POKEMON_WITH_FORMS) && !RandomizedChallenge::POKEMON_WITH_FORMS.empty?  
-      return RandomizedChallenge::POKEMON_WITH_FORMS[@species][rand(RandomizedChallenge::POKEMON_WITH_FORMS[@species].length)] || 0
-    end
+    return RandomizedChallenge::POKEMON_WITH_FORMS[@species][rand(RandomizedChallenge::POKEMON_WITH_FORMS[@species].length)] || 0
 
     form = rand(2)
     return form if form == 0
@@ -826,6 +826,7 @@ class PokeBattle_Pokemon
   def type1
     return type1_random unless random_enabled? && random_types_enabled?
 
+    # Ensure that a random type is generated and stored if it doesn't exist
     unless $PokemonGlobal.random_types[@species]
       random_type1 = rand(PBTypes.maxValue - 1) + 1 while RandomizedChallenge::INVALID_TYPES.include?(random_type1)
       $PokemonGlobal.random_types[@species] = [random_type1]
@@ -837,10 +838,13 @@ class PokeBattle_Pokemon
   def type2
     return type2_random unless random_enabled? && random_types_enabled?
 
+    # Ensure that the second type is set, either the same as type1 or different
     stored_types = $PokemonGlobal.random_types[@species]
     if stored_types.nil? || stored_types.length < 2
+      # Fetch or generate type1 to ensure it's in the stored_types
       type1_random = type1
 
+      # If type1 and type2 are originally the same, keep them the same
       if type2_random == type1_random
         $PokemonGlobal.random_types[@species].push(type1_random)
       else
@@ -985,6 +989,8 @@ class PokeBattle_Pokemon
 
     list = []
 
+
+
     (0..length - 1).each do
       level = atkdata.fgetw
       move = atkdata.fgetw
@@ -992,7 +998,7 @@ class PokeBattle_Pokemon
       progresive = ((!badge3_level && $Trainer.numbadges < 3) || level <= badge3_level) && progressive_random_on?
 
       move = progresive ? find_valid_move(true, 70, false, list) : find_valid_move(false, 0, false, list)
-      list.push([level, move])
+      list.push([level, move]) #unless isConst?(move, PBMoves, :CHATTER) && !isConst?(species, PBSpecies, :CHATOT)
     end
     atkdata.close
     $PokemonGlobal.random_moves[@species][form_index] = list
@@ -1020,11 +1026,12 @@ def pbCheckEvolutionEx(pokemon)
 
   ret = -1
   pbGetEvolvedFormData(pokemon.species).each do |form|
-    ret = if random_enabled? && random_evos_on?
-            yield pokemon, form[0], form[1], random_evo(pokemon, form[2]) # form[2]
-          else
-            yield pokemon, form[0], form[1], form[2]
-          end
+    if random_enabled? && random_evos_on?
+      evo = random_evo(pokemon, form[2])
+      ret = yield pokemon, form[0], form[1], evo # form[2]
+    else
+      ret = yield pokemon, form[0], form[1], form[2]
+    end
     break if ret > 0
   end
   ret
@@ -1082,13 +1089,16 @@ def pbLoadTrainer(trainerid, trainername, partyid = 0)
       pkmn.calcStats
     elsif pbIsMegaStone?(pkmn.item) && pkmn.hasMegaForm?
       megastone = RandomizedChallenge::POKEMON_MEGA_STONES.fetch(pkmn.species)
-      pkmn.item megastone.is_a?(Array) ? megastone[rand(megastone.length)] : megastone
+      megastone = megastone.is_a?(Array) ? megastone[rand(megastone.length)] : megastone
+      pkmn.setItem(megastone || 0)
     elsif pbIsMegaStone?(pkmn.item)
-      new_species = RandomizedChallenge::POKEMON_MEGA_STONES.keys.sample
+      new_species = RandomizedChallenge::POKEMON_MEGA_STONES.keys.shuffle[0]
       pause_random_species
       pkmn = PokeBattle_Pokemon.new(new_species, pkmn.level, trainer[0])
       resume_random_species
-      pkmn.setItem(RandomizedChallenge::POKEMON_MEGA_STONES.fetch(new_species, 0))
+      megastone = RandomizedChallenge::POKEMON_MEGA_STONES.fetch(pkmn.species)
+      megastone = megastone.is_a?(Array) ? megastone[rand(megastone.length)] : megastone
+      pkmn.setItem(megastone || 0)
       # pkmn.resetMoves
       pkmn.calcStats
     end
@@ -1293,3 +1303,17 @@ class EncounterListUI
     encable
   end
 end
+
+class PokemonEvolutionScene
+  alias pbEvolution_random pbEvolution
+  def pbEvolution(cancancel=true)
+    prev_species = @pokemon.species
+    prev_level = @pokemon.level
+    pbEvolution_random(cancancel)
+    if random_evos_on? && @pokemon.species != prev_species && @pokemon.level != prev_level
+      @pokemon.level = prev_level
+      @pokemon.form = @pokemon.form
+      pbSeenForm(@pokemon)
+    end
+  end
+end  
