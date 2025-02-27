@@ -482,6 +482,11 @@ def get_starter(index = 0, var = nil)
   pbGet(RandomizedChallenge::RANDOM_STARTER_VARIABLES[index])
 end
 
+def show_starter_random_pic(index = 0, var = nil)
+  species = get_starter(index, var)
+  SpeciesIntro.new(species).set_mark_as_seen(false).show
+end
+
 def give_starter_random(index = 0, var = nil, level = 5)
   species = get_starter(index, var)
   RandomizedChallenge.pause
