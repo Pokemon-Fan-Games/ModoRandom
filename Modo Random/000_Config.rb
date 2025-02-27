@@ -289,10 +289,10 @@ class RandomizerConfigurator
   end
 
   def self.turn_on_consistent_wild_encounters
-    $PokemonGlobal.keep_wild_encounters = true
+    $PokemonGlobal.consistent_wild_encounters = true
   end
 
   def self.turn_off_consistent_wild_encounters
-    $PokemonGlobal.keep_wild_encounters = false
+    $PokemonGlobal.consistent_wild_encounters = false
   end
 end

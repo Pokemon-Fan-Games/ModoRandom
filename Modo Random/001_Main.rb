@@ -144,7 +144,7 @@ module RandomizedChallenge
   end
 
   def self.consistent_wild_encounters?
-    enabled? && $PokemonGlobal.keep_wild_encounters ? true : false
+    enabled? && $PokemonGlobal.consistent_wild_encounters ? true : false
   end
 end
 
@@ -285,15 +285,16 @@ class Pokemon
     RandomizedChallenge::MOVEBLACKLIST.include?(move) || move_exists || (move_data.ohko? && ohko_banned?) || given_tm ? true : false
   end
 
-  alias reset_moves_random reset_moves
-  def reset_moves
-    reset_moves_random
-    movelist = improve_moves_with_stab_and_damage
+  # Esto de momento se comenta ya que da problemas de performance hay que ver como optimizarlo.
+  # alias reset_moves_random reset_moves
+  # def reset_moves
+  #   reset_moves_random
+  #   movelist = improve_moves_with_stab_and_damage
 
-    movelist.each_with_index do |m, i|
-      @moves[i] = Pokemon::Move.new(m.id)
-    end
-  end
+  #   movelist.each_with_index do |m, i|
+  #     @moves[i] = Pokemon::Move.new(m.id)
+  #   end
+  # end
 
   def improve_moves_with_stab_and_damage(movelist = nil)
     movelist ||= @moves
