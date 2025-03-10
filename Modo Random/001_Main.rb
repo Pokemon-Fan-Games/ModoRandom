@@ -468,7 +468,18 @@ end
 def generate_random_starters
   starter_count = RandomizedChallenge::RANDOM_STARTER_VARIABLES.length || 3
   # Selecciona 3 iniciales unicos de la lista
-  starters = RandomizedChallenge::RANDOM_STARTERS_LIST.sample(starter_count)
+  if RandomizedChallenge::RANDOM_STARTERS_LIST.empty?
+    starters = []
+    index = 1
+    GameData::Species.each_species { |species|
+      next if species.get_family_evolutions.size < 2
+      break if index >= starter_count
+      starters << species.id
+      index+=1
+    }
+  else
+    starters = RandomizedChallenge::RANDOM_STARTERS_LIST.sample(starter_count)
+  end
 
   # Asigna los iniciales a las variables
   RandomizedChallenge::RANDOM_STARTER_VARIABLES.each_with_index do |var, i|
@@ -519,14 +530,14 @@ def pbLoadTrainer(tr_type, tr_name, tr_version = 0)
       pkmn = Pokemon.new(unrandomizable_pokes[index], pkmn.level, pkmn.owner)
       RandomizedChallenge.resume
     elsif pkmn&.item&.is_mega_stone?
-      species_data = GameData::Species.get(pkmn.species)
+      species_data = GameData::Species.get_species_form(pkmn.species, pkmn.form)
       if species_data.mega_stone
         pkmn.item = species_data.mega_stone
       else
         RandomizedChallenge.pause
         new_species = random_species(true)
         pkmn = Pokemon.new(new_species, pkmn.level, pkmn.owner)
-        pkmn.item = GameData::Species.get(new_species).mega_stone
+        pkmn.item = GameData::Species.get_species_form(new_species, pkmn.form).mega_stone
         pkmn.reset_moves
         RandomizedChallenge.resume
       end
