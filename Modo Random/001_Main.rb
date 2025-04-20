@@ -119,18 +119,6 @@ module RandomizedChallenge
     $PokemonGlobal.progressive_random ? true : false
   end
 
-  def self.evolutions_on?
-    $PokemonGlobal.enable_random_evolutions ? true : false
-  end
-
-  def self.evolutions_similar_bst_on?
-    $PokemonGlobal.enable_random_evolutions_similar_bst ? true : false
-  end
-
-  def self.evos_respect_restrictions?
-    $PokemonGlobal.enable_random_evolutions_respect_restrictions
-  end
-
   def self.gens
     $PokemonGlobal.random_gens || []
   end
@@ -269,14 +257,14 @@ class Pokemon
         move = moves[rand(moves.length - 1) + 1]
         move = GameData::Move.get(move)
       end
-    elsif type
+    elsif !types.empty?
       until types.include?(move.type)
         move = moves[rand(moves.length - 1) + 1]
         move = GameData::Move.get(move)
       end
     end
 
-    Pokemon::Move.new(move.id)
+    move
   end
 
   def invalid_move?(move, move_data, for_tm = false)
@@ -363,14 +351,14 @@ class Pokemon
     movelist
   end
 
-  def find_valid_move(min_damage = 0, types = [], for_tm = false)
+  def find_valid_move(min_damage = 0, types = [], for_tm = false, progressive = RandomizedChallenge.progressive?)
     badge_count = $player.badge_count
     move = random_move(min_damage, types)
     loop do
       move_data = GameData::Move.get(move.id)
-      if RandomizedChallenge.progressive? && badge_count < 3
+      if progressive && badge_count < 3
         break unless move_data.display_real_damage(self) > 70 || invalid_move?(move, move_data, for_tm)
-      elsif RandomizedChallenge.progressive? && badge_count >= 6
+      elsif progressive && badge_count >= 6
         break unless move_data.display_real_damage(self) < 55 || invalid_move?(move, move_data, for_tm)
       else
         break unless invalid_move?(move, move_data, for_tm)
@@ -380,6 +368,19 @@ class Pokemon
     end
 
     move
+  end
+
+  def random_moveset(progresive = RandomizedChallenge.progressive?, num_moves = 4)
+    moves = []
+    num_moves.times do
+      if RandomizedChallenge::PRIORIZE_STAB_IN_LEARNSET && rand(100) < RandomizedChallenge::STAB_IN_LEARNSET
+        move = find_valid_move(0, self.types, false, progresive)
+      else
+        move = find_valid_move(0, [], false, progresive)
+      end
+      self.moves << move
+    end
+    moves
   end
 
   alias random_getMoveList getMoveList
@@ -394,7 +395,11 @@ class Pokemon
 
     moves.each do |item|
       level = item[0]
-      move = find_valid_move
+      if RandomizedChallenge::PRIORIZE_STAB_IN_LEARNSET && rand(100) < RandomizedChallenge::STAB_IN_LEARNSET
+        move = find_valid_move(0, self.types)
+      else
+        move = find_valid_move
+      end
       $PokemonGlobal.random_moves[@species].push([level, move])
     end
     $PokemonGlobal.random_moves[@species]
@@ -414,50 +419,6 @@ class Pokemon
     is_compatible = rand(2).zero?
     $PokemonGlobal.tm_compatibility_random[species] << [move_id, is_compatible]
     is_compatible
-  end
-
-  def get_random_evo(_current_species, new_species)
-    species_list = GameData::Species.keys
-    # species_list.shuffle!
-    return species_list.sample unless RandomizedChallenge.evolutions_similar_bst_on? || RandomizedChallenge.evos_respect_restrictions?
-
-    filtered_species = species_list.select do |species|
-      species_bst = GameData::Species.get(species).base_stats.values.sum
-
-      if RandomizedChallenge.evolutions_similar_bst_on?
-        new_species_bst = GameData::Species.get(new_species).base_stats.values.sum
-        species_bst.between?(new_species_bst * 0.9, new_species_bst * 1.1) && valid_pokemon?(species, true)
-      elsif RandomizedChallenge.evos_respect_restrictions?
-        valid_pokemon?(species)
-      end
-    end
-
-    filtered_species.sample
-  end
-
-  def check_evolution_internal
-    return nil if egg? || shadowPokemon?
-    return nil if hasItem?(:EVERSTONE)
-    return nil if hasAbility?(:BATTLEBOND)
-
-    species_data.get_evolutions(true).each do |evo| # [new_species, method, parameter, boolean]
-      next if evo[3] # Prevolution
-
-      random_evo = RandomizedChallenge.evolutions_on? ? get_random_evo(self, evo[0]) : evo[0]
-      ret = yield self, random_evo, evo[1], evo[2] # pkmn, new_species, method, parameter
-      return ret if ret
-    end
-    nil
-  end
-end
-
-class PokemonEvolutionScene
-  alias pbEvolutionSuccess_random pbEvolutionSuccess
-  def pbEvolutionSuccess
-    previous_level = @pokemon.level
-    pbEvolutionSuccess_random
-    @pokemon.form = GameData::Species.get(@pokemon.species).base_form
-    @pokemon.level = previous_level if RandomizedChallenge.evolutions_on? && @pokemon.level != previous_level
   end
 end
 
@@ -522,6 +483,13 @@ def pbLoadTrainer(tr_type, tr_name, tr_version = 0)
 
   unrandomizable_pokes = RandomizedChallenge::UNRANDOMIZABLE_TRAINER_POKEMON.fetch(trainer_data.id, {})
 
+  if unrandomizable_pokes.empty? && RandomizedChallenge::RERANDOM_TRAINER_MOVESET
+    trainer.party.map! do |pkmn|
+      pkmn.moves = RandomizedChallenge::TRAINERS_MOVESET_RESPECT_PROGRESSIVE ? pkmn.random_moveset : pkmn.random_moveset(false)
+      pkmn
+    end
+  end
+
   return trainer if unrandomizable_pokes.empty? && !RandomizedChallenge::MEGAS_RANDOMIZE_TO_MEGAS
 
   trainer.party.map!.with_index do |pkmn, index|
@@ -538,8 +506,11 @@ def pbLoadTrainer(tr_type, tr_name, tr_version = 0)
         new_species = random_species(true)
         pkmn = Pokemon.new(new_species, pkmn.level, pkmn.owner)
         pkmn.item = GameData::Species.get_species_form(new_species, pkmn.form).mega_stone
-        pkmn.reset_moves
         RandomizedChallenge.resume
+        pkmn.reset_moves
+        if RandomizedChallenge::RERANDOM_TRAINER_MOVESET
+          pkmn.moves = RandomizedChallenge::TRAINERS_MOVESET_RESPECT_PROGRESSIVE ? pkmn.random_moveset : pkmn.random_moveset(false)
+        end
       end
     end
     pkmn

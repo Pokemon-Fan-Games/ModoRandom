@@ -29,6 +29,7 @@ module RandomizedChallenge::Ability
   def self.get(key, default, hidden = false)
     # Load default data when switch is off
     return default if !$game_switches || !$game_switches[RandomizedChallenge::ABILITY_RANDOMIZER_SWITCH]
+    return default if RandomizedChallenge::SPECIES_WITHOUT_RANDOM_ABS.include?(key)
 
     # Load randomized data if exists
     all_abils = self.get_randomized_data

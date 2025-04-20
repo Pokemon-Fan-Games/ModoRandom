@@ -51,6 +51,23 @@ module RandomizedChallenge
   # Puedes modificar esto en cualquier momento llamando al método toggle_random_moves.
   RANDOM_MOVES_DEFAULT_VALUE = true
 
+  # Re Randomizar ataques de los Pokémon de los trainers
+  # La idea de esto es que los Pokemon que saquen los trainers, no tengan el mismo moveset
+  # De un mismo pokemon que salga como salvaje. 
+  # Es decir si tu tienes a un Pikachu y un trainer saca a un Pikachu no tiene porqué tener los mismos moves.
+  RERANDOM_TRAINER_MOVESET = true
+
+  # Define si el moveset de los entrenadores respeta el random progresivo o no
+  TRAINERS_MOVESET_RESPECT_PROGRESSIVE = true
+
+  # Priorizar stab en el learnset de los Pokemon
+  PRIORIZE_STAB_IN_LEARNSET = true
+
+  # Probabilidad de movimientos con stab en el learnset por nivel
+  # Porcentaje de probabilidad de que un movimiento sea del stab del pokemon
+  # Solo se tendra en cuenta si la constante PRIORIZE_STAB_IN_LEARNSET está en true
+  STAB_IN_LEARNSET = 20
+
   # BANNEAR MOVIMIENTOS OHKO
   BAN_OHKO_MOVES = true
 
@@ -73,6 +90,15 @@ module RandomizedChallenge
   # Si tanto este flag como el de arriba estan en false, las evoluciones random podrán ser cualquier pokémon
   # Esto puede beneficiarlos o perjudicarlos, ya que tu pichu podria evolucionar en un Palkia, pero tu Charmander podria evolucionar en un Weedle
   RANDOM_EVOLUTIONS_RESPECT_RESTRICTIONS = false
+
+  # Sinplificar evoluciones
+  # Metodos que serán reemplazados por evoluciones por nivel
+  # Esto es para evitar las evoluciones que implican aprender un movimiento que es posible que en random no se aprenda
+  CHANGE_EVO_METHODS = ["LevelUseMoveCount", "Trade", "HasMove", "HasMoveRandForm", "NightHoldItem", 
+                        "DayHoldItem", "HasInParty", "LevelRecoilDamageForm0", "TradeSpecies", "LevelDefeatItsKindWithItem", "CollectItems"]
+  
+  # Nivel en el que evolucionaran los Pokémon con metodos cambiados
+  DIFFICULT_EVO_LEVEL = 36
 
   # Las megas de los entrenadores se randomizan por otra mega.
   MEGAS_RANDOMIZE_TO_MEGAS = true
@@ -148,6 +174,10 @@ module RandomizedChallenge
     :BATTLEBOND, :HUNGERSWITCH, :SHIELDSDOWN, :SCHOOLING, :RKSSYSTEM, :POWERCONSTRUCT,
     :STANCECHANGE, :ZENMODE, :COMMANDER, :MULTITYPE, :GULPMISSILE, :ICEFACE, :ZEROTOHERO, :DISGUISE
   ]
+
+  # Especies a los que no se les randomizará nunca la habilidad
+  # El caso más común es el de Shedinja que sin Superguarda es basura.
+  SPECIES_WITHOUT_RANDOM_ABS = [:SHEDINJA]
 
   # Interruptores que se usan para el modo Random.
   # Ten en cuenta que los NPCs de ejemplo usan estos switches, si cambias el número deberás modificarlos también a ellos.
