@@ -51,6 +51,10 @@ module RandomizedChallenge
   # Puedes modificar esto en cualquier momento llamando al método toggle_random_moves.
   RANDOM_MOVES_DEFAULT_VALUE = true
 
+
+  # RANDOMIZAR LOS EQUIPOS DE ENTRENADORES
+  RANDOM_TRAINER_TEAM_DEFAULT_VALUE = true
+
   # Re Randomizar ataques de los Pokémon de los trainers
   # La idea de esto es que los Pokemon que saquen los trainers, no tengan el mismo moveset
   # De un mismo pokemon que salga como salvaje. 
@@ -259,7 +263,7 @@ class PokemonGlobalMetadata
                 :enable_random_evolutions_similar_bst,
                 :enable_random_evolutions_respect_restrictions, :enable_random_types,
                 :random_types, :randomize_items, :randomize_held_items,
-                :consistent_wild_encounters
+                :consistent_wild_encounters, :randomize_trainers
 end
 class RandomizerConfigurator
   def self.toggle_moves
@@ -326,5 +330,12 @@ class RandomizerConfigurator
 
   def self.turn_off_consistent_wild_encounters
     $PokemonGlobal.consistent_wild_encounters = false
+  end
+
+  def self.toggle_randomize_trainers
+    if $PokemonGlobal.randomize_trainers.nil?
+      $PokemonGlobal.randomize_trainers = RandomizedChallenge::RANDOM_TRAINER_TEAM_DEFAULT_VALUE
+    end
+    $PokemonGlobal.randomize_trainers = !$PokemonGlobal.randomize_trainers
   end
 end

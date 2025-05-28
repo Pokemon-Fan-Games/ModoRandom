@@ -10,7 +10,7 @@ class PokemonGlobalMetadata
                 :enable_random_evolutions_respect_restrictions, :enable_random_types,
                 :random_types, :randomize_items, :randomize_held_items,
                 :random_encounter_table, :consistent_wild_encounters, :dont_randomize, :wild_paused, 
-                :given_tm_moves
+                :given_tm_moves, :randomize_trainers
   alias initialize_random initialize
   def initialize
     initialize_random
@@ -36,6 +36,7 @@ class PokemonGlobalMetadata
     @wild_paused = false
     @dont_randomize = []
     @given_tm_moves = []
+    @randomize_trainers = RandomizedChallenge::RANDOM_TRAINER_TEAM_DEFAULT_VALUE
   end
 
   def disable_random_params
@@ -55,6 +56,7 @@ class PokemonGlobalMetadata
     @wild_paused = true
     @dont_randomize = []
     @given_tm_moves = []
+    @randomize_trainers = false
   end
 end
 
@@ -133,6 +135,10 @@ module RandomizedChallenge
 
   def self.consistent_wild_encounters?
     enabled? && $PokemonGlobal.consistent_wild_encounters ? true : false
+  end
+
+  def self.randomize_trainers?
+    $PokemonGlobal.randomize_trainers ? true : false
   end
 end
 
@@ -473,7 +479,7 @@ end
 # ********************************************************
 alias pbLoadTrainer_random pbLoadTrainer
 def pbLoadTrainer(tr_type, tr_name, tr_version = 0)
-  return pbLoadTrainer_random(tr_type, tr_name, tr_version) unless RandomizedChallenge.enabled?
+  return pbLoadTrainer_random(tr_type, tr_name, tr_version) unless RandomizedChallenge.enabled? && RandomizedChallenge.randomize_trainers?
 
   trainer = pbLoadTrainer_random(tr_type, tr_name, tr_version)
   return trainer if trainer.nil?
