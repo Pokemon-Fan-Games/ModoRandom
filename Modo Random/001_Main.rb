@@ -436,14 +436,13 @@ def generate_random_starters
   starter_count = RandomizedChallenge::RANDOM_STARTER_VARIABLES.length || 3
   # Selecciona 3 iniciales unicos de la lista
   if RandomizedChallenge::RANDOM_STARTERS_LIST.empty?
-    starters = []
-    index = 1
-    GameData::Species.each_species { |species|
-      next if species.get_family_evolutions.size < 2
-      break if index >= starter_count
-      starters << species.id
-      index+=1
-    }
+    species_list = [] 
+    GameData::Species.each_species do |species|
+      evolutions = species.get_family_evolutions
+      species_list << species if evolutions.size >= 2 && evolutions.one? {|e| e[0] == species.id }
+    end
+    species_list.shuffle!
+    starters = species_list.sample(starter_count)
   else
     starters = RandomizedChallenge::RANDOM_STARTERS_LIST.sample(starter_count)
   end
