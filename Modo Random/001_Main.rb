@@ -10,7 +10,7 @@ class PokemonGlobalMetadata
                 :enable_random_evolutions_respect_restrictions, :enable_random_types,
                 :random_types, :randomize_items, :randomize_held_items,
                 :random_encounter_table, :consistent_wild_encounters, :dont_randomize, :wild_paused, 
-                :given_tm_moves, :randomize_trainers
+                :given_tm_moves, :randomize_trainers, :randomize_starters
   alias initialize_random initialize
   def initialize
     initialize_random
@@ -37,6 +37,7 @@ class PokemonGlobalMetadata
     @dont_randomize = []
     @given_tm_moves = []
     @randomize_trainers = RandomizedChallenge::RANDOM_TRAINER_TEAM_DEFAULT_VALUE
+    @randomize_starters = RandomizedChallenge::RANDOMIZE_STARTERS
   end
 
   def disable_random_params
@@ -57,6 +58,7 @@ class PokemonGlobalMetadata
     @dont_randomize = []
     @given_tm_moves = []
     @randomize_trainers = false
+    @randomize_starters = false
   end
 end
 
@@ -73,7 +75,7 @@ module RandomizedChallenge
       $game_switches[RandomizedChallenge::ABILITY_RANDOMIZER_SWITCH] = true
       $game_switches[RandomizedChallenge::ABILITY_SEMI_RANDOMIZER_SWITCH] = true
     end
-    generate_random_starters
+    generate_random_starters if randomize_starters?
     $game_switches[RandomizedChallenge::SWITCH] = true
   end
 
@@ -110,15 +112,15 @@ module RandomizedChallenge
   end
 
   def self.moves_on?
-    $PokemonGlobal.enable_random_moves ? true : false
+    enabled? && $PokemonGlobal.enable_random_moves ? true : false
   end
 
   def self.tm_compat_on?
-    $PokemonGlobal.enable_random_tm_compat ? true : false
+    enabled? && $PokemonGlobal.enable_random_tm_compat ? true : false
   end
 
   def self.progressive?
-    $PokemonGlobal.progressive_random ? true : false
+    enabled? && $PokemonGlobal.progressive_random ? true : false
   end
 
   def self.gens
@@ -126,7 +128,7 @@ module RandomizedChallenge
   end
 
   def self.types_on?
-    $PokemonGlobal.enable_random_types ? true : false
+    enabled? && $PokemonGlobal.enable_random_types ? true : false
   end
 
   def self.ohko_banned?
@@ -138,7 +140,11 @@ module RandomizedChallenge
   end
 
   def self.randomize_trainers?
-    $PokemonGlobal.randomize_trainers ? true : false
+    enabled? && $PokemonGlobal.randomize_trainers ? true : false
+  end
+
+  def self.randomize_starters?
+    enabled? && $PokemonGlobal.randomize_starters ? true : false
   end
 end
 
@@ -454,6 +460,7 @@ def generate_random_starters
 end
 
 def get_starter(index = 0, var = nil)
+  return nil unless RandomizedChallenge.randomize_starters?
   return pbGet(var) if var
 
   pbGet(RandomizedChallenge::RANDOM_STARTER_VARIABLES[index])

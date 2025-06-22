@@ -128,8 +128,12 @@ module RandomizedChallenge
   # Este valor puede ir entre 1 y 100 o cualquier valor menor 1 para desactivarlo
   PROBABILITY_OF_STAB = 25
 
+  # Desactiva esto si no deseas que los iniciales sean random.
+  RANDOMIZE_STARTERS = true
+
   # Lista de posibles Pokémon que aparecerán como Pokémon Iniciales.
   # La lista debe ser la especie del Pokemon empezando con :, ejemplo :BULBASAUR
+  # Si el listado está vacío se utilizarán 3 Pokemon aleatorios que tengan 2 evoluciones.
   RANDOM_STARTERS_LIST = []
   # RANDOM_STARTERS_LIST = [
   #   :BULBASAUR, :CHARMANDER, :SQUIRTLE, :PIDGEY, :NIDORANmA, :NIDORANfE, :ZUBAT, :MANKEY, :POLIWAG, :ABRA, :MACHOP, :BELLSPROUT, :GEODUDE,
@@ -263,7 +267,7 @@ class PokemonGlobalMetadata
                 :enable_random_evolutions_similar_bst,
                 :enable_random_evolutions_respect_restrictions, :enable_random_types,
                 :random_types, :randomize_items, :randomize_held_items,
-                :consistent_wild_encounters, :randomize_trainers
+                :consistent_wild_encounters, :randomize_trainers, :randomize_starters
 end
 class RandomizerConfigurator
   def self.toggle_moves
@@ -337,5 +341,12 @@ class RandomizerConfigurator
       $PokemonGlobal.randomize_trainers = RandomizedChallenge::RANDOM_TRAINER_TEAM_DEFAULT_VALUE
     end
     $PokemonGlobal.randomize_trainers = !$PokemonGlobal.randomize_trainers
+  end
+
+  def self.toggle_randomize_starters
+    if $PokemonGlobal.randomize_starters.nil?
+      $PokemonGlobal.randomize_starters = RandomizedChallenge::RANDOMIZE_STARTERS
+    end
+    $PokemonGlobal.randomize_starters =  !$PokemonGlobal.randomize_starters
   end
 end
