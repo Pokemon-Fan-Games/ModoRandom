@@ -32,4 +32,24 @@ class SelectPokemonScene
 			RandomizedChallenge.resume
 		end
 	end
-end 
+end
+
+module TradeExpert
+	class << self
+		alias_method :fetchEqualSpecies, :fetchEqualSpeciesRandom
+		alias_method :tradePoke, :tradePokeRandom
+	end
+
+	def self.fetchEqualSpecies(poke, margin = 0.1)
+		return fetchEqualSpeciesRandom(poke, margin) unless RandomizedChallenge.enabled?
+		species = random_species while TradeExpert::TRADING_BLACKLIST.include?(species)
+		return [species]
+	end
+
+	def self.tradePoke(give, recv)
+		return tradePokeRandom(give, recv) unless RandomizedChallenge.enabled?
+		RandomizedChallenge.pause
+		tradePokeRandom(give, recv)
+		RandomizedChallenge.resume
+	end
+end
