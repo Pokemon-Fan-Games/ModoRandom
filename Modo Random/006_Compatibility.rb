@@ -14,27 +14,28 @@ if PluginManager.installed?("DiegoWTs Starter Selection") && defined?(DiegoWTsSt
 end
 
 if PluginManager.installed?("Script sencillo para la selección de starters.") && defined?(SelectPokemonScene)
-class SelectPokemonScene
-	alias_method :original_initialize, :initialize unless method_defined?(:original_initialize)
-	def initialize(switchNum,varNum)
-		original_initialize(switchNum,varNum)
-		return unless RandomizedChallenge.enabled?
-		starter1 = get_starter(0)
-		starter2 = get_starter(1)
-		starter3 = get_starter(2)
-		if starter1 && starter2 && starter3
-			@pkmnList = [starter1, starter2, starter3]
-		end
-	end
+  class SelectPokemonScene
+    alias_method :original_initialize, :initialize unless method_defined?(:original_initialize)
+    def initialize(switchNum,varNum)
+      original_initialize(switchNum,varNum)
+      return unless RandomizedChallenge.enabled?
+      starter1 = get_starter(0)
+      starter2 = get_starter(1)
+      starter3 = get_starter(2)
+      if starter1 && starter2 && starter3
+        @pkmnList = [starter1, starter2, starter3]
+      end
+    end
 
-	alias original_change_pokemon changePkmn
-	def changePkmn
-		if RandomizedChallenge.enabled?
-			RandomizedChallenge.pause
-			original_change_pokemon
-			RandomizedChallenge.resume
-		end
-	end
+    alias original_change_pokemon changePkmn
+    def changePkmn
+      if RandomizedChallenge.enabled?
+        RandomizedChallenge.pause
+        original_change_pokemon
+        RandomizedChallenge.resume
+      end
+    end
+  end
 end
 
 if PluginManager.installed?("Trade Expert") && defined?(TradeExpert)
@@ -43,9 +44,9 @@ if PluginManager.installed?("Trade Expert") && defined?(TradeExpert)
   end
   module TradeExpert
     class << self
-      alias_method :fetchEqualSpecies, :fetchEqualSpeciesRandom
-      alias_method :tradePoke, :tradePokeRandom
-      alias_method :start, :startRandom
+      alias_method :fetchEqualSpeciesRandom, :fetchEqualSpecies
+      alias_method :tradePokeRandom, :tradePoke
+      alias_method :startRandom, :start
     end
 
     def self.start(margin = 0.1)
