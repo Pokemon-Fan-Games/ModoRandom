@@ -8,46 +8,51 @@ end
 # Picking up an item found on the ground
 #-------------------------------------------------------------------------------
 alias pbItemBall_random pbItemBall
-def pbItemBall(item, quantity = 1)
-  return pbItemBall_random(item, quantity) unless RandomizedChallenge.randomize_items?
+def pbItemBall(item, quantity = 1, outfit_change = nil, randomize = true)
+  return pbItemBall_random(item, quantity, outfit_change) unless RandomizedChallenge.randomize_items? && randomize
 
   random_item = RandomizedChallenge.determine_random_item(item)
-  pbItemBall_random(random_item, quantity)
+  pbItemBall_random(random_item, quantity, outfit_change, false)
 end
 
 alias pbReceiveItem_random pbReceiveItem
-def pbReceiveItem(item, quantity = 1)
-  return pbReceiveItem_random(item, quantity) unless RandomizedChallenge.randomize_items?
+def pbReceiveItem(item, quantity = 1, outfit_change = nil, randomize = true)
+  return pbReceiveItem_random(item, quantity, outfit_change) unless RandomizedChallenge.randomize_items? && randomize
 
   random_item = RandomizedChallenge.determine_random_item(item)
-  pbReceiveItem_random(random_item, quantity)
+  pbReceiveItem_random(random_item, quantity, outfit_change, false)
 end
 
-alias pbGenerateWildPokemon_randomized pbGenerateWildPokemon
-def pbGenerateWildPokemon(species, level, isRoamer = false)
-  wild_poke = pbGenerateWildPokemon_randomized(species, level, isRoamer)
-  $PokemonGlobal.dont_randomize.delete_at($PokemonGlobal.dont_randomize.index(species)) if $PokemonGlobal.dont_randomize&.include?(species)
-  RandomizedChallenge.resume_wild_species if RandomizedChallenge.consistent_wild_encounters? && $PokemonGlobal.dont_randomize&.empty?
-  wild_poke.item = RandomizedChallenge.random_held_item if wild_poke.item && RandomizedChallenge.randomize_held_items?
-  wild_poke
-end
+# alias pbGenerateWildPokemon_randomized pbGenerateWildPokemon
+# def pbGenerateWildPokemon(species, level, isRoamer = false)
+#   wild_poke = pbGenerateWildPokemon_randomized(species, level, isRoamer)
+#   $PokemonGlobal.dont_randomize.delete_at($PokemonGlobal.dont_randomize.index(species)) if $PokemonGlobal.dont_randomize&.include?(species)
+#   RandomizedChallenge.resume_random_species if RandomizedChallenge.consistent_wild_encounters? && $PokemonGlobal.dont_randomize&.empty?
+#   wild_poke.item = RandomizedChallenge.random_held_item if wild_poke.item && RandomizedChallenge.randomize_held_items?
+#   wild_poke
+# end
 
-class TrainerBattle
-  class << self
-    alias start_random start
-    def start(*args)
-      outcome = start_random(*args)
-      return outcome == 1 unless RandomizedChallenge.enabled? && RandomizedChallenge::TRAINERS_CAN_GIVE_RANDOM_ITEMS
+EventHandlers.add(:on_wild_species_chosen, :randomize_wild_species,
+  proc { |encounter|
+    $PokemonGlobal.dont_randomize.delete_at($PokemonGlobal.dont_randomize.index(encounter[0])) if $PokemonGlobal.dont_randomize&.include?(encounter[0])
+    RandomizedChallenge.resume_random_species if RandomizedChallenge.consistent_wild_encounters? && $PokemonGlobal.dont_randomize&.empty?
+  }
+)
 
-      if outcome ==  1 && RandomizedChallenge.enabled? && RandomizedChallenge::TRAINERS_CAN_GIVE_RANDOM_ITEMS
-        chance = RandomizedChallenge::PROBABILITY_OF_RANDOM_ITEMS_FROM_TRAINERS || 15
-        give_item = rand < (chance / 100)
-        Kernel.pbReceiveItem(:POKEBALL) if give_item
-      end
-      outcome == 1
-    end
-  end
-end
+EventHandlers.add(:on_wild_pokemon_created, :randomize_wild_pokemon_item,
+  proc { |pokemon|
+    pokemon.item = RandomizedChallenge.random_held_item if pokemon.item && RandomizedChallenge.randomize_held_items?
+  }
+)
+
+EventHandlers.add(:on_end_battle, :gift_random_item,
+  proc { |decision, _canLose, battle|
+    next if !RandomizedChallenge::TRAINERS_CAN_GIVE_RANDOM_ITEMS || !RandomizedChallenge.enabled? || decision != 1 || !battle.trainerBattle?
+    chance = RandomizedChallenge::PROBABILITY_OF_RANDOM_ITEMS_FROM_TRAINERS || 15
+    give_item = rand < (chance / 100)
+    pbReceiveItem(:POKEBALL) if give_item
+  }
+)
 
 module RandomizedChallenge
   def self.randomize_items?

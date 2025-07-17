@@ -3,14 +3,15 @@
 # ***********************************************************
 
 class PokemonGlobalMetadata
-  attr_accessor :progressive_random, :random_moves,
+  attr_accessor :random_enabled, :progressive_random, :random_moves,
                 :enable_random_moves, :banohko, :random_gens,
                 :enable_random_tm_compat, :tm_compatibility_random, :enable_random_evolutions,
                 :enable_random_evolutions_similar_bst,
                 :enable_random_evolutions_respect_restrictions, :enable_random_types,
                 :random_types, :randomize_items, :randomize_held_items,
                 :random_encounter_table, :consistent_wild_encounters, :dont_randomize, :wild_paused, 
-                :given_tm_moves, :randomize_trainers, :randomize_starters
+                :given_tm_moves, :randomize_trainers, :randomize_starters, :semi_random_mode,
+                :remember_trainer_teams, :random_trainer_teams, :randomize_trainers_items
   alias initialize_random initialize
   def initialize
     initialize_random
@@ -38,6 +39,9 @@ class PokemonGlobalMetadata
     @given_tm_moves = []
     @randomize_trainers = RandomizedChallenge::RANDOM_TRAINER_TEAM_DEFAULT_VALUE
     @randomize_starters = RandomizedChallenge::RANDOMIZE_STARTERS
+    @semi_random_mode = false
+    @random_trainer_teams = {}
+    @randomize_trainers_items = RandomizedChallenge::RANDOM_TRAINER_ITEMS_DEFAULT_VALUE
   end
 
   def disable_random_params
@@ -59,6 +63,9 @@ class PokemonGlobalMetadata
     @given_tm_moves = []
     @randomize_trainers = false
     @randomize_starters = false
+    @semi_random_mode = false
+    @random_trainer_teams = {}
+    @randomize_trainers_items = false
   end
 end
 
@@ -67,56 +74,67 @@ module RandomizedChallenge
     return unless $game_switches
 
     $PokemonGlobal.initialize_random_params
-    case RandomizedChallenge::RANDOM_ABILITY_METHOD
-    when :FULLRANDOM, :MAPABILITIES
-      $game_switches[RandomizedChallenge::ABILITY_RANDOMIZER_SWITCH] = true
-      $game_switches[RandomizedChallenge::ABILITY_SWAP_RANDOMIZER_SWITCH] = RandomizedChallenge::RANDOM_ABILITY_METHOD == :MAPABILITIES
-    when :SAMEINEVOLUTION
-      $game_switches[RandomizedChallenge::ABILITY_RANDOMIZER_SWITCH] = true
-      $game_switches[RandomizedChallenge::ABILITY_SEMI_RANDOMIZER_SWITCH] = true
-    end
+    RandomizerConfigurator.ability_mode = RandomizedChallenge::RANDOM_ABILITY_METHOD
     generate_random_starters if randomize_starters?
-    $game_switches[RandomizedChallenge::SWITCH] = true
+    # $game_switches[RandomizedChallenge::SWITCH] = true
+    $PokemonGlobal.random_enabled = true
   end
 
   def self.disable
-    $game_switches[RandomizedChallenge::SWITCH] = false
+    # $game_switches[RandomizedChallenge::SWITCH] = false
     $game_switches[RandomizedChallenge::ABILITY_RANDOMIZER_SWITCH] = false
     $game_switches[RandomizedChallenge::ABILITY_SWAP_RANDOMIZER_SWITCH] = false
     $game_switches[RandomizedChallenge::ABILITY_SEMI_RANDOMIZER_SWITCH] = false
     $PokemonGlobal.disable_random_params
+    $PokemonGlobal.random_enabled = false
   end
 
   def self.pause
-    $game_switches[RandomizedChallenge::SWITCH] = false
+    $PokemonGlobal.random_enabled = false
   end
 
-  def self.pause_wild_species
+  def self.pause_random_species
     $PokemonGlobal.wild_paused = true
   end
 
-  def self.resume_wild_species
+  def self.resume_random_species
     $PokemonGlobal.wild_paused = false
   end
 
   def self.wild_paused?
     $PokemonGlobal.wild_paused ? true : false
   end
+  
+  class << self
+    alias random_species_pause? wild_paused?
+  end
 
   def self.resume
-    $game_switches[RandomizedChallenge::SWITCH] = true
+    $PokemonGlobal.random_enabled = true
   end
 
   def self.enabled?
-    $game_switches && $game_switches[RandomizedChallenge::SWITCH]
+    # $game_switches && $game_switches[RandomizedChallenge::SWITCH] ? true : false
+    $PokemonGlobal && $PokemonGlobal.random_enabled ? true : false
+  end
+
+  def self.random_abilities?
+    enabled? && $game_switches[RandomizedChallenge::ABILITY_RANDOMIZER_SWITCH] && !RandomizedChallenge.semi_random_mode? ? true : false
+  end
+
+  def self.ability_mode?
+    return :NO if !random_abilities?
+    return :MAPABILITIES if random_abilities? && $game_switches[RandomizedChallenge::ABILITY_SWAP_RANDOMIZER_SWITCH]
+    # return :SAMEINEVOLUTION if random_abilities? && $game_switches[RandomizedChallenge::ABILITY_SEMI_RANDOMIZER_SWITCH]
+    return :FULLRANDOM if random_abilities? && $game_switches[RandomizedChallenge::ABILITY_RANDOMIZER_SWITCH]
   end
 
   def self.moves_on?
-    enabled? && $PokemonGlobal.enable_random_moves ? true : false
+    enabled? && $PokemonGlobal.enable_random_moves && !semi_random_mode? ? true : false
   end
 
   def self.tm_compat_on?
-    enabled? && $PokemonGlobal.enable_random_tm_compat ? true : false
+    enabled? && $PokemonGlobal.enable_random_tm_compat && !semi_random_mode? ? true : false
   end
 
   def self.progressive?
@@ -128,7 +146,7 @@ module RandomizedChallenge
   end
 
   def self.types_on?
-    enabled? && $PokemonGlobal.enable_random_types ? true : false
+    enabled? && $PokemonGlobal.enable_random_types && !semi_random_mode? ? true : false
   end
 
   def self.ohko_banned?
@@ -140,11 +158,27 @@ module RandomizedChallenge
   end
 
   def self.randomize_trainers?
-    enabled? && $PokemonGlobal.randomize_trainers ? true : false
+    enabled? && $PokemonGlobal.randomize_trainers && !semi_random_mode? ? true : false
   end
 
   def self.randomize_starters?
     enabled? && $PokemonGlobal.randomize_starters ? true : false
+  end
+
+  def self.semi_random_mode?
+    enabled? && $PokemonGlobal.semi_random_mode ? true : false
+  end
+
+  def self.remember_trainer_teams?
+    enabled? && $PokemonGlobal.remember_trainer_teams ? true : false
+  end
+
+  def self.randomize_trainers_items?
+    enabled? && $PokemonGlobal.randomize_trainers_items ? true : false
+  end
+
+  def self.gen_included?(gen)
+    gens.include?(gen) || gens.empty?
   end
 end
 
@@ -217,10 +251,11 @@ def valid_bst?(bst, badge_count = nil)
 end
 
 class Pokemon
+  attr_accessor :traded
   alias randomized_init initialize
 
   def initialize(species, level, owner = $player, withMoves = true, recheck_form = true)
-    if RandomizedChallenge.enabled?
+    if RandomizedChallenge.enabled? && !RandomizedChallenge::UNRANDOMIZABLE_POKEMON.include?(species)
       species = RandomizedChallenge::WHITELISTED_POKEMON.sample || species unless RandomizedChallenge.wild_paused?
       if RandomizedChallenge::WHITELISTED_POKEMON.empty? && !RandomizedChallenge.wild_paused?
         $PokemonGlobal.random_gens = [] unless RandomizedChallenge.gens
@@ -228,6 +263,14 @@ class Pokemon
       end
     end
     randomized_init(species, level, owner, withMoves, recheck_form)
+  end
+
+  def traded?
+    @traded || false
+  end
+
+  def traded=(value)
+    @traded = value
   end
 
   def random_types
@@ -398,7 +441,7 @@ class Pokemon
   alias random_getMoveList getMoveList
   def getMoveList
     moves = random_getMoveList
-    return moves unless RandomizedChallenge.enabled? && RandomizedChallenge.moves_on?
+    return moves unless RandomizedChallenge.enabled? && RandomizedChallenge.moves_on? && !RandomizedChallenge::UNRANDOMIZABLE_POKEMON.include?(self.species_data.id)
 
     $PokemonGlobal.random_moves = {} unless $PokemonGlobal.random_moves
     return $PokemonGlobal.random_moves[@species] if $PokemonGlobal.random_moves[@species]
@@ -454,9 +497,12 @@ def generate_random_starters
   end
 
   # Asigna los iniciales a las variables
+  RandomizedChallenge.pause
   RandomizedChallenge::RANDOM_STARTER_VARIABLES.each_with_index do |var, i|
-    $game_variables[var] = starters[i]
+    pokemon = Pokemon.new(starters[i], 5)
+    pbSet(var, pokemon)
   end
+  RandomizedChallenge.resume
 end
 
 def get_starter(index = 0, var = nil)
@@ -467,15 +513,21 @@ def get_starter(index = 0, var = nil)
 end
 
 def show_starter_random_pic(index = 0, var = nil)
-  species = get_starter(index, var)
-  SpeciesIntro.new(species).set_mark_as_seen(false).show
+  pokemon = get_starter(index, var)
+  pbSet(3, pokemon.name)
+  pbMostrarPkmnAnimado(pokemon, true, Graphics.width/2, Graphics.height/2)
+  # SpeciesIntro.new(species).set_mark_as_seen(false).show
 end
 
 def give_starter_random(index = 0, var = nil, level = 5)
-  species = get_starter(index, var)
-  RandomizedChallenge.pause
-  pbAddPokemon(species, level)
-  RandomizedChallenge.resume
+  pokemon = get_starter(index, var)
+  if pokemon.is_a?(Pokemon)
+    pbAddPokemon(pokemon)
+  else
+    RandomizedChallenge.pause
+    pbAddPokemon(species, level)
+    RandomizedChallenge.resume
+  end
   $player.party.first.reset_moves
 end
 
@@ -485,19 +537,35 @@ end
 # ********************************************************
 alias pbLoadTrainer_random pbLoadTrainer
 def pbLoadTrainer(tr_type, tr_name, tr_version = 0)
-  return pbLoadTrainer_random(tr_type, tr_name, tr_version) unless RandomizedChallenge.enabled? && RandomizedChallenge.randomize_trainers?
+  return pbLoadTrainer_random(tr_type, tr_name, tr_version) unless RandomizedChallenge.enabled?
+
+  trainer_data = GameData::Trainer.try_get(tr_type, tr_name, tr_version)
+
+  if RandomizedChallenge.remember_trainer_teams? && $PokemonGlobal.random_trainer_teams.has_key?(trainer_data.id)
+    trainer = $PokemonGlobal.random_trainer_teams[trainer_data.id]
+    return trainer
+  end
+
+  if !RandomizedChallenge.randomize_trainers? || RandomizedChallenge::UNRANDOMIZABLE_TRAINERS.include?(trainer_data.id)
+    RandomizedChallenge.pause_random
+    trainer = pbLoadTrainer_random(tr_type, tr_name, tr_version)
+    RandomizedChallenge.resume_random
+    return trainer
+  end
 
   trainer = pbLoadTrainer_random(tr_type, tr_name, tr_version)
   return trainer if trainer.nil?
 
-  trainer_data = GameData::Trainer.try_get(tr_type, tr_name, tr_version)
-  return trainer if RandomizedChallenge::UNRANDOMIZABLE_TRAINERS.include?(trainer_data.id)
-
   unrandomizable_pokes = RandomizedChallenge::UNRANDOMIZABLE_TRAINER_POKEMON.fetch(trainer_data.id, {})
 
-  if unrandomizable_pokes.empty? && RandomizedChallenge::RERANDOM_TRAINER_MOVESET
+  if unrandomizable_pokes.empty? 
     trainer.party.map! do |pkmn|
-      pkmn.moves = RandomizedChallenge::TRAINERS_MOVESET_RESPECT_PROGRESSIVE ? pkmn.random_moveset : pkmn.random_moveset(false)
+      if RandomizedChallenge::RERANDOM_TRAINER_MOVESET
+        pkmn.moves = RandomizedChallenge::TRAINERS_MOVESET_RESPECT_PROGRESSIVE ? pkmn.random_moveset : pkmn.random_moveset(false)
+      end
+      if RandomizedChallenge.randomize_trainers_items? && !pkmn&.item&.is_mega_stone?
+        pkmn.item = RandomizedChallenge.random_item(false, true)
+      end
       pkmn
     end
   end
@@ -520,14 +588,19 @@ def pbLoadTrainer(tr_type, tr_name, tr_version = 0)
         pkmn.item = GameData::Species.get_species_form(new_species, pkmn.form).mega_stone
         RandomizedChallenge.resume
         pkmn.reset_moves
-        if RandomizedChallenge::RERANDOM_TRAINER_MOVESET
-          pkmn.moves = RandomizedChallenge::TRAINERS_MOVESET_RESPECT_PROGRESSIVE ? pkmn.random_moveset : pkmn.random_moveset(false)
-        end
       end
+    elsif RandomizedChallenge.randomize_trainers_items?
+      pkmn.item = RandomizedChallenge.random_item(false, true)
+    end
+    if RandomizedChallenge::RERANDOM_TRAINER_MOVESET
+      pkmn.moves = RandomizedChallenge::TRAINERS_MOVESET_RESPECT_PROGRESSIVE ? pkmn.random_moveset : pkmn.random_moveset(false)
     end
     pkmn
   end
 
+  if RandomizedChallenge.remember_trainer_teams?
+    $PokemonGlobal.random_trainer_teams[trainer_data.id] = trainer
+  end
   trainer
 end
 
@@ -588,7 +661,7 @@ class PokemonEncounters
     @encounter_tables[enc_type] = $PokemonGlobal.random_encounter_table[enc_type]
 
     wild = choose_wild_pokemon_random(enc_type, chance_rolls)
-    RandomizedChallenge.pause_wild_species
+    RandomizedChallenge.pause_random_species
     $PokemonGlobal.dont_randomize << wild[0]
     wild
   end
@@ -603,9 +676,9 @@ class EncounterList_Scene
     if RandomizedChallenge.consistent_wild_encounters?
       @encounter_tables = $PokemonGlobal.random_encounter_table || {}
       @max_enc, @eLength = @encounter_tables.empty? ? [1, 1] : getMaxEncounters(@encounter_tables)
-      Kernel.pbMessage(_INTL('En el modo random el busca salvajes estará vacío hasta que entres al menos en 1 combate con salvajes por ruta'))
+      pbMessage(_INTL('En el modo random el busca salvajes estará vacío hasta que entres al menos en 1 combate con salvajes por ruta'))
     else
-      Kernel.pbMessage(_INTL('En el modo random donde los Pokémon de las rutas son 100% aleatorios el busca salvajes no mostrará información correcta'))
+      pbMessage(_INTL('En el modo random donde los Pokémon de las rutas son 100% aleatorios el busca salvajes no mostrará información correcta'))
     end
   end
 end

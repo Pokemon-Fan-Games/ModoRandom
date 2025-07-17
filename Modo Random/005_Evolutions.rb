@@ -26,10 +26,10 @@ class Pokemon
 			species_bst = GameData::Species.get(species).base_stats.values.sum
 
 			if RandomizedChallenge.evolutions_similar_bst_on?
-			new_species_bst = GameData::Species.get(new_species).base_stats.values.sum
-			species_bst.between?(new_species_bst * 0.9, new_species_bst * 1.1) && valid_pokemon?(species, true)
+				new_species_bst = GameData::Species.get(new_species).base_stats.values.sum
+				species_bst.between?(new_species_bst * 0.9, new_species_bst * 1.1) && valid_pokemon?(species, true)
 			elsif RandomizedChallenge.evos_respect_restrictions?
-			valid_pokemon?(species)
+				valid_pokemon?(species)
 			end
 		end
 

@@ -28,7 +28,7 @@ module RandomizedChallenge::Ability
   #-----------------------------------------------------------------------------
   def self.get(key, default, hidden = false)
     # Load default data when switch is off
-    return default if !$game_switches || !$game_switches[RandomizedChallenge::ABILITY_RANDOMIZER_SWITCH]
+    return default if !RandomizedChallenge.random_abilities?
     return default if RandomizedChallenge::SPECIES_WITHOUT_RANDOM_ABS.include?(key)
 
     # Load randomized data if exists
@@ -195,6 +195,28 @@ module GameData
       sp = get_first_evo
       ([sp] + GameData::Species.get(sp).get_next_evos).uniq
     end
+  end
+end
+
+class Pokemon
+  attr_accessor :forced_ability
+
+  alias ability_random ability
+  def ability
+    return GameData::Ability.try_get(@forced_ability) if @forced_ability
+    ability_random
+  end
+
+  alias ability_id_random ability_id
+  def ability_id
+    return GameData::Ability.get(@forced_ability).id if @forced_ability
+    ability_id_random
+  end
+
+
+  def forced_ability=(value)
+    return if !GameData::Ability.exists?(value)
+    @forced_ability = value
   end
 end
 

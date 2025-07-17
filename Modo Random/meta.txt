@@ -1,6 +1,7 @@
 Name       = Random Pokemon & Moves + Randomizer EX (Abilities)
-Version    = 1.8.1
+Version    = 1.9.0
 Essentials = 21.1
 Requires   = v21.1 Hotfixes
-Optional   = DiegoWTs Starter Selection,1.5.0,Script sencillo para la selección de starters.,1.0
+Optional   = DiegoWTs Starter Selection,1.5.0
+Optional   = Script sencillo para la selección de starters.,1.0
 Credits    = DPertierra, Golisopod User, CrimsonTY, Luka SJ, Skyflyer

@@ -35,7 +35,7 @@ module RandomizedChallenge
   # ID del Interruptor/Switch para randomizar a los Pokémon. En caso
   # de estar en ON, todos los Pokémon del juego sin excepción serán
   # randomizados, con las restricciones de las opciones siguientes.
-  SWITCH = 60
+  SWITCH = 47
 
   # VARIABLES POKEMON INICIALES
   # La posicion 1 es la de la primera variable, la 2 la de la segunda, etc.
@@ -54,6 +54,9 @@ module RandomizedChallenge
 
   # RANDOMIZAR LOS EQUIPOS DE ENTRENADORES
   RANDOM_TRAINER_TEAM_DEFAULT_VALUE = true
+
+  # RANDOMIZAR OBJETOS ENTRENADORES
+  RANDOM_TRAINER_ITEMS_DEFAULT_VALUE = true
 
   # Re Randomizar ataques de los Pokémon de los trainers
   # La idea de esto es que los Pokemon que saquen los trainers, no tengan el mismo moveset
@@ -113,7 +116,10 @@ module RandomizedChallenge
 
   # Pokémon que no pueden salir en el modo Random. Añade aquí los que no quieres que salgan
   # con el mismo formato de los que ya aparecen.
-  BLACKLISTED_POKEMON = [:MEW, :ARCEUS]
+  BLACKLISTED_POKEMON = [:MEW, :ARCEUS, :MEWTWO_5]
+
+  # Pokemon que no se randomizarán
+  UNRANDOMIZABLE_POKEMON = [:MEWTWO_5]
 
   # Lista de los únicos Pokémon que pueden aparecer en el modo Random. Si la dejas VACÍA,
   # aparecerán todos los Pokémon del juego SALVO los que añadas a la lista que hay
@@ -185,13 +191,13 @@ module RandomizedChallenge
 
   # Especies a los que no se les randomizará nunca la habilidad
   # El caso más común es el de Shedinja que sin Superguarda es basura.
-  SPECIES_WITHOUT_RANDOM_ABS = [:SHEDINJA]
+  SPECIES_WITHOUT_RANDOM_ABS = [:SHEDINJA, :MEWTWO_5]
 
   # Interruptores que se usan para el modo Random.
   # Ten en cuenta que los NPCs de ejemplo usan estos switches, si cambias el número deberás modificarlos también a ellos.
-  ABILITY_RANDOMIZER_SWITCH      = 61
-  ABILITY_SEMI_RANDOMIZER_SWITCH = 62
-  ABILITY_SWAP_RANDOMIZER_SWITCH = 63
+  ABILITY_RANDOMIZER_SWITCH      = 48
+  ABILITY_SEMI_RANDOMIZER_SWITCH = 49
+  ABILITY_SWAP_RANDOMIZER_SWITCH = 50
 
   # ********************************************************
   # OBJETOS RANDOMIZADOS                                   *
@@ -212,7 +218,7 @@ module RandomizedChallenge
   GIFTED_POKEMON_ITEM_PROBABILITY = 15
 
   # Lista de objetos que no quieres que aparezcan entre los objetos Random.
-  ITEM_BLACK_LIST = []
+  ITEM_BLACK_LIST = [:ABILITYCAPSULE, :SUPERCAPSULE]
 
   # Lista de objetos que no podrán salir como objetos equipados en salvajes
   HELD_ITEM_BLACK_LIST = []
@@ -267,7 +273,9 @@ class PokemonGlobalMetadata
                 :enable_random_evolutions_similar_bst,
                 :enable_random_evolutions_respect_restrictions, :enable_random_types,
                 :random_types, :randomize_items, :randomize_held_items,
-                :consistent_wild_encounters, :randomize_trainers, :randomize_starters
+                :consistent_wild_encounters, :randomize_trainers, :randomize_starters,
+                :semi_random_mode, :remember_trainer_teams, :random_trainer_teams,
+                :random_trainer_items
 end
 class RandomizerConfigurator
   def self.toggle_moves
@@ -304,7 +312,7 @@ class RandomizerConfigurator
   def self.add_or_remove_gen(gen = nil)
     return unless gen
 
-    $PokemonGlobal.random_gens = $PokemonGlobal.random_gens || []
+    $PokemonGlobal.random_gens ||= []
     if !$PokemonGlobal.random_gens.include?(gen)
       $PokemonGlobal.random_gens.push(gen)
     else
@@ -328,6 +336,10 @@ class RandomizerConfigurator
     $PokemonGlobal.randomize_held_items = !$PokemonGlobal.randomize_held_items
   end
 
+  def self.toggle_trainers_items
+    $PokemonGlobal.randomize_trainers_items = !$PokemonGlobal.randomize_trainers_items
+  end
+
   def self.turn_on_consistent_wild_encounters
     $PokemonGlobal.consistent_wild_encounters = true
   end
@@ -348,5 +360,49 @@ class RandomizerConfigurator
       $PokemonGlobal.randomize_starters = RandomizedChallenge::RANDOMIZE_STARTERS
     end
     $PokemonGlobal.randomize_starters =  !$PokemonGlobal.randomize_starters
+  end
+
+  def self.toggle_semi_random_mode
+    $PokemonGlobal.semi_random_mode ||= false
+    $PokemonGlobal.semi_random_mode = !$PokemonGlobal.semi_random_mode 
+  end
+
+  def self.ability_mode=(mode = RandomizedChallenge::RANDOM_ABILITY_METHOD)
+    case mode
+    when :FULLRANDOM
+      $game_switches[RandomizedChallenge::ABILITY_RANDOMIZER_SWITCH] = true
+      $game_switches[RandomizedChallenge::ABILITY_SWAP_RANDOMIZER_SWITCH] = false
+    when :MAPABILITIES
+      $game_switches[RandomizedChallenge::ABILITY_RANDOMIZER_SWITCH] = true
+      $game_switches[RandomizedChallenge::ABILITY_SWAP_RANDOMIZER_SWITCH] = true
+    when :SAMEINEVOLUTION
+      $game_switches[RandomizedChallenge::ABILITY_RANDOMIZER_SWITCH] = true
+      $game_switches[RandomizedChallenge::ABILITY_SEMI_RANDOMIZER_SWITCH] = true
+    when :NO
+      $game_switches[RandomizedChallenge::ABILITY_RANDOMIZER_SWITCH] = false
+      $game_switches[RandomizedChallenge::ABILITY_SWAP_RANDOMIZER_SWITCH] = false
+      $game_switches[RandomizedChallenge::ABILITY_SEMI_RANDOMIZER_SWITCH] = false
+    end
+  end
+
+  def self.toggle_remember_trainer_teams
+    $PokemonGlobal.remember_trainer_teams ||= false
+    $PokemonGlobal.remember_trainer_teams = !$PokemonGlobal.remember_trainer_teams 
+    $PokemonGlobal.random_trainer_teams = {} if !$PokemonGlobal.remember_trainer_teams
+  end
+
+  def self.pbRandomMenu(menu = :randomizer_configurator, is_sub_menu = true)
+    if !RandomizedChallenge.enabled?
+      if pbConfirmMessage(_INTL("El modo Random está desactivado, ¿deseas activarlo?"))
+        RandomizedChallenge.enable
+      else
+        return
+      end
+    end
+    pbFadeOutIn do
+      scene = PokemonOption_Scene.new
+      screen = PokemonOptionScreen.new(scene)
+      screen.pbStartScreen(false, menu, is_sub_menu)
+    end
   end
 end
