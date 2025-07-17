@@ -267,21 +267,23 @@ MenuHandlers.add(:randomizer_configurator, :randomize_trainers, {
       next true
     },
 })
-  
-MenuHandlers.add(:randomizer_configurator, :gen_chooser, {
-    "name" => _INTL("Seleccionar Generación"),
-    "description" => _INTL("Selecciona la generación de Pokémon que quieres que salgan en el modo random.\nPor defecto todas las generaciones están activadas."),
-    "order" => 14,
-    "type" => ButtonOption,
-    "parent" => :randomizer_configurator,
-    "condition" => proc { next RandomizedChallenge.enabled? },
-    "get_proc" => proc { next 0 },
-    "set_proc" => proc { |value, scene|
-      RandomizerConfigurator.pbRandomMenu(:gen_chooser)
-      next true
-    },
-})
-  
+
+if defined?(ButtonOption)
+  MenuHandlers.add(:randomizer_configurator, :gen_chooser, {
+      "name" => _INTL("Seleccionar Generación"),
+      "description" => _INTL("Selecciona la generación de Pokémon que quieres que salgan en el modo random.\nPor defecto todas las generaciones están activadas."),
+      "order" => 14,
+      "type" => ButtonOption,
+      "parent" => :randomizer_configurator,
+      "condition" => proc { next RandomizedChallenge.enabled? },
+      "get_proc" => proc { next 0 },
+      "set_proc" => proc { |value, scene|
+        RandomizerConfigurator.pbRandomMenu(:gen_chooser)
+        next true
+      },
+  })
+end
+
 MenuHandlers.add(:gen_chooser, :gen1, {
     "name" => _INTL("Generación 1"),
     "description" => _INTL("Permitir Pokémon de la generación 1, incluyendo evoluciones de generaciones posteriores"),
@@ -294,7 +296,7 @@ MenuHandlers.add(:gen_chooser, :gen1, {
       next true
     },
 })
-  
+
 MenuHandlers.add(:gen_chooser, :gen2, {
     "name" => _INTL("Generación 2"),
     "description" => _INTL("Permitir Pokémon de la generación 2, incluyendo evoluciones de generaciones posteriores"),
@@ -307,7 +309,7 @@ MenuHandlers.add(:gen_chooser, :gen2, {
       next true
     },
 })
-  
+
 MenuHandlers.add(:gen_chooser, :gen3, {
     "name" => _INTL("Generación 3"),
     "description" => _INTL("Permitir Pokémon de la generación 3, incluyendo evoluciones de generaciones posteriores"),
@@ -399,23 +401,24 @@ MenuHandlers.add(:gen_chooser, :gen9, {
     },
 })
 
-MenuHandlers.add(:randomizer_configurator, :disable, {
-    "name" => _INTL("Desactivar Modo Random"),
-    "description" => _INTL("Al interactuar con este botón se desactivará el modo random.\nTe solicitará confirmación"),
-    "order" => 20,
-    "type" => ButtonOption,
-    "parent" => :options_menu,
-    "condition" => proc { next RandomizedChallenge.enabled? },
-    "get_proc" => proc { next 0 },
-    "set_proc" => proc { |value, scene|
-        if pbConfirmMessage(_INTL("¿Estás seguro de que quieres desactivar el modo random?\nSi luego lo vuelves a activar todo el randomizado cambiará."))
-            RandomizedChallenge.disable
-            pbMessage(_INTL("El modo random ha sido desactivado."))
-            scene.pbCloseSubMenu
-            next true
-        else
-            next false
-        end
-    },
-})
-  
+if defined?(ButtonOption)
+  MenuHandlers.add(:randomizer_configurator, :disable, {
+      "name" => _INTL("Desactivar Modo Random"),
+      "description" => _INTL("Al interactuar con este botón se desactivará el modo random.\nTe solicitará confirmación"),
+      "order" => 20,
+      "type" => ButtonOption,
+      "parent" => :options_menu,
+      "condition" => proc { next RandomizedChallenge.enabled? },
+      "get_proc" => proc { next 0 },
+      "set_proc" => proc { |value, scene|
+          if pbConfirmMessage(_INTL("¿Estás seguro de que quieres desactivar el modo random?\nSi luego lo vuelves a activar todo el randomizado cambiará."))
+              RandomizedChallenge.disable
+              pbMessage(_INTL("El modo random ha sido desactivado."))
+              scene.pbCloseSubMenu
+              next true
+          else
+              next false
+          end
+      },
+  })
+end  
