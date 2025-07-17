@@ -513,16 +513,16 @@ def get_starter(index = 0, var = nil)
 end
 
 def show_starter_random_pic(index = 0, var = nil)
-  pokemon = get_starter(index, var)
-  pbSet(3, pokemon.name)
-  pbMostrarPkmnAnimado(pokemon, true, Graphics.width/2, Graphics.height/2)
-  # SpeciesIntro.new(species).set_mark_as_seen(false).show
+  starter = get_starter(index, var)
+  pbSet(3, starter.name)
+  species = starter.is_a?(Pokemon) ? starter.species : starter
+  SpeciesIntro.new(species).set_mark_as_seen(false).show
 end
 
 def give_starter_random(index = 0, var = nil, level = 5)
-  pokemon = get_starter(index, var)
-  if pokemon.is_a?(Pokemon)
-    pbAddPokemon(pokemon)
+  starter = get_starter(index, var)
+  if starter.is_a?(Pokemon)
+    pbAddPokemon(starter)
   else
     RandomizedChallenge.pause
     pbAddPokemon(species, level)

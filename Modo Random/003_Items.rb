@@ -12,7 +12,7 @@ def pbItemBall(item, quantity = 1, outfit_change = nil, randomize = true)
   return pbItemBall_random(item, quantity, outfit_change) unless RandomizedChallenge.randomize_items? && randomize
 
   random_item = RandomizedChallenge.determine_random_item(item)
-  pbItemBall_random(random_item, quantity, outfit_change, false)
+  pbItemBall_random(random_item, quantity, outfit_change)
 end
 
 alias pbReceiveItem_random pbReceiveItem
@@ -20,17 +20,8 @@ def pbReceiveItem(item, quantity = 1, outfit_change = nil, randomize = true)
   return pbReceiveItem_random(item, quantity, outfit_change) unless RandomizedChallenge.randomize_items? && randomize
 
   random_item = RandomizedChallenge.determine_random_item(item)
-  pbReceiveItem_random(random_item, quantity, outfit_change, false)
+  pbReceiveItem_random(random_item, quantity, outfit_change)
 end
-
-# alias pbGenerateWildPokemon_randomized pbGenerateWildPokemon
-# def pbGenerateWildPokemon(species, level, isRoamer = false)
-#   wild_poke = pbGenerateWildPokemon_randomized(species, level, isRoamer)
-#   $PokemonGlobal.dont_randomize.delete_at($PokemonGlobal.dont_randomize.index(species)) if $PokemonGlobal.dont_randomize&.include?(species)
-#   RandomizedChallenge.resume_random_species if RandomizedChallenge.consistent_wild_encounters? && $PokemonGlobal.dont_randomize&.empty?
-#   wild_poke.item = RandomizedChallenge.random_held_item if wild_poke.item && RandomizedChallenge.randomize_held_items?
-#   wild_poke
-# end
 
 EventHandlers.add(:on_wild_species_chosen, :randomize_wild_species,
   proc { |encounter|
