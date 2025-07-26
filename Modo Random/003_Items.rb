@@ -1,5 +1,11 @@
 class PokemonGlobalMetadata
-  attr_accessor :given_tm_moves
+  attr_accessor :given_tm_moves, :tm_list
+end
+
+module GameData
+  class Item
+    attr_accessor :move
+  end
 end
 
 #-------------------------------------------------------------------------------
@@ -10,7 +16,7 @@ end
 alias pbItemBall_random pbItemBall
 def pbItemBall(item, quantity = 1, outfit_change = nil, randomize = true)
   return pbItemBall_random(item, quantity, outfit_change) unless RandomizedChallenge.randomize_items? && randomize
-
+  
   random_item = RandomizedChallenge.determine_random_item(item)
   pbItemBall_random(random_item, quantity, outfit_change)
 end
@@ -23,16 +29,27 @@ def pbReceiveItem(item, quantity = 1, outfit_change = nil, randomize = true)
   pbReceiveItem_random(random_item, quantity, outfit_change)
 end
 
-EventHandlers.add(:on_wild_species_chosen, :randomize_wild_species,
-  proc { |encounter|
-    $PokemonGlobal.dont_randomize.delete_at($PokemonGlobal.dont_randomize.index(encounter[0])) if $PokemonGlobal.dont_randomize&.include?(encounter[0])
-    RandomizedChallenge.resume_random_species if RandomizedChallenge.consistent_wild_encounters? && $PokemonGlobal.dont_randomize&.empty?
-  }
-)
+# alias pbGenerateWildPokemon_randomized pbGenerateWildPokemon
+# def pbGenerateWildPokemon(species, level, isRoamer = false)
+#   wild_poke = pbGenerateWildPokemon_randomized(species, level, isRoamer)
+#   $PokemonGlobal.dont_randomize.delete_at($PokemonGlobal.dont_randomize.index(species)) if $PokemonGlobal.dont_randomize&.include?(species)
+#   RandomizedChallenge.resume_random_species if RandomizedChallenge.consistent_wild_encounters? && $PokemonGlobal.dont_randomize&.empty?
+#   wild_poke.item = RandomizedChallenge.random_held_item if wild_poke.item && RandomizedChallenge.randomize_held_items?
+#   wild_poke
+# end
+
+# EventHandlers.add(:on_wild_species_chosen, :randomize_wild_species,
+#   proc { |encounter|
+#     $PokemonGlobal.dont_randomize.delete_at($PokemonGlobal.dont_randomize.index(encounter[0])) if $PokemonGlobal.dont_randomize&.include?(encounter[0])
+#     RandomizedChallenge.resume_random_species if RandomizedChallenge.consistent_wild_encounters? && $PokemonGlobal.dont_randomize&.empty?
+#   }
+# )
 
 EventHandlers.add(:on_wild_pokemon_created, :randomize_wild_pokemon_item,
   proc { |pokemon|
     pokemon.item = RandomizedChallenge.random_held_item if pokemon.item && RandomizedChallenge.randomize_held_items?
+    $PokemonGlobal.dont_randomize.delete_at($PokemonGlobal.dont_randomize.index(pokemon.species)) if $PokemonGlobal.dont_randomize&.include?(pokemon.species)
+    RandomizedChallenge.resume_random_species if RandomizedChallenge.consistent_wild_encounters? && $PokemonGlobal.dont_randomize&.empty?
   }
 )
 
@@ -68,9 +85,9 @@ module RandomizedChallenge
     item
   end
 
-  def self.random_held_item(item = :POKEBALL)
+  def self.random_held_item
     no_tm = !RandomizedChallenge::WILD_CAN_HAVE_TMS
-    RandomizedChallenge.determine_random_item(item, no_tm, true)
+    random_item(false, no_tm, true)
   end
 
   def self.random_tm(check_allow_list = true, allow_duplicates = RandomizedChallenge::ALLOW_DUPLICATE_TMS)
@@ -78,10 +95,33 @@ module RandomizedChallenge
       random_tms = RandomizedChallenge::MTLIST_RANDOM.shuffle
       return random_tms.find { |tm_id| !$bag.has?(GameData::Item.get(tm_id)) }
     end
-    tm = random_item
-    tm = random_item until tm.is_machine? && (allow_duplicates || !$bag.has?(tm))
+    tm_list = get_tm_list
+    count = 0
+    tm = nil
+    loop do
+      tm = tm_list.sample
+      break if allow_duplicates || !$bag.has?(tm)
+      count += 1
+      break if count >= tm_list.length
+    end
+    if tm.nil? || $bag.has?(tm)
+      return random_item(false, true)
+    end
     tm.move = random_move if (tm.is_TM? || tm.is_TR?) && RandomizedChallenge::RANDOMIZE_TM_MOVES
     tm
+  end
+
+  def self.get_tm_list
+    $PokemonGlobal.tm_list ||= []
+    if !$PokemonGlobal.tm_list.empty?
+      return $PokemonGlobal.tm_list.shuffle
+    end
+    tms = []  # Get all item IDs
+    GameData::Item.each do |item|
+      tms << item if item.is_TM?
+    end
+    $PokemonGlobal.tm_list = tms
+    $PokemonGlobal.tm_list.shuffle
   end
 
   def self.determine_random_item(original_item)
@@ -115,15 +155,14 @@ module RandomizedChallenge
   end
 end
 
-alias pbAddPokemon_random pbAddPokemon
+alias pbAddPokemon_random pbAddPokemon unless defined?(pbAddPokemon_random)
 def pbAddPokemon(pkmn, level = 1, see_form = true)
   return pbAddPokemon_random(pkmn, level, see_form) unless RandomizedChallenge::GIFTED_POKEMON_CAN_HAVE_ITEMS && RandomizedChallenge.enabled? && RandomizedChallenge.randomize_held_items?
-
-  poke = Pokemon.new(pkmn, level) unless pkmn.is_a?(Pokemon)
+  pkmn = Pokemon.new(pkmn, level) if !pkmn.is_a?(Pokemon)
   chance = RandomizedChallenge::GIFTED_POKEMON_ITEM_PROBABILITY.between?(0, 100) ? RandomizedChallenge::GIFTED_POKEMON_ITEM_PROBABILITY : 15
   give_item = rand < (chance / 100)
-  poke.item = RandomizedChallenge.random_held_item if give_item
-  pbAddPokemon_random(poke, level, see_form)
+  pkmn.item = RandomizedChallenge.random_held_item if give_item
+  pbAddPokemon_random(pkmn, level, see_form)
 end
 
 alias pbAddPokemonSilent_random pbAddPokemonSilent

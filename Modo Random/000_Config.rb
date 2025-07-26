@@ -83,9 +83,6 @@ module RandomizedChallenge
   # Puedes modificar esto en cualquier momento llamando al método toggle_tm_compat.
   RANDOM_TM_COMPAT_DEFAULT_VALUE = true
 
-  # BANNEAR MOVIMIENTOS OHKO
-  BAN_OHKO_MOVES = true
-
   # RANDOMIZAR EVOLUCIONES
   # Si quieres que las evoluciones estén randomizadas.
   RANDOM_EVOLUTIONS_DEFAULT_VALUE = false
@@ -160,10 +157,18 @@ module RandomizedChallenge
   # De esta forma se podrán generar los pokemon de las rutas al activar el modo random y que se mantengan
   # Si esta constante no está mantenida se tendrá que entrar al menos 1 vez a un combate de salvaje y en ese momento
   # Se generaran los salvajes de esa ruta y en futuras ocasiones saldrán los mismos
-  # BADGES_MAX_LEVELS = { 
-  # 1 => 14,
-  # 2 => 30,
-  # }
+  BADGES_MAX_LEVELS = { 
+    0 => LevelCapsEX::LEVELGYM0,
+    1 => LevelCapsEX::LEVELGYM1,
+    2 => LevelCapsEX::LEVELGYM2,
+    3 => LevelCapsEX::LEVELGYM3,
+    4 => LevelCapsEX::LEVELGYM4,
+    5 => LevelCapsEX::LEVELGYM5,
+    6 => LevelCapsEX::LEVELGYM6,
+    7 => LevelCapsEX::LEVELGYM7,
+    8 => LevelCapsEX::LEVELGYM8,
+    9 => LevelCapsEX::LEVELGYM9,
+  }
 
 
   # ********************************************************
@@ -218,13 +223,13 @@ module RandomizedChallenge
   GIFTED_POKEMON_ITEM_PROBABILITY = 15
 
   # Lista de objetos que no quieres que aparezcan entre los objetos Random.
-  ITEM_BLACK_LIST = [:ABILITYCAPSULE, :SUPERCAPSULE]
+  ITEM_BLACK_LIST = [:ABILITYCAPSULE, :SUPERCAPSULE, :CENIZASSAGRADAS]
 
   # Lista de objetos que no podrán salir como objetos equipados en salvajes
   HELD_ITEM_BLACK_LIST = []
 
   # Objetos que no se randomizarán si son dados en algun evento.
-  UNRANDOMIZABLE_ITEMS = []
+  UNRANDOMIZABLE_ITEMS = [:CENIZASSAGRADAS, :TINYMUSHROOM]
 
   # Si en un evento se da una MT se randomizará por otra MT del listado de abajo, a menos que el listado esté vacío
   # Si el listado está vacío se randomizará por cualquier MT
@@ -232,7 +237,7 @@ module RandomizedChallenge
 
   # Si el movimiento que enseña la MT se debe randomizar, es decir la MT24 ya no enseñara rayo
   # si no cualquier otro movimiento.
-  RANDOMIZE_TM_MOVES = false
+  RANDOMIZE_TM_MOVES = true
 
   # Lista de las MTs que pueden salir en el modo Random.
   # Elimina las que prefieras que se entreguen por NPCs y por tanto no
@@ -277,39 +282,275 @@ class PokemonGlobalMetadata
                 :semi_random_mode, :remember_trainer_teams, :random_trainer_teams,
                 :random_trainer_items
 end
-class RandomizerConfigurator
-  def self.toggle_moves
+module RandomizerConfigurator
+  RULES = {
+    :PROGRESSIVE_RANDOM => {
+      :name  => _INTL("Randomizar progresivo"),
+      :desc  => _INTL("El randomizado irá aumentando a medida que avances en el juego, no podran salir ultimas evoluciones o ataques muy potentes al inicio."),
+      :order => 1,
+      :check => lambda { RandomizedChallenge.progressive? },
+      :toggle => lambda { RandomizerConfigurator.toggle_progressive }
+    },
+    :RANDOMIZE_POKEMON => { # EDITAR QUE SE ACTIVE CON CUALQUIER CLÁUSULA DEBAJO DE ESTA
+      :name  => _INTL("Randomizar Pokémon"),
+      :desc  => _INTL("Se randomizarán los Pokémon salvajes, regalados, de intercambios o de eventos."),
+      :order => 1,
+      :check => lambda { RandomizedChallenge.randomize_pokemon? },
+      :toggle => lambda { RandomizerConfigurator.toggle_randomize_pokemon }
+    },
+    :PROGRESSIVE_RANDOM => {
+      :name  => _INTL("Randomizado progresivo"),
+      :desc  => _INTL("Al comienzo del juego saldrán Pokémon y ataques más débiles y se irán fortaleciendo con tu avance."),
+      :order => 1,
+      :check => lambda { RandomizedChallenge.progressive? },
+      :toggle => lambda { RandomizedConfigurator.toggle_progressive }
+    },
+    :CONSISTENT_ENCOUNTERS =>{
+      :name  => _INTL("Salvajes random fijos"),
+      :desc  => _INTL("En cada ruta habrá un set fijo de Pokémon random. En cada partida el set será diferente."),
+      :order => 2,
+      :check => lambda { RandomizedChallenge.consistent_wild_encounters? },
+      :toggle => lambda { RandomizerConfigurator.toggle_consistent_wild_encounters }
+    },
+    :RANDOMIZE_MOVES => {
+      :name  => _INTL("Randomizar movimientos"),
+      :desc  => _INTL("Se randomizarán los movimientos que los Pokémon aprenden por nivel."),
+      :order => 3,
+      :check => lambda { RandomizedChallenge.moves_on? },
+      :toggle => lambda { RandomizerConfigurator.toggle_moves }
+      # :parent => :RANDOMIZE_POKEMON
+    },
+    :BAN_OHKO => {
+      :name  => _INTL("Bannear Mov. OHKO"),
+      :desc  => _INTL("Se banearán los movimientos OHKO, como Frío Polar, Guillotina, etc. para que no puedan salir."),
+      :order => 4,
+      :check => lambda { RandomizedChallenge.ohko_banned? },
+      :toggle => lambda { RandomizerConfigurator.toggle_ban_ohko }
+      # :parent => :RANDOMIZE_POKEMON
+    },
+    :RANDOMIZE_TM_COMPATIBILITY => {
+      :name  => _INTL("Randomiz. compat. de MTs"),
+      :desc  => _INTL("Se randomizará la compatibilidad de los Pokémon con las MTs."),
+      :order => 5,
+      :check => lambda { RandomizedChallenge.tm_compat_on? },
+      :toggle => lambda { RandomizerConfigurator.toggle_tm_compat }
+      # :parent => :RANDOMIZE_POKEMON
+    },
+    :RANDOMIZE_ABILITIES => {
+      :name  => _INTL("Randomizar habilidades"),
+      :desc  => _INTL("Se randomizarán las habilidades de los Pokémon."),
+      :order => 6,
+      # :check => lambda { RandomizedChallenge.random_abilities? },
+      # :toggle => lambda { RandomizedChallenge.toggle_random_abilities }
+      # :parent => :RANDOMIZE_POKEMON
+    },
+    :RANDOMIZE_TYPES => {
+      :name  => _INTL("Randomizar tipos"),
+      :desc  => _INTL("Se randomizarán los tipos de los Pokémon."),
+      :order => 7,
+      :check => lambda { RandomizedChallenge.types_on? },
+      :toggle => lambda { RandomizerConfigurator.toggle_types }
+      # :parent => :RANDOMIZE_POKEMON
+    },
+    :RANDOMIZE_EVOLUTIONS => {
+      :name  => _INTL("Randomizar evoluciones"),
+      :desc  => _INTL("Se randomizarán las evoluciones de los Pokémon."),
+      :order => 8,
+      :parent => :RANDOMIZE_POKEMON,
+      :check => lambda { RandomizedChallenge.evolutions_on? },
+      :toggle => lambda { RandomizerConfigurator.toggle_evolutions }
+    },
+    :RANDOMIZE_EVOLUTIONS_SIMILAR_BST => {
+      :name  => _INTL("BST similar en evos"),
+      :desc  => _INTL("Al randomizar las evoluciones de los Pokémon se elegirán especies con estadísticas similares a la evo. original."),
+      :order => 9,
+      :parent => :RANDOMIZE_EVOLUTIONS,
+      :check => lambda { RandomizedChallenge.evolutions_similar_bst_on? },
+      :toggle => lambda { RandomizerConfigurator.toggle_evolutions_similar_bst }
+    },
+    :RANDOMIZE_EVOLUTIONS_RESPECT_PROGRESSIVE => {
+      :name  => _INTL("Randomizar evos. progre."),
+      :desc  => _INTL("Al randomizar las evoluciones de los Pokémon se respetará que sean progresivas."),
+      :order => 10,
+      :parent => :RANDOMIZE_EVOLUTIONS,
+      :check => lambda { RandomizedChallenge.evos_respect_restrictions? },
+      :toggle => lambda { RandomizerConfigurator.toggle_evos_respect_restrictions }
+    },
+    :GENS => {
+      :name  => _INTL("Generaciones permitidas"),
+      :desc  => _INTL("Elige las generaciones permitidas para el modo random."),
+      :order => 11,
+      :parent => :RANDOMIZE_POKEMON
+    },
+    :RANDOMIZE_TRAINERS => {
+      :name  => _INTL("Randomizar Entrenadores"),
+      :desc  => _INTL("Se randomizarán los Pokémon de los Entrenadores, sus ataques, habilidades y movimientos."),
+      :order => 12,
+      :check => lambda { RandomizedChallenge.randomize_trainers? },
+      :toggle => lambda { RandomizerConfigurator.toggle_randomize_trainers }
+    },
+    :REMEMBER_TRAINER_TEAMS => {
+      :name  => _INTL("Recordar Entrenadores"),
+      :desc  => _INTL("Si se pierde un combate contra un Entrenador, mantendrá el mismo equipo."),
+      :order => 13,
+      :parent => :RANDOMIZE_TRAINERS,
+      :check => lambda { RandomizedChallenge.remember_trainer_teams? },
+      :toggle => lambda { RandomizerConfigurator.toggle_remember_trainer_teams }
+    },
+    :RANDOMIZE_TRAINER_ITEMS => {
+      :name  => _INTL("Randomiz. objs. Entren."),
+      :desc  => _INTL("Se randomizarán los objetos equipados de los Pokémon de los Entrenadores."),
+      :order => 14,
+      :parent => :RANDOMIZE_TRAINERS,
+      :check => lambda { RandomizedChallenge.randomize_trainers_items? },
+      :toggle => lambda { RandomizerConfigurator.toggle_trainers_items }
+    },
+    :RANDOMIZE_ITEMS => {
+      :name  => _INTL("Randomizar objetos"),
+      :desc  => _INTL("Se randomizarán los objetos que te encuentres o te regalen, pero se aplicarán algunas excepciones."),
+      :order => 15,
+      :check => lambda { RandomizedChallenge.randomize_items? },
+      :toggle => lambda { RandomizerConfigurator.toggle_items }
+      # :parent => :RANDOMIZE_TRAINERS
+    },
+    :RANDOMIZE_HELD_ITEMS => {
+      :name  => _INTL("Random. objs. de salvajes"),
+      :desc  => _INTL("Se randomizarán los objetos equipados en los Pokémon salvajes."),
+      :order => 16,
+      :parent => :RANDOMIZE_ITEMS,
+      :check => lambda { RandomizedChallenge.randomize_held_items? },
+      :toggle => lambda { RandomizerConfigurator.toggle_held_items }
+    },
+    # :TRAINERS_CAN_GIVE_RANDOM_ITEMS => {
+    #   :name  => _INTL("Entrenadores derrotados pueden dar objetos random"),
+    #   :desc  => _INTL("Los entrenadores derrotados tienen una probabilidad de dar objetos random."),
+    #   :order => 16,
+    #   :parent => :RANDOMIZE_ITEMS
+    # },
+    # :RANDOMIZE_TM_MOVES => {
+    #   :name  => _INTL("Randomizar movimientos de MTs"),
+    #   :desc  => _INTL("Al obtener una MT el movimiento que contiene será randomizado."),
+    #   :order => 17,
+    #   :parent => :RANDOMIZE_ITEMS
+    # },
+  }
+
+  GENS = {
+    :GEN1 => {
+      :name  => _INTL("Generación 1"),
+      :desc  => _INTL("Permitir Pokémon de la generación 1, incluyendo evoluciones de generaciones posteriores."),
+      :order => 1,
+      :parent => :GENS,
+      :key => :GEN1,
+      :value => 1,
+    },
+    :GEN2 => {
+      :name  => _INTL("Generación 2"),
+      :desc  => _INTL("Permitir Pokémon de la generación 2, incluyendo evoluciones de generaciones posteriores."),
+      :order => 2,
+      :parent => :GENS,
+      :key => :GEN2,
+      :value => 2,
+    },
+    :GEN3 => {
+      :name  => _INTL("Generación 3"),
+      :desc  => _INTL("Permitir Pokémon de la generación 3, incluyendo evoluciones de generaciones posteriores."),
+      :order => 3,
+      :parent => :GENS,
+      :key => :GEN3,
+      :value => 3,
+    },
+    :GEN4 => {
+      :name  => _INTL("Generación 4"),
+      :desc  => _INTL("Permitir Pokémon de la generación 4, incluyendo evoluciones de generaciones posteriores."),
+      :order => 4,
+      :parent => :GENS,
+      :key => :GEN4,
+      :value => 4,
+    },
+    :GEN5 => {
+      :name  => _INTL("Generación 5"),
+      :desc  => _INTL("Permitir Pokémon de la generación 5, incluyendo evoluciones de generaciones posteriores."),
+      :order => 5,
+      :parent => :GENS,
+      :key => :GEN5,
+      :value => 5,
+    },
+    :GEN6 => {
+      :name  => _INTL("Generación 6"),
+      :desc  => _INTL("Permitir Pokémon de la generación 6, incluyendo evoluciones de generaciones posteriores."),
+      :order => 6,
+      :parent => :GENS,
+      :key => :GEN6,
+      :value => 6,
+    },
+    :GEN7 => {
+      :name  => _INTL("Generación 7"),
+      :desc  => _INTL("Permitir Pokémon de la generación 7, incluyendo evoluciones de generaciones posteriores."),
+      :order => 7,
+      :parent => :GENS,
+      :key => :GEN7,
+      :value => 7,
+    },
+    :GEN8 => {
+      :name  => _INTL("Generación 8"),
+      :desc  => _INTL("Permitir Pokémon de la generación 8, incluyendo evoluciones de generaciones posteriores."),
+      :order => 8,
+      :parent => :GENS,
+      :key => :GEN8,
+      :value => 8,
+    },
+    :GEN9 => {
+      :name  => _INTL("Generación 9"),
+      :desc  => _INTL("Permitir Pokémon de la generación 9."),
+      :order => 9,
+      :parent => :GENS,
+      :key => :GEN9,
+      :value => 9,
+    },
+  }
+
+  module_function
+
+  def toggle_randomize_pokemon
+    if $PokemonGlobal.wild_paused.nil?
+      $PokemonGlobal.wild_paused = false
+    end
+    $PokemonGlobal.wild_paused = !$PokemonGlobal.wild_paused
+  end
+
+  def toggle_moves
     if $PokemonGlobal.enable_random_moves.nil?
       $PokemonGlobal.enable_random_moves = RandomizedChallenge::RANDOM_MOVES_DEFAULT_VALUE
     end
     $PokemonGlobal.enable_random_moves = !$PokemonGlobal.enable_random_moves
   end
 
-  def self.toggle_tm_compat
+  def toggle_tm_compat
     $PokemonGlobal.enable_random_tm_compat = !$PokemonGlobal.enable_random_tm_compat
   end
 
-  def self.toggle_progressive
+  def toggle_progressive
     $PokemonGlobal.progressive_random = !$PokemonGlobal.progressive_random
   end
 
-  def self.toggle_evolutions
+  def toggle_evolutions
     $PokemonGlobal.enable_random_evolutions = !$PokemonGlobal.enable_random_evolutions
   end
 
-  def self.toggle_evolutions_similar_bst
+  def toggle_evolutions_similar_bst
     $PokemonGlobal.enable_random_evolutions_similar_bst = !$PokemonGlobal.enable_random_evolutions_similar_bst
   end
 
-  def self.toggle_evolutions_respect_progressive
+  def toggle_evolutions_respect_progressive
     $PokemonGlobal.enable_random_evolutions_respect_restrictions = !$PokemonGlobal.enable_random_evolutions_respect_restrictions
   end
 
-  def self.set_gens(gens = [])
+  def gens=(gens = [])
     $PokemonGlobal.random_gens = Array(gens)
   end
 
-  def self.add_or_remove_gen(gen = nil)
+  def add_or_remove_gen(gen = nil)
     return unless gen
 
     $PokemonGlobal.random_gens ||= []
@@ -320,54 +561,72 @@ class RandomizerConfigurator
     end
   end
 
-  def self.toggle_types
+  def toggle_types
     $PokemonGlobal.enable_random_types = !$PokemonGlobal.enable_random_types
   end
 
-  def self.toggle_ban_ohko
+  def toggle_ban_ohko
     $PokemonGlobal.banohko = !$PokemonGlobal.banohko
   end
 
-  def self.toggle_items
+  def toggle_items
     $PokemonGlobal.randomize_items = !$PokemonGlobal.randomize_items
   end
 
-  def self.toggle_held_items
+  def toggle_held_items
     $PokemonGlobal.randomize_held_items = !$PokemonGlobal.randomize_held_items
   end
 
-  def self.toggle_trainers_items
+  def toggle_trainers_items
     $PokemonGlobal.randomize_trainers_items = !$PokemonGlobal.randomize_trainers_items
   end
 
-  def self.turn_on_consistent_wild_encounters
-    $PokemonGlobal.consistent_wild_encounters = true
+  def toggle_consistent_wild_encounters
+    if $PokemonGlobal.consistent_wild_encounters.nil?
+      $PokemonGlobal.consistent_wild_encounters = RandomizedChallenge::CONSISTENT_WILD_ENCOUNTERS_DEFAULT_VALUE
+    end
+    $PokemonGlobal.consistent_wild_encounters = !$PokemonGlobal.consistent_wild_encounters
   end
 
-  def self.turn_off_consistent_wild_encounters
-    $PokemonGlobal.consistent_wild_encounters = false
-  end
+  # def turn_off_consistent_wild_encounters
+  #   $PokemonGlobal.consistent_wild_encounters = false
+  # end
 
-  def self.toggle_randomize_trainers
+  def toggle_randomize_trainers
     if $PokemonGlobal.randomize_trainers.nil?
       $PokemonGlobal.randomize_trainers = RandomizedChallenge::RANDOM_TRAINER_TEAM_DEFAULT_VALUE
     end
     $PokemonGlobal.randomize_trainers = !$PokemonGlobal.randomize_trainers
   end
 
-  def self.toggle_randomize_starters
+  def toggle_randomize_starters
     if $PokemonGlobal.randomize_starters.nil?
       $PokemonGlobal.randomize_starters = RandomizedChallenge::RANDOMIZE_STARTERS
     end
     $PokemonGlobal.randomize_starters =  !$PokemonGlobal.randomize_starters
   end
 
-  def self.toggle_semi_random_mode
+  def toggle_semi_random_mode
     $PokemonGlobal.semi_random_mode ||= false
-    $PokemonGlobal.semi_random_mode = !$PokemonGlobal.semi_random_mode 
+    $PokemonGlobal.semi_random_mode = !$PokemonGlobal.semi_random_mode
+    if $PokemonGlobal.semi_random_mode
+      $PokemonGlobal.enable_random_tm_compat = false
+      $PokemonGlobal.enable_random_moves = false
+      ability_mode = :NO
+      $PokemonGlobal.randomize_trainers = false
+      $PokemonGlobal.randomize_trainers_items = false
+      $PokemonGlobal.randomize_items = false
+      $PokemonGlobal.randomize_held_items = false
+      $PokemonGlobal.enable_random_types = false
+      $PokemonGlobal.enable_random_evolutions = false
+      $PokemonGlobal.enable_random_evolutions_similar_bst = false
+      $PokemonGlobal.enable_random_evolutions_respect_restrictions = false
+      $PokemonGlobal.banohko = false
+      $PokemonGlobal.random_gens = []
+    end 
   end
 
-  def self.ability_mode=(mode = RandomizedChallenge::RANDOM_ABILITY_METHOD)
+  def ability_mode=(mode = RandomizedChallenge::RANDOM_ABILITY_METHOD)
     case mode
     when :FULLRANDOM
       $game_switches[RandomizedChallenge::ABILITY_RANDOMIZER_SWITCH] = true
@@ -385,13 +644,43 @@ class RandomizerConfigurator
     end
   end
 
-  def self.toggle_remember_trainer_teams
+  def toggle_remember_trainer_teams
     $PokemonGlobal.remember_trainer_teams ||= false
     $PokemonGlobal.remember_trainer_teams = !$PokemonGlobal.remember_trainer_teams 
     $PokemonGlobal.random_trainer_teams = {} if !$PokemonGlobal.remember_trainer_teams
   end
 
-  def self.pbRandomMenu(menu = :randomizer_configurator, is_sub_menu = true)
+  def show_gen_chooser(gens)
+    chosen_gens = []
+    cmds = []
+    (1..9).each do |gen|
+      chosen_gens.push(gen) if gens.empty? || gens.include?(gen)
+      cmds.push(_INTL("[#{gens.include?(gen) || gens.empty? ? 'X' : ''}] Generación #{gen}"))
+    end
+    cmds.push(_INTL("Confirmar"))
+    cmds.push(_INTL("Cancelar"))
+    loop do
+      cmd = pbMessageWithHelp(_INTL("Selecciona las generaciones permitidas"), cmds, [_INTL("Permitir Pokémon de la generación 1, incluyendo evoluciones de generaciones posteriores."), _INTL("Permitir Pokémon de la generación 2, incluyendo evoluciones de generaciones posteriores."), _INTL("Permitir Pokémon de la generación 3, incluyendo evoluciones de generaciones posteriores."), _INTL("Permitir Pokémon de la generación 4, incluyendo evoluciones de generaciones posteriores."), _INTL("Permitir Pokémon de la generación 5, incluyendo evoluciones de generaciones posteriores."), _INTL("Permitir Pokémon de la generación 6, incluyendo evoluciones de generaciones posteriores."), _INTL("Permitir Pokémon de la generación 7, incluyendo evoluciones de generaciones posteriores."), _INTL("Permitir Pokémon de la generación 8, incluyendo evoluciones de generaciones posteriores."), _INTL("Confirmar"), _INTL("Cancelar")], -1)
+      
+      if cmd == cmds.length - 2
+        break
+      elsif cmd == -1 || cmd == cmds.length - 1
+        return gens
+      else
+        gen = cmd + 1
+        if chosen_gens.include?(gen)
+          chosen_gens.delete(gen)
+          cmds[cmd] = _INTL("[ ] Generación #{gen}")
+        else
+          chosen_gens.push(gen)
+          cmds[cmd] = _INTL("[X] Generación #{gen}")
+        end
+      end
+    end
+    return chosen_gens
+  end
+
+  def pbRandomMenu(menu = :randomizer_configurator, is_sub_menu = true)
     if !RandomizedChallenge.enabled?
       if pbConfirmMessage(_INTL("El modo Random está desactivado, ¿deseas activarlo?"))
         RandomizedChallenge.enable
