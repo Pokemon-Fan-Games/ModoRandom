@@ -113,10 +113,10 @@ module RandomizedChallenge
 
   # Pokémon que no pueden salir en el modo Random. Añade aquí los que no quieres que salgan
   # con el mismo formato de los que ya aparecen.
-  BLACKLISTED_POKEMON = [:MEW, :ARCEUS, :MEWTWO_5]
+  BLACKLISTED_POKEMON = [:MEW, :ARCEUS]
 
   # Pokemon que no se randomizarán
-  UNRANDOMIZABLE_POKEMON = [:MEWTWO_5]
+  UNRANDOMIZABLE_POKEMON = []
 
   # Lista de los únicos Pokémon que pueden aparecer en el modo Random. Si la dejas VACÍA,
   # aparecerán todos los Pokémon del juego SALVO los que añadas a la lista que hay
@@ -157,18 +157,11 @@ module RandomizedChallenge
   # De esta forma se podrán generar los pokemon de las rutas al activar el modo random y que se mantengan
   # Si esta constante no está mantenida se tendrá que entrar al menos 1 vez a un combate de salvaje y en ese momento
   # Se generaran los salvajes de esa ruta y en futuras ocasiones saldrán los mismos
-  BADGES_MAX_LEVELS = { 
-    0 => LevelCapsEX::LEVELGYM0,
-    1 => LevelCapsEX::LEVELGYM1,
-    2 => LevelCapsEX::LEVELGYM2,
-    3 => LevelCapsEX::LEVELGYM3,
-    4 => LevelCapsEX::LEVELGYM4,
-    5 => LevelCapsEX::LEVELGYM5,
-    6 => LevelCapsEX::LEVELGYM6,
-    7 => LevelCapsEX::LEVELGYM7,
-    8 => LevelCapsEX::LEVELGYM8,
-    9 => LevelCapsEX::LEVELGYM9,
-  }
+  # BADGES_MAX_LEVELS = { 
+  #   0 => 14,
+  #   1 => 22,
+  #   2 => 30,
+  # }
 
 
   # ********************************************************
