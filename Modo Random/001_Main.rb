@@ -12,11 +12,6 @@ class PokemonGlobalMetadata
                 :random_encounter_table, :consistent_wild_encounters, :dont_randomize, :wild_paused, 
                 :given_tm_moves, :randomize_trainers, :randomize_starters, :semi_random_mode,
                 :remember_trainer_teams, :random_trainer_teams, :randomize_trainers_items
-  alias initialize_random initialize
-  def initialize
-    initialize_random
-    initialize_random_params
-  end
 
   def initialize_random_params(without_defaults = false)
     unless without_defaults
