@@ -6,6 +6,5 @@ Requires   = DP Scripting Utilities
 Optional   = DiegoWTs Starter Selection,1.5.0
 Optional   = Script sencillo para la selección de starters.,1.0
 Optional   = Level Caps EX,2.1
-#Optional   = Monotype Challenge,1.1.0
 Credits    = DPertierra, Golisopod User, CrimsonTY, Luka SJ, Skyflyer
 Disabled   = 
