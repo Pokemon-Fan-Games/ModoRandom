@@ -61,16 +61,6 @@ module RandomizerConfigurator
       when :RANDOMIZE_ABILITIES
         value = :NO if value.is_a?(FalseClass)
         RandomizerConfigurator.ability_mode = value.is_a?(Symbol) ? value : value.to_sym
-        # case value
-        # when :FULLRANDOM
-        #   RandomizerConfigurator.ability_mode = :FULLRANDOM
-        # when :MAPABILITIES
-        #   RandomizerConfigurator.ability_mode = :MAPABILITIES
-        # when :SAMEINEVOLUTION
-        #   RandomizerConfigurator.ability_mode = :SAMEINEVOLUTION
-        # else
-        #   RandomizerConfigurator.ability_mode = :NO
-        # end
         if !rules.has_key?(rule)
           RandomizerConfigurator.ability_mode = :NO
         end
@@ -177,7 +167,6 @@ module RandomizerConfigurator
         end
         if updated
           pbPlayCursorSE
-          # selected_rules.sort! { |a, b| rules_hash[a][:order] <=> rules_hash[b][:order] }
           need_refresh = true
         else 
           pbPlayBuzzerSE
@@ -335,7 +324,6 @@ module RandomizerConfigurator
         end
         if updated
           pbPlayCursorSE
-          # selected_rules.sort! { |a, b| rules_hash[a][:order] <=> rules_hash[b][:order] }
           need_refresh = true
         else 
           pbPlayBuzzerSE
@@ -404,27 +392,6 @@ module RandomizerConfigurator
         end
       end
     end
-    # rule_text  = ""
-    # pbSetSmallFont(infowindow.contents)
-    # infowindow.text = rule_text
-    # infowindow.resizeHeightToFit(rule_text)
-    # infowindow.height = Graphics.height if infowindow.height > Graphics.height
-    # infowindow.y = (Graphics.height - infowindow.height) / 2
-    # pbPlayDecisionSE
-    # loop do
-    #   Graphics.update
-    #   Input.update
-    #   infowindow.update
-    #   pbUpdateSceneMap
-    #   if Input.trigger?(Input::USE) || Input.trigger?(Input::BACK)
-    #     if infowindow.busy?
-    #       pbPlayDecisionSE if infowindow.pausing?
-    #       infowindow.resume
-    #     else
-    #       break
-    #     end
-    #   end
-    # end
     infowindow.dispose
     vp.dispose
   end

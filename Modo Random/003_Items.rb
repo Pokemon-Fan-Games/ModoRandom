@@ -42,23 +42,6 @@ def pbReceiveItem(item, quantity = 1, outfit_change = nil, randomize = true)
   pbReceiveItem_random(random_item, quantity, outfit_change)
 end
 
-# alias pbGenerateWildPokemon_randomized pbGenerateWildPokemon
-# def pbGenerateWildPokemon(species, level, isRoamer = false)
-#   # LÓGICA SIMPLIFICADA: Si el randomizador está activo, siempre randomizar
-#   if RandomizedChallenge.randomize_pokemon?
-#     # Limpiar cualquier bloqueo previo
-#     if $PokemonGlobal.dont_randomize&.include?(species)
-#       $PokemonGlobal.dont_randomize.delete(species)
-#     end
-#     # Siempre asegurar que la randomización esté activa
-#     RandomizedChallenge.resume_random_species
-#   end
-  
-#   # Crear el Pokémon
-#   wild_poke = pbGenerateWildPokemon_randomized(species, level, isRoamer)
-#   wild_poke
-# end
-
 alias pbGenerateWildPokemon_randomized pbGenerateWildPokemon
 def pbGenerateWildPokemon(species, level, isRoamer = false)
   return pbGenerateWildPokemon_randomized(species, level, isRoamer) unless RandomizedChallenge.consistent_wild_encounters?
@@ -66,7 +49,7 @@ def pbGenerateWildPokemon(species, level, isRoamer = false)
   # Handle randomization logic differently for VOE vs normal encounters
   if RandomizedChallenge.randomize_pokemon? && !$PokemonGlobal.dont_randomize&.include?(species)
     # For VOE spawning, we need to ensure the visual sprite matches the battle species
-    if voe_enabled? && $PokemonGlobal.creatingSpawningPokemon
+    if defined?(voe_enabled?) && voe_enabled? && defined?($PokemonGlobal.creatingSpawningPokemon) && $PokemonGlobal.creatingSpawningPokemon
       # During VOE spawning, the species should already be randomized from choose_wild_pokemon
       # So we need to prevent additional randomization in Pokemon.initialize
       RandomizedChallenge.pause_random_species
@@ -77,7 +60,7 @@ def pbGenerateWildPokemon(species, level, isRoamer = false)
       # Resume random species if consistent wild encounters are enabled
       RandomizedChallenge.resume_random_species if RandomizedChallenge.consistent_wild_encounters?
     end
-    $PokemonGlobal.dont_randomize.delete(species) if $PokemonGlobal.dont_randomize&.include?(species) && !($PokemonGlobal.creatingSpawningPokemon && voe_enabled?)
+    $PokemonGlobal.dont_randomize.delete(species) if $PokemonGlobal.dont_randomize&.include?(species) && ( !defined?(voe_enabled?) || !($PokemonGlobal.creatingSpawningPokemon && voe_enabled?))
   end
   wild_poke = pbGenerateWildPokemon_randomized(species, level, isRoamer)
   
@@ -165,12 +148,6 @@ module RandomizedChallenge
         return fallback_to_random_item
       end
       item.move = random_move
-      # move = find_valid_move(0, [], true)
-      # while $PokemonGlobal.given_tm_moves.include?(move.id)
-      #   move = find_valid_move(0, [], true)
-      # end
-      # item.move = move.id
-      # $PokemonGlobal.given_tm_moves.add(move.id)
     end
     
     item
@@ -238,16 +215,6 @@ module RandomizedChallenge
     else
       item = random_item
     end
-
-    # return random_item(false, true) if !item && GameData::Item.get(original_item).is_machine?
-    # return item unless item.is_machine? && $bag.has?(item)
-
-    # if MTLIST_RANDOM.empty? && item.is_machine?
-    #   item = random_tm(false)
-    # elsif !MTLIST_RANDOM.empty? && item.is_machine?
-    #   item = random_tm(true)
-    #   item ||= random_item(false, true)
-    # end
 
     item
   end

@@ -659,7 +659,6 @@ module RandomizerConfigurator
       $PokemonGlobal.enable_random_evolutions_similar_bst = false
       $PokemonGlobal.enable_random_evolutions_respect_restrictions = false
       $PokemonGlobal.banohko = false
-      # $PokemonGlobal.random_gens = []
     end 
   end
 

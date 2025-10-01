@@ -135,6 +135,6 @@ def force_normal_ability(pkmn)
   end
   
   # Force the Pokemon to use the normal ability
-  pkmn.forced_ability = normal_ability if normal_ability
+  pkmn.forced_ability = normal_ability if defined?(pkmn.forced_ability) && normal_ability
   pkmn
 end
