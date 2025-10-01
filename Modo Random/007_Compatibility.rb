@@ -120,11 +120,13 @@ if PluginManager.installed?("Trade Expert") && defined?(TradeExpert)
   end
 end
 
-alias pbStartRadar_randomized pbStartRadar
-def pbStartRadar
-  return pbStartRadar_randomized unless RandomizedChallenge.enabled? && !RandomizedChallenge.consistent_wild_encounters?
-  pbMessage(_INTL('En el modo random donde los Pokémon de las rutas son 100% aleatorios el busca salvajes no mostrará información correcta'))
-  return
+if defined?(pbStartRadar)
+  alias pbStartRadar_randomized pbStartRadar
+  def pbStartRadar
+    return pbStartRadar_randomized unless RandomizedChallenge.enabled? && !RandomizedChallenge.consistent_wild_encounters?
+    pbMessage(_INTL('En el modo random donde los Pokémon de las rutas son 100% aleatorios el busca salvajes no mostrará información correcta'))
+    return
+  end
 end
 
 class EncounterList_Scene
@@ -133,7 +135,6 @@ class EncounterList_Scene
     initialize_random
     if RandomizedChallenge.consistent_wild_encounters?
       @encounter_tables = $PokemonGlobal.random_encounter_table[$game_map.map_id] || {}
-      echoln "encounter tables: #{@encounter_tables.inspect}"
       @max_enc, @eLength = @encounter_tables.empty? ? [1, 1] : getMaxEncounters(@encounter_tables)
       pbMessage(_INTL('En el modo random el busca salvajes estará vacío hasta que entres al menos en 1 combate con salvajes por ruta')) if @encounter_tables.empty?
     end

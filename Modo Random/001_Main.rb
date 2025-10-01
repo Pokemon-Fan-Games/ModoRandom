@@ -571,6 +571,7 @@ class Pokemon
   def compatible_with_move?(move_id)
     return compatible_with_move_random?(move_id) unless RandomizedChallenge.enabled? && RandomizedChallenge.tm_compat_on?
 
+    move_id = move_id.is_a?(GameData::Move) ? move_id.id : move_id
     # RAND Compatibility #TM - Use in-memory storage
     $PokemonGlobal.tm_compatibility_random ||= {}
     species_compatibility = $PokemonGlobal.tm_compatibility_random[species] ||= []
