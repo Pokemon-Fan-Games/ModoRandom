@@ -41,6 +41,15 @@ module RandomizedChallenge
   # La posicion 1 es la de la primera variable, la 2 la de la segunda, etc.
   RANDOM_STARTER_VARIABLES = [803, 804, 805]
 
+  RANDOMIZE_POKEMON = true
+
+  # Estos Pokemon tienen muchas formas por lo que habrá un 50% de probabilidad de que se rerandomicen para que no salgan tan a menudo.
+  MULTIPLE_FORM_POOL = { :FURFROU => 2, :UNOWN => 20, :ARCEUS => 2, :SILVALLY => 2, 
+                         :VIVILLON => 10, :PIKACHU => 10, :ALCREMIE => 20, :MINIOR => 2 }
+
+  # Si se revive el mismo fossil mas de 1 vez siempre dará el mismo Pokémon
+  KEEP_SAME_FOSSIL_POKEMON = true
+
   # BST PROGRESIVO DE POKÉMON RANDOMIZADOS
   # Los BST de cada medalla se definen en getMaxBSTCap.
   # Desactiva esto en cualquier momento con toggle_progressive_random.
@@ -73,10 +82,20 @@ module RandomizedChallenge
   # Probabilidad de movimientos con stab en el learnset por nivel
   # Porcentaje de probabilidad de que un movimiento sea del stab del pokemon
   # Solo se tendra en cuenta si la constante PRIORIZE_STAB_IN_LEARNSET está en true
-  STAB_IN_LEARNSET = 20
+  STAB_IN_LEARNSET = 15
+
+  # Formas diferentes de la misma especie tienen movesets distintos
+  # Si está en true, cada forma tendrá su propio set de movimientos aleatorios
+  # Si está en false, todas las formas de la misma especie compartirán el mismo moveset
+  DIFFERENT_MOVESETS_PER_FORM = false
 
   # BANNEAR MOVIMIENTOS OHKO
   BAN_OHKO_MOVES = true
+
+  # ASEGURAR AL MENOS UN MOVIMIENTO DE DAÑO
+  # Si está en true, garantiza que todos los Pokémon tengan al menos un movimiento que cause daño
+  # Esto previene que los Pokémon se generen con solo movimientos de estado/soporte
+  ENSURE_DAMAGING_MOVES = true
 
   # RANDOMIZAR COMPATIBILIDAD DE LAS MTs
   # Si quieres que el aprendizaje de MTs sea aleatorio.
@@ -98,11 +117,10 @@ module RandomizedChallenge
   # Sinplificar evoluciones
   # Metodos que serán reemplazados por evoluciones por nivel
   # Esto es para evitar las evoluciones que implican aprender un movimiento que es posible que en random no se aprenda
-  CHANGE_EVO_METHODS = ["LevelUseMoveCount", "Trade", "HasMove", "HasMoveRandForm", "NightHoldItem", 
-                        "DayHoldItem", "HasInParty", "LevelRecoilDamageForm0", "TradeSpecies", "LevelDefeatItsKindWithItem", "CollectItems"]
+  CHANGE_EVO_METHODS = []
   
   # Nivel en el que evolucionaran los Pokémon con metodos cambiados
-  DIFFICULT_EVO_LEVEL = 36
+  DIFFICULT_EVO_LEVEL = 40
 
   # Las megas de los entrenadores se randomizan por otra mega.
   MEGAS_RANDOMIZE_TO_MEGAS = true
@@ -113,10 +131,12 @@ module RandomizedChallenge
 
   # Pokémon que no pueden salir en el modo Random. Añade aquí los que no quieres que salgan
   # con el mismo formato de los que ya aparecen.
-  BLACKLISTED_POKEMON = [:MEW, :ARCEUS]
+  BLACKLISTED_POKEMON = [:ARCEUS, :MEWTWO_5, :GRENINJA_1, :GRENINJA_2,
+                         :BASCULIN_2,  :BASCULIN_3,
+                         :CRAMORANT_1, :CRAMORANT_2]
 
   # Pokemon que no se randomizarán
-  UNRANDOMIZABLE_POKEMON = []
+  UNRANDOMIZABLE_POKEMON = [:MEWTWO_5]
 
   # Lista de los únicos Pokémon que pueden aparecer en el modo Random. Si la dejas VACÍA,
   # aparecerán todos los Pokémon del juego SALVO los que añadas a la lista que hay
@@ -157,11 +177,18 @@ module RandomizedChallenge
   # De esta forma se podrán generar los pokemon de las rutas al activar el modo random y que se mantengan
   # Si esta constante no está mantenida se tendrá que entrar al menos 1 vez a un combate de salvaje y en ese momento
   # Se generaran los salvajes de esa ruta y en futuras ocasiones saldrán los mismos
-  # BADGES_MAX_LEVELS = { 
-  #   0 => 14,
-  #   1 => 22,
-  #   2 => 30,
-  # }
+  BADGES_MAX_LEVELS = { 
+    0 => LevelCapsEX::LEVELGYM0,
+    1 => LevelCapsEX::LEVELGYM1,
+    2 => LevelCapsEX::LEVELGYM2,
+    3 => LevelCapsEX::LEVELGYM3,
+    4 => LevelCapsEX::LEVELGYM4,
+    5 => LevelCapsEX::LEVELGYM5,
+    6 => LevelCapsEX::LEVELGYM6,
+    7 => LevelCapsEX::LEVELGYM7,
+    8 => LevelCapsEX::LEVELGYM8,
+    9 => LevelCapsEX::LEVELGYM9,
+  }
 
 
   # ********************************************************
@@ -182,9 +209,10 @@ module RandomizedChallenge
   # Lista de habilidades que no pueden aparecer en el modo Random.
   # Debes añadirlas con el nombre interno que aparece en el PBS abilities.txt.
   ABILITY_EXCLUSIONS = [
-    :IMPOSTER, :PLUS, :MINUS, :WONDERGUARD, :FORECAST, :HARVEST, :HONEYGATHER,
+    :PLUS, :MINUS, :WONDERGUARD, :FORECAST, :HARVEST, :HONEYGATHER,
     :BATTLEBOND, :HUNGERSWITCH, :SHIELDSDOWN, :SCHOOLING, :RKSSYSTEM, :POWERCONSTRUCT,
-    :STANCECHANGE, :ZENMODE, :COMMANDER, :MULTITYPE, :GULPMISSILE, :ICEFACE, :ZEROTOHERO, :DISGUISE
+    :STANCECHANGE, :ZENMODE, :COMMANDER, :MULTITYPE, :GULPMISSILE, :ICEFACE, :ZEROTOHERO, :DISGUISE,
+    :COMATOSE, :SHIELDSDOWN, :TERASHIFT, :EMBODYASPECT, :EMBODYASPECT_1, :EMBODYASPECT_2, :EMBODYASPECT_3
   ]
 
   # Especies a los que no se les randomizará nunca la habilidad
@@ -216,7 +244,14 @@ module RandomizedChallenge
   GIFTED_POKEMON_ITEM_PROBABILITY = 15
 
   # Lista de objetos que no quieres que aparezcan entre los objetos Random.
-  ITEM_BLACK_LIST = [:ABILITYCAPSULE, :SUPERCAPSULE, :CENIZASSAGRADAS]
+  ITEM_BLACK_LIST = [:CENIZASSAGRADAS, :GROWTHMULCH, :BLACKFLUTE, :WHITEFLUTE, :BLUEFLUTE, :YELLOWFLUTE, :REDFLUTE,
+                     :DAMPMULCH, :REDNECTAR, :YELLOWNECTAR, :PINKNECTAR, :PURPLENECTAR, :SQUIRTBOTTLE, :SPRAYDUCK, :WAILMERPAIL, :SPRINKLOTAD,
+                     :REDAPRICORN, :YELLOWAPRICORN, :BLUEAPRICORN, :GREENAPRICORN, :PINKAPRICORN, :WHITEAPRICORN, :BLACKAPRICORN,
+                     :HEARTSCALE, :SLOWPOKETAIL, :STABLEMULCH, :GOOEYMULCH, :SHOALSALT, :SHOALSHELL, :GRACIDEA, 
+                     :RAZZBERRY, :BLUKBERRY, :NANABBERRY, :WEPEARBERRY, :CORNNBERRY, :MAGOSTBERRY, :RABUTABERRY, :NOMELBERRY, :SPELONBERRY,
+                     :PAMTREBERRY, :WATMELBERRY, :DURINBERRY, :BELUEBERRY, :ABILITYURGE, :GIMMIGHOULCOIN,
+                     :SACREDASH, :METALALLOY, :MASTERPIECETEACUP, :UNREMARKABLETEACUP, :SYRUPYAPPLE, :LEADERSCREST, :MALICIOUSARMOR, :AUSPICIOUSARMOR,
+                     :GALARICACUFF, :SWEETAPPLE, :TARTAPPLE, :CHIPPEDPOT, :CRACKEDPOT ]
 
   # Lista de objetos que no podrán salir como objetos equipados en salvajes
   HELD_ITEM_BLACK_LIST = []
@@ -273,13 +308,13 @@ class PokemonGlobalMetadata
                 :random_types, :randomize_items, :randomize_held_items,
                 :consistent_wild_encounters, :randomize_trainers, :randomize_starters,
                 :semi_random_mode, :remember_trainer_teams, :random_trainer_teams,
-                :random_trainer_items
+                :random_trainer_items, :randomize_pokemon, :different_movesets_per_form
 end
 module RandomizerConfigurator
   RULES = {
     :PROGRESSIVE_RANDOM => {
       :name  => _INTL("Randomizar progresivo"),
-      :desc  => _INTL("El randomizado irá aumentando a medida que avances en el juego, no podran salir ultimas evoluciones o ataques muy potentes al inicio."),
+      :desc  => _INTL("Según avances en tu aventura irán apareciendo Pokémon con cada vez mayores estadísticas."),
       :order => 1,
       :check => lambda { RandomizedChallenge.progressive? },
       :toggle => lambda { RandomizerConfigurator.toggle_progressive }
@@ -287,76 +322,85 @@ module RandomizerConfigurator
     :RANDOMIZE_POKEMON => { # EDITAR QUE SE ACTIVE CON CUALQUIER CLÁUSULA DEBAJO DE ESTA
       :name  => _INTL("Randomizar Pokémon"),
       :desc  => _INTL("Se randomizarán los Pokémon salvajes, regalados, de intercambios o de eventos."),
-      :order => 1,
+      :order => 2,
       :check => lambda { RandomizedChallenge.randomize_pokemon? },
       :toggle => lambda { RandomizerConfigurator.toggle_randomize_pokemon }
-    },
-    :PROGRESSIVE_RANDOM => {
-      :name  => _INTL("Randomizado progresivo"),
-      :desc  => _INTL("Al comienzo del juego saldrán Pokémon y ataques más débiles y se irán fortaleciendo con tu avance."),
-      :order => 1,
-      :check => lambda { RandomizedChallenge.progressive? },
-      :toggle => lambda { RandomizedConfigurator.toggle_progressive }
     },
     :CONSISTENT_ENCOUNTERS =>{
       :name  => _INTL("Salvajes random fijos"),
       :desc  => _INTL("En cada ruta habrá un set fijo de Pokémon random. En cada partida el set será diferente."),
-      :order => 2,
+      :order => 3,
       :check => lambda { RandomizedChallenge.consistent_wild_encounters? },
       :toggle => lambda { RandomizerConfigurator.toggle_consistent_wild_encounters }
     },
     :RANDOMIZE_MOVES => {
       :name  => _INTL("Randomizar movimientos"),
       :desc  => _INTL("Se randomizarán los movimientos que los Pokémon aprenden por nivel."),
-      :order => 3,
+      :order => 4,
       :check => lambda { RandomizedChallenge.moves_on? },
       :toggle => lambda { RandomizerConfigurator.toggle_moves }
       # :parent => :RANDOMIZE_POKEMON
     },
+    :PRIORIZE_STAB_IN_LEARNSET => {
+      :name  => _INTL("Probabilidad de STAB"),
+      :desc  => _INTL("Los movimientos de tipo STAB tendrán prioridad al ser elegidos en el learnset. (es un 15%)"),
+      :order => 5,
+      :check => lambda { RandomizedChallenge.prioritize_stab_in_learnset? },
+      :toggle => lambda { RandomizerConfigurator.toggle_prioritize_stab_in_learnset },
+      :parent => :RANDOMIZE_MOVES
+    },
+    :DIFFERENT_MOVESETS_PER_FORM => {
+      :name  => _INTL("Dif. Moveset. forma"),
+      :desc  => _INTL("Cada forma de la misma especie tendrá un moveset distinto."),
+      :order => 6,
+      :check => lambda { RandomizedChallenge.different_moveset_per_form? },
+      :toggle => lambda { RandomizerConfigurator.toggle_moves_different_form },
+      :parent => :RANDOMIZE_MOVES
+    },
     :BAN_OHKO => {
       :name  => _INTL("Bannear Mov. OHKO"),
-      :desc  => _INTL("Se banearán los movimientos OHKO, como Frío Polar, Guillotina, etc. para que no puedan salir."),
-      :order => 4,
+      :desc  => _INTL("Se banearán los movimientos OHKO como Frío Polar, Guillotina, etc. para que no puedan salir."),
+      :order => 7,
       :check => lambda { RandomizedChallenge.ohko_banned? },
-      :toggle => lambda { RandomizerConfigurator.toggle_ban_ohko }
-      # :parent => :RANDOMIZE_POKEMON
+      :toggle => lambda { RandomizerConfigurator.toggle_ban_ohko },
+      :parent => :RANDOMIZE_MOVES
     },
     :RANDOMIZE_TM_COMPATIBILITY => {
       :name  => _INTL("Randomiz. compat. de MTs"),
-      :desc  => _INTL("Se randomizará la compatibilidad de los Pokémon con las MTs."),
-      :order => 5,
+      :desc  => _INTL("Se randomizará la compatibilidad de los Pokémon con las MTs que consigas."),
+      :order => 8,
       :check => lambda { RandomizedChallenge.tm_compat_on? },
       :toggle => lambda { RandomizerConfigurator.toggle_tm_compat }
       # :parent => :RANDOMIZE_POKEMON
     },
     :RANDOMIZE_ABILITIES => {
       :name  => _INTL("Randomizar habilidades"),
-      :desc  => _INTL("Se randomizarán las habilidades de los Pokémon."),
-      :order => 6,
+      :desc  => _INTL("Se randomizarán las habilidades que puedan tener los Pokémon."),
+      :order => 9,
       # :check => lambda { RandomizedChallenge.random_abilities? },
       # :toggle => lambda { RandomizedChallenge.toggle_random_abilities }
       # :parent => :RANDOMIZE_POKEMON
     },
     :RANDOMIZE_TYPES => {
       :name  => _INTL("Randomizar tipos"),
-      :desc  => _INTL("Se randomizarán los tipos de los Pokémon."),
-      :order => 7,
+      :desc  => _INTL("Se randomizarán los tipos que tengan todos los Pokémon."),
+      :order => 10,
       :check => lambda { RandomizedChallenge.types_on? },
       :toggle => lambda { RandomizerConfigurator.toggle_types }
       # :parent => :RANDOMIZE_POKEMON
     },
     :RANDOMIZE_EVOLUTIONS => {
       :name  => _INTL("Randomizar evoluciones"),
-      :desc  => _INTL("Se randomizarán las evoluciones de los Pokémon."),
-      :order => 8,
+      :desc  => _INTL("Se randomizarán las evoluciones, haciendo que evolucionen en especies distintas a las que deberían."),
+      :order => 11,
       :parent => :RANDOMIZE_POKEMON,
       :check => lambda { RandomizedChallenge.evolutions_on? },
       :toggle => lambda { RandomizerConfigurator.toggle_evolutions }
     },
     :RANDOMIZE_EVOLUTIONS_SIMILAR_BST => {
       :name  => _INTL("BST similar en evos"),
-      :desc  => _INTL("Al randomizar las evoluciones de los Pokémon se elegirán especies con estadísticas similares a la evo. original."),
-      :order => 9,
+      :desc  => _INTL("Al randomizar las evoluciones se elegirán especies con estadísticas similares a la evo. original."),
+      :order => 12,
       :parent => :RANDOMIZE_EVOLUTIONS,
       :check => lambda { RandomizedChallenge.evolutions_similar_bst_on? },
       :toggle => lambda { RandomizerConfigurator.toggle_evolutions_similar_bst }
@@ -364,28 +408,28 @@ module RandomizerConfigurator
     :RANDOMIZE_EVOLUTIONS_RESPECT_PROGRESSIVE => {
       :name  => _INTL("Randomizar evos. progre."),
       :desc  => _INTL("Al randomizar las evoluciones de los Pokémon se respetará que sean progresivas."),
-      :order => 10,
+      :order => 13,
       :parent => :RANDOMIZE_EVOLUTIONS,
       :check => lambda { RandomizedChallenge.evos_respect_restrictions? },
-      :toggle => lambda { RandomizerConfigurator.toggle_evos_respect_restrictions }
+      :toggle => lambda { RandomizerConfigurator.toggle_evolutions_respect_progressive }
     },
     :GENS => {
       :name  => _INTL("Generaciones permitidas"),
-      :desc  => _INTL("Elige las generaciones permitidas para el modo random."),
-      :order => 11,
+      :desc  => _INTL("Limita de qué generaciones serán los Pokémon que aparezcan en el juego al ser randomizados."),
+      :order => 14,
       :parent => :RANDOMIZE_POKEMON
     },
     :RANDOMIZE_TRAINERS => {
       :name  => _INTL("Randomizar Entrenadores"),
       :desc  => _INTL("Se randomizarán los Pokémon de los Entrenadores, sus ataques, habilidades y movimientos."),
-      :order => 12,
+      :order => 15,
       :check => lambda { RandomizedChallenge.randomize_trainers? },
       :toggle => lambda { RandomizerConfigurator.toggle_randomize_trainers }
     },
     :REMEMBER_TRAINER_TEAMS => {
       :name  => _INTL("Recordar Entrenadores"),
-      :desc  => _INTL("Si se pierde un combate contra un Entrenador, mantendrá el mismo equipo."),
-      :order => 13,
+      :desc  => _INTL("Si se pierde un combate contra un Entrenador, mantendrá el mismo equipo al enfrentarle de nuevo."),
+      :order => 16,
       :parent => :RANDOMIZE_TRAINERS,
       :check => lambda { RandomizedChallenge.remember_trainer_teams? },
       :toggle => lambda { RandomizerConfigurator.toggle_remember_trainer_teams }
@@ -393,7 +437,7 @@ module RandomizerConfigurator
     :RANDOMIZE_TRAINER_ITEMS => {
       :name  => _INTL("Randomiz. objs. Entren."),
       :desc  => _INTL("Se randomizarán los objetos equipados de los Pokémon de los Entrenadores."),
-      :order => 14,
+      :order => 17,
       :parent => :RANDOMIZE_TRAINERS,
       :check => lambda { RandomizedChallenge.randomize_trainers_items? },
       :toggle => lambda { RandomizerConfigurator.toggle_trainers_items }
@@ -401,7 +445,7 @@ module RandomizerConfigurator
     :RANDOMIZE_ITEMS => {
       :name  => _INTL("Randomizar objetos"),
       :desc  => _INTL("Se randomizarán los objetos que te encuentres o te regalen, pero se aplicarán algunas excepciones."),
-      :order => 15,
+      :order => 18,
       :check => lambda { RandomizedChallenge.randomize_items? },
       :toggle => lambda { RandomizerConfigurator.toggle_items }
       # :parent => :RANDOMIZE_TRAINERS
@@ -409,7 +453,7 @@ module RandomizerConfigurator
     :RANDOMIZE_HELD_ITEMS => {
       :name  => _INTL("Random. objs. de salvajes"),
       :desc  => _INTL("Se randomizarán los objetos equipados en los Pokémon salvajes."),
-      :order => 16,
+      :order => 19,
       :parent => :RANDOMIZE_ITEMS,
       :check => lambda { RandomizedChallenge.randomize_held_items? },
       :toggle => lambda { RandomizerConfigurator.toggle_held_items }
@@ -506,10 +550,10 @@ module RandomizerConfigurator
   module_function
 
   def toggle_randomize_pokemon
-    if $PokemonGlobal.wild_paused.nil?
-      $PokemonGlobal.wild_paused = false
+    if $PokemonGlobal.randomize_pokemon.nil?
+      $PokemonGlobal.randomize_pokemon = RandomizedChallenge::RANDOMIZE_POKEMON
     end
-    $PokemonGlobal.wild_paused = !$PokemonGlobal.wild_paused
+    $PokemonGlobal.randomize_pokemon = !$PokemonGlobal.randomize_pokemon
   end
 
   def toggle_moves
@@ -605,7 +649,7 @@ module RandomizerConfigurator
     if $PokemonGlobal.semi_random_mode
       $PokemonGlobal.enable_random_tm_compat = false
       $PokemonGlobal.enable_random_moves = false
-      ability_mode = :NO
+      self.ability_mode = :NO
       $PokemonGlobal.randomize_trainers = false
       $PokemonGlobal.randomize_trainers_items = false
       $PokemonGlobal.randomize_items = false
@@ -615,7 +659,7 @@ module RandomizerConfigurator
       $PokemonGlobal.enable_random_evolutions_similar_bst = false
       $PokemonGlobal.enable_random_evolutions_respect_restrictions = false
       $PokemonGlobal.banohko = false
-      $PokemonGlobal.random_gens = []
+      # $PokemonGlobal.random_gens = []
     end 
   end
 
@@ -641,6 +685,13 @@ module RandomizerConfigurator
     $PokemonGlobal.remember_trainer_teams ||= false
     $PokemonGlobal.remember_trainer_teams = !$PokemonGlobal.remember_trainer_teams 
     $PokemonGlobal.random_trainer_teams = {} if !$PokemonGlobal.remember_trainer_teams
+  end
+
+  def toggle_moves_different_form
+    if $PokemonGlobal.different_movesets_per_form.nil?
+      $PokemonGlobal.different_movesets_per_form = RandomizedChallenge::DIFFERENT_MOVESETS_PER_FORM
+    end
+    $PokemonGlobal.different_movesets_per_form = !$PokemonGlobal.different_movesets_per_form
   end
 
   def show_gen_chooser(gens)
@@ -673,18 +724,11 @@ module RandomizerConfigurator
     return chosen_gens
   end
 
-  def pbRandomMenu(menu = :randomizer_configurator, is_sub_menu = true)
-    if !RandomizedChallenge.enabled?
-      if pbConfirmMessage(_INTL("El modo Random está desactivado, ¿deseas activarlo?"))
-        RandomizedChallenge.enable
-      else
-        return
-      end
+  def toggle_prioritize_stab_in_learnset
+    return if !$PokemonGlobal.enable_random_moves
+    if $PokemonGlobal.prioritize_stab_in_learnset.nil?
+      $PokemonGlobal.prioritize_stab_in_learnset = RandomizedChallenge::PRIORIZE_STAB_IN_LEARNSET
     end
-    pbFadeOutIn do
-      scene = PokemonOption_Scene.new
-      screen = PokemonOptionScreen.new(scene)
-      screen.pbStartScreen(false, menu, is_sub_menu)
-    end
+    $PokemonGlobal.prioritize_stab_in_learnset = !$PokemonGlobal.prioritize_stab_in_learnset
   end
 end

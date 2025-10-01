@@ -1,3 +1,5 @@
+# require 'set'
+
 # ***********************************************************
 # - MAIN -
 # ***********************************************************
@@ -11,7 +13,8 @@ class PokemonGlobalMetadata
                 :random_types, :randomize_items, :randomize_held_items,
                 :random_encounter_table, :consistent_wild_encounters, :dont_randomize, :wild_paused, 
                 :given_tm_moves, :randomize_trainers, :randomize_starters, :semi_random_mode,
-                :remember_trainer_teams, :random_trainer_teams, :randomize_trainers_items
+                :remember_trainer_teams, :random_trainer_teams, :randomize_trainers_items, :randomize_pokemon,
+                :reviving_fossil, :fossil_species, :raid_battle_type, :prioritize_stab_in_learnset
 
   def initialize_random_params(without_defaults = false)
     unless without_defaults
@@ -29,16 +32,23 @@ class PokemonGlobalMetadata
       @randomize_trainers = RandomizedChallenge::RANDOM_TRAINER_TEAM_DEFAULT_VALUE
       @randomize_starters = RandomizedChallenge::RANDOMIZE_STARTERS
       @randomize_trainers_items = RandomizedChallenge::RANDOM_TRAINER_ITEMS_DEFAULT_VALUE
+      @randomize_pokemon = RandomizedChallenge::RANDOMIZE_POKEMON
+      @prioritize_stab_in_learnset = RandomizedChallenge::PRIORIZE_STAB_IN_LEARNSET
     end
+    @reviving_fossil = nil
+    @fossil_species = nil
     # @random_gens = []
     @random_types = {}
     @tm_compatibility_random = {}
     @random_encounter_table = {}
     @wild_paused = false
     @dont_randomize = []
-    @given_tm_moves = []
+    # Migrate from Array to Set if needed, otherwise initialize as Set
+    ensure_given_tm_moves_as_set
+    @tm_move_map = {}
     @semi_random_mode = false
     @random_trainer_teams = {}
+    @raid_battle_type = nil
   end
 
   def disable_random_params
@@ -57,12 +67,23 @@ class PokemonGlobalMetadata
     @consistent_wild_encounters = false
     @wild_paused = true
     @dont_randomize = []
-    @given_tm_moves = []
+    # Migrate from Array to Set if needed, otherwise initialize as Set
+    ensure_given_tm_moves_as_set
+    @tm_move_map = {}
     @randomize_trainers = false
     @randomize_starters = false
     @semi_random_mode = false
     @random_trainer_teams = {}
     @randomize_trainers_items = false
+    @randomize_pokemon = false
+    @raid_battle_type = nil
+    @prioritize_stab_in_learnset = false
+  end
+
+  private
+
+  def ensure_given_tm_moves_as_set
+    @given_tm_moves = @given_tm_moves.is_a?(Array) ? Set.new(@given_tm_moves) : Set.new
   end
 end
 
@@ -72,9 +93,9 @@ module RandomizedChallenge
 
     $PokemonGlobal.initialize_random_params(without_defaults)
     RandomizerConfigurator.ability_mode = RandomizedChallenge::RANDOM_ABILITY_METHOD
-    generate_random_starters #if randomize_starters?
     # $game_switches[RandomizedChallenge::SWITCH] = true
     $PokemonGlobal.random_enabled = true
+    generate_random_starters #if randomize_starters?
   end
 
   def self.disable
@@ -82,6 +103,7 @@ module RandomizedChallenge
     $game_switches[RandomizedChallenge::ABILITY_RANDOMIZER_SWITCH] = false
     $game_switches[RandomizedChallenge::ABILITY_SWAP_RANDOMIZER_SWITCH] = false
     $game_switches[RandomizedChallenge::ABILITY_SEMI_RANDOMIZER_SWITCH] = false
+    RandomizedChallenge::Ability.reset_randomized_data
     $PokemonGlobal.disable_random_params
     $PokemonGlobal.random_enabled = false
   end
@@ -103,11 +125,11 @@ module RandomizedChallenge
   end
 
   def self.wild_paused?
-    $PokemonGlobal.wild_paused ? true : false
+    !!($PokemonGlobal&.wild_paused)
   end
 
   def self.randomize_pokemon?
-    return !self.wild_paused?
+    !!($PokemonGlobal&.randomize_pokemon)
   end
   
   class << self
@@ -116,30 +138,30 @@ module RandomizedChallenge
 
   def self.enabled?
     # $game_switches && $game_switches[RandomizedChallenge::SWITCH] ? true : false
-    $PokemonGlobal && $PokemonGlobal.random_enabled ? true : false
+    !!($PokemonGlobal&.random_enabled)
   end
 
   def self.random_abilities?
-    enabled? && $game_switches[RandomizedChallenge::ABILITY_RANDOMIZER_SWITCH] && !RandomizedChallenge.semi_random_mode? ? true : false
+    enabled? && $game_switches[RandomizedChallenge::ABILITY_RANDOMIZER_SWITCH] #&& !semi_random_mode?
   end
 
   def self.ability_mode
     return :NO if !random_abilities?
     return :MAPABILITIES if random_abilities? && $game_switches[RandomizedChallenge::ABILITY_SWAP_RANDOMIZER_SWITCH]
-    # return :SAMEINEVOLUTION if random_abilities? && $game_switches[RandomizedChallenge::ABILITY_SEMI_RANDOMIZER_SWITCH]
+    return :SAMEINEVOLUTION if random_abilities? && $game_switches[RandomizedChallenge::ABILITY_SEMI_RANDOMIZER_SWITCH]
     return :FULLRANDOM if random_abilities? && $game_switches[RandomizedChallenge::ABILITY_RANDOMIZER_SWITCH]
   end
 
   def self.moves_on?
-    enabled? && $PokemonGlobal.enable_random_moves && !semi_random_mode? ? true : false
+    enabled? && $PokemonGlobal.enable_random_moves #&& !semi_random_mode?
   end
 
   def self.tm_compat_on?
-    enabled? && $PokemonGlobal.enable_random_tm_compat && !semi_random_mode? ? true : false
+    enabled? && $PokemonGlobal.enable_random_tm_compat #&& !semi_random_mode?
   end
 
   def self.progressive?
-    enabled? && $PokemonGlobal.progressive_random ? true : false
+    enabled? && !!$PokemonGlobal.progressive_random
   end
 
   def self.gens
@@ -148,39 +170,79 @@ module RandomizedChallenge
   end
 
   def self.types_on?
-    enabled? && $PokemonGlobal.enable_random_types && !semi_random_mode? ? true : false
+    enabled? && $PokemonGlobal.enable_random_types #&& !semi_random_mode?
   end
 
   def self.ohko_banned?
-    $PokemonGlobal.banohko ? true : false
+    !!($PokemonGlobal&.banohko)
   end
 
   def self.consistent_wild_encounters?
-    enabled? && $PokemonGlobal.consistent_wild_encounters ? true : false
+    enabled? && !!($PokemonGlobal&.consistent_wild_encounters)
   end
 
   def self.randomize_trainers?
-    enabled? && $PokemonGlobal.randomize_trainers && !semi_random_mode? ? true : false
+    enabled? && $PokemonGlobal.randomize_trainers #&& !semi_random_mode?
   end
 
   def self.randomize_starters?
-    enabled? && $PokemonGlobal.randomize_starters ? true : false
+    enabled? && !!($PokemonGlobal&.randomize_starters)
   end
 
   def self.semi_random_mode?
-    enabled? && $PokemonGlobal.semi_random_mode ? true : false
+    enabled? && !!($PokemonGlobal&.semi_random_mode)
   end
 
   def self.remember_trainer_teams?
-    enabled? && $PokemonGlobal.remember_trainer_teams ? true : false
+    enabled? && !!($PokemonGlobal&.remember_trainer_teams)
   end
 
   def self.randomize_trainers_items?
-    enabled? && $PokemonGlobal.randomize_trainers_items ? true : false
+    enabled? && !!($PokemonGlobal&.randomize_trainers_items)
+  end
+
+  def self.ensure_damaging_moves?
+    RandomizedChallenge::ENSURE_DAMAGING_MOVES
+  end
+
+  def self.different_moveset_per_form?
+    return DIFFERENT_MOVESETS_PER_FORM if $PokemonGlobal&.different_movesets_per_form.nil?
+    enabled? && !!($PokemonGlobal&.different_movesets_per_form)
   end
 
   def self.gen_included?(gen)
     gens.include?(gen) || gens.empty?
+  end
+
+  def self.prioritize_stab_in_learnset?
+    enabled? && !!($PokemonGlobal&.prioritize_stab_in_learnset)
+  end
+
+  def self.save_tm_compatibility_data(data)
+    file_path = get_tm_compatibility_file_path
+    File.open(file_path, 'wb') { |f| Marshal.dump(data, f) }
+  end
+
+  def self.load_tm_compatibility_data
+    file_path = get_tm_compatibility_file_path
+    return {} unless File.exist?(file_path)
+    
+    begin
+      File.open(file_path, 'rb') { |f| Marshal.load(f) }
+    rescue
+      return {}
+    end
+  end
+
+  def self.get_tm_compatibility_file_path
+    # Use save-slot specific filename to ensure independence between saves
+    if defined?($player.save_slot) && $player.save_slot
+      save_slot = $player&.save_slot || "Default"
+      safe_slot_name = save_slot.gsub(/[^a-zA-Z0-9]/, "_") # Replace special chars with underscore
+      RTP.getSaveFileName("tm_compatibility_#{safe_slot_name}.dat")
+    else
+      RTP.getSaveFileName("tm_compatibility.dat")
+    end
   end
 end
 
@@ -203,12 +265,24 @@ def max_bst_cap(badge_count = nil)
   badge_count < min_key ? max_caps[min_key] : max_caps.fetch(badge_count, max_caps[max_key])
 end
 
+def reviving_fossil(item)
+  return if !GameData::Item.try_get(item)&.is_fossil?
+  $PokemonGlobal.reviving_fossil = item
+end
+
+def raid_battle(type)
+  return if !RandomizedChallenge.enabled?
+  return if !RandomizedChallenge.randomize_pokemon?
+  return if !GameData::Type.exists?(type)
+  $PokemonGlobal.raid_battle_type = type
+end
+
 def min_bst_cap(badge_count = nil)
   badge_count ||= $player.badge_count
   min_caps = {
-    7 => 440,
-    6 => 425,
-    5 => 400,
+    7 => 460,
+    6 => 440,
+    5 => 420,
     4 => 375,
     3 => 350
   }
@@ -222,27 +296,52 @@ def random_species(with_mega = false)
   species_list = GameData::Species.keys
   if with_mega
     species_list = species_list.select { |s| GameData::Species.get(s).mega_stone }
-    return species_list.sample
+    species = species_list.sample
+    species = GameData::Species.get(species).species
+  else
+    species = species_list.sample
+    species_id = GameData::Species.get(species).species
+    rand_count = RandomizedChallenge::MULTIPLE_FORM_POOL[species_id]
+    rand_val = rand(rand_count)
+    if rand_count && rand_val != 0
+      while RandomizedChallenge::MULTIPLE_FORM_POOL.has_key?(species_id)
+        species = species_list.sample
+        species_id = GameData::Species.get(species).species
+      end
+    end
   end
-  species = species_list.sample
   GameData::Species.get(species)
 end
 
-def valid_pokemon?(species, ignore_bst = false, badge_count = nil)
-  bst = species.base_stats.values.sum
+def valid_pokemon?(species, ignore_bst = false, badge_count = nil, type = nil, bst_range = nil)
+  return false if species.nil?
+  species_data = GameData::Species.get(species)
+  base_species = GameData::Species.get(species_data.get_baby_species)
+  bst = species_data.base_stats.values.sum
   badge_count ||= $player.badge_count
-  previous_species = GameData::Species.get(species.get_previous_species)
-  valid_form = species.mega_stone && species.form != species.unmega_form ? false : true
-  valid_bst = ignore_bst || valid_bst?(bst, badge_count)
-  blacklisted = RandomizedChallenge::BLACKLISTED_POKEMON.include?(species)
-  valid_gen = RandomizedChallenge.gens.empty? || RandomizedChallenge.gens.include?(species.generation) || RandomizedChallenge.gens.include?(previous_species.generation)
-  species && !blacklisted && valid_bst && valid_gen && valid_form
+  ignore_bst = true if !RandomizedChallenge.progressive?
+  return false if species_data.form != 0 && species_data.form_name&.downcase&.include?("mega")
+  return false if !ignore_bst && !valid_bst?(bst, badge_count)
+  return false if type && !species_data.types.include?(type)
+  return false if bst_range && !bst_range.include?(bst)
+  return false if RandomizedChallenge::BLACKLISTED_POKEMON.include?(species_data.id)
+  return false if !RandomizedChallenge.gens.empty? && !RandomizedChallenge.gens.include?(species_data.generation) && !RandomizedChallenge.gens.include?(base_species.generation)
+  return true
 end
 
-def valid_random_species(badge_count = nil)
+def valid_random_species(badge_count = nil, ignore_bst = false, type = nil, bst_range = nil)
   badge_count ||= $player.badge_count
-  species = random_species
-  species = random_species until valid_pokemon?(species, false, badge_count)
+  attempts = 0
+  max_attempts = 1000 # Prevent infinite loops
+  species = nil
+  
+  loop do
+    species = random_species
+    return species if valid_pokemon?(species, ignore_bst, badge_count, type, bst_range)
+    
+    attempts += 1
+    break if attempts >= max_attempts
+  end
   species
 end
 
@@ -255,25 +354,64 @@ end
 
 class Pokemon
   attr_accessor :traded
+  attr_accessor :randomized
   alias randomized_init initialize
 
   def initialize(species, level, owner = $player, withMoves = true, recheck_form = true)
-    if RandomizedChallenge.enabled? && !RandomizedChallenge::UNRANDOMIZABLE_POKEMON.include?(species)
-      species = RandomizedChallenge::WHITELISTED_POKEMON.sample || species unless RandomizedChallenge.wild_paused?
-      if RandomizedChallenge::WHITELISTED_POKEMON.empty? && !RandomizedChallenge.wild_paused?
-        $PokemonGlobal.random_gens = [] unless RandomizedChallenge.gens
-        species = valid_random_species
+    @randomized = false
+    return randomized_init(species, level, owner, withMoves, recheck_form) if !RandomizedChallenge.enabled?
+    original_species = species
+    if RandomizedChallenge.randomize_pokemon? && !RandomizedChallenge::UNRANDOMIZABLE_POKEMON.include?(species)
+      if RandomizedChallenge::KEEP_SAME_FOSSIL_POKEMON && $PokemonGlobal.reviving_fossil
+        if $PokemonGlobal.fossil_species && $PokemonGlobal.fossil_species[$PokemonGlobal.reviving_fossil]
+          species = $PokemonGlobal.fossil_species[$PokemonGlobal.reviving_fossil]
+        else
+          species = valid_random_species
+          $PokemonGlobal.fossil_species ||= {}
+          $PokemonGlobal.fossil_species[$PokemonGlobal.reviving_fossil] = species
+        end
+        $PokemonGlobal.reviving_fossil = nil
+      else
+        species = RandomizedChallenge::WHITELISTED_POKEMON.sample || species unless RandomizedChallenge.wild_paused?
+        if RandomizedChallenge::WHITELISTED_POKEMON.empty? && !RandomizedChallenge.wild_paused?
+          $PokemonGlobal.random_gens = [] unless RandomizedChallenge.gens
+          if $PokemonGlobal.raid_battle_type
+            species_data = GameData::Species.get(species)
+            bst_range = create_bst_range(species_data.base_stats.values.sum)
+            species = valid_random_species(nil, true, $PokemonGlobal.raid_battle_type, bst_range)
+            $PokemonGlobal.raid_battle_type = nil
+          else
+            species = valid_random_species
+          end
+        end  
       end
     end
+
+    species ||= original_species
+    @randomized = (species != original_species)
     randomized_init(species, level, owner, withMoves, recheck_form)
+    
+    # Ensure the final moveset has at least one damaging move if moves were generated
+    if withMoves && RandomizedChallenge.enabled? && RandomizedChallenge.moves_on? && RandomizedChallenge.ensure_damaging_moves?
+      ensure_has_damaging_move!
+    end
+    
   end
 
   def traded?
-    @traded || false
+    !!@traded
   end
 
   def traded=(value)
     @traded = value
+  end
+
+  def randomized?
+    !!@randomized
+  end
+
+  def randomized=(value)
+    @randomized = value
   end
 
   def random_types
@@ -281,7 +419,7 @@ class Pokemon
     current_types = GameData::Species.get(@species).types
 
     until types.size == current_types.size
-      type = GameData::Type.keys[rand(GameData::Type.count)]
+      type = GameData::Type.keys.sample
       types.add(type) unless RandomizedChallenge::INVALID_TYPES.include?(type)
     end
     types.to_a
@@ -289,7 +427,7 @@ class Pokemon
 
   alias randomized_types types
   def types
-    return randomized_types unless RandomizedChallenge.enabled? && RandomizedChallenge.types_on?
+    return randomized_types unless RandomizedChallenge.enabled? && RandomizedChallenge.types_on? && self.randomized?
 
     unless $PokemonGlobal.random_types[@species]
       types = random_types
@@ -299,95 +437,107 @@ class Pokemon
     $PokemonGlobal.random_types[@species]
   end
 
-  # Esto de momento se comenta ya que da problemas de performance hay que ver como optimizarlo.
-  # alias reset_moves_random reset_moves
-  # def reset_moves
-  #   reset_moves_random
-  #   movelist = improve_moves_with_stab_and_damage
-
-  #   movelist.each_with_index do |m, i|
-  #     @moves[i] = Pokemon::Move.new(m.id)
-  #   end
-  # end
-
-  def improve_moves_with_stab_and_damage(movelist = nil)
-    movelist ||= @moves
-
-    stab_index, damage_index = find_stab_and_damage_indices(types, movelist)
-
-    return movelist if stab_index && damage_index
-
-    movelist = add_or_replace_damage_move(stab_index, movelist) unless damage_index
-
-    movelist = add_or_replace_stab_move(damage_index, types, movelist) unless stab_index
-
-    movelist
-  end
-
-  def find_stab_and_damage_indices(types, movelist = nil)
-    stab_index = nil
-    damage_index = nil
-
-    movelist.each_with_index do |m, i|
-      movedata = GameData::Move.get(m.id)
-      stab_index = i if types.include?(movedata.type) && !stab_index
-
-      damage_index = i if movedata.display_real_damage(self) > 10 && !damage_index
-
-      break if stab_index && damage_index
-    end
-
-    [stab_index, damage_index]
-  end
-
-  def add_or_replace_damage_move(stab_index, movelist)
-    damage_move = find_valid_move(10)
-
-    if movelist.length < 4
-      movelist.push(damage_move)
-    else
-      movelist = replace_move(stab_index ? [stab_index] : [], damage_move, movelist)
-    end
-    movelist
-  end
-
-  def add_or_replace_stab_move(damage_index, types, movelist)
-    return movelist unless RandomizedChallenge::PROBABILITY_OF_STAB.positive?
-
-    chance_of_stab = RandomizedChallenge::PROBABILITY_OF_STAB / 100.0
-    return movelist unless rand < chance_of_stab
-
-    max_power = RandomizedChallenge.progressive? && $player.badge_count < 3 ? 70 : 0
-    stab_move = find_valid_move(max_power, types)
-
-    if movelist.length < 4
-      movelist.push(stab_move)
-    else
-      movelist = replace_move(damage_index ? [damage_index] : [], stab_move, movelist)
-    end
-    movelist
-  end
-
-  def replace_move(index_to_avoid, move, movelist)
-    possible_indices = [0, 1, 2, 3] - index_to_avoid
-    return movelist if possible_indices.empty?
-
-    replace_index = possible_indices.sample
-    movelist[replace_index] = Pokemon::Move.new(move.id)
-    movelist
-  end
-
-  def random_moveset(progresive = RandomizedChallenge.progressive?, num_moves = 4)
+  def random_moveset(progresive = RandomizedChallenge.progressive?, num_moves = 4, existing_moves = [])
     moves = []
     num_moves.times do
-      if RandomizedChallenge::PRIORIZE_STAB_IN_LEARNSET && rand(100) < RandomizedChallenge::STAB_IN_LEARNSET
-        move = GameData::Move.get(find_valid_move(0, self.types, false, progresive).id)
+      move = nil
+      if RandomizedChallenge.prioritize_stab_in_learnset? && rand(100) < RandomizedChallenge::STAB_IN_LEARNSET
+        move = find_valid_move(0, self.types, false, progresive)
       else
-        move = GameData::Move.get(find_valid_move(0, [], false, progresive).id)
+        move = find_valid_move(0, [], false, progresive)
       end
-      moves << move
+
+      if move
+        move = GameData::Move.get(move.id)
+      elsif move.nil? && !existing_moves.empty?
+        move = GameData::Move.get(existing_moves.sample)
+      end
+
+      moves << move if move
     end
-    moves
+
+    # make moves uniq
+    moves.uniq!
+
+    # Convert to Pokemon::Move objects for damage checking
+    move_objects = moves.map { |move_data| Pokemon::Move.new(move_data.id) }
+    
+    # Ensure at least one damaging move
+    move_objects = ensure_damaging_move(move_objects, progresive)
+    
+    move_objects
+  end
+
+  # Ensures the movelist contains at least one damaging move
+  def ensure_damaging_move(movelist, progressive = RandomizedChallenge.progressive?)
+    return movelist if movelist.empty? || !RandomizedChallenge.ensure_damaging_moves? || !RandomizedChallenge.moves_on?
+
+    # Check if any move already deals damage
+    has_damage_move = movelist.any? do |move|
+      move_data = GameData::Move.get(move.id)
+      move_data.display_power(self) > 10
+    end
+    
+    return movelist if has_damage_move
+    
+    # If no damaging move found, replace one move with a damaging move
+    damaging_move_data = find_valid_move(10, [], false, progressive)
+    return movelist unless damaging_move_data # Safety check
+    
+    damaging_move = Pokemon::Move.new(damaging_move_data.id)
+    
+    # Replace the first non-damaging move
+    movelist[0] = damaging_move
+    
+    movelist
+  end
+
+  # Ensures the learnset contains at least one damaging move
+  def ensure_damaging_move_in_learnset(learnset)
+    return learnset if learnset.empty? || !RandomizedChallenge.ensure_damaging_moves? || !RandomizedChallenge.moves_on?
+
+    # Check if any move in the learnset is damaging
+    has_damage_move = learnset.any? do |level_move|
+      move_data = GameData::Move.get(level_move[1].id)
+      move_data.display_power(self) > 10
+    end
+    
+    return learnset if has_damage_move
+    
+    # If no damaging move found, replace the first move with a damaging move
+    damaging_move_data = find_valid_move(10)
+    return learnset unless damaging_move_data # Safety check
+    
+    # Keep the same level, replace the move
+    original_level = learnset[0][0]
+    learnset[0] = [original_level, damaging_move_data]
+    
+    learnset
+  end
+
+  # Public method to ensure any Pokémon has at least one damaging move
+  # Can be called on existing Pokémon to fix movesets without damaging moves
+  def ensure_has_damaging_move!
+    return unless RandomizedChallenge.enabled? && RandomizedChallenge.moves_on? && RandomizedChallenge.ensure_damaging_moves?
+    
+    # Check if any current move is damaging
+    has_damage_move = @moves.any? do |move|
+      move_data = GameData::Move.get(move.id)
+      move_data.display_power(self) > 10
+    end
+    
+    return if has_damage_move
+    
+    # Find a damaging move to replace one of the existing moves
+    damaging_move_data = find_valid_move(10)
+    return unless damaging_move_data # Safety check
+    
+    # Replace the first move (or add if no moves exist)
+    if @moves.empty? || @moves.length < 4
+      @moves << Pokemon::Move.new(damaging_move_data.id)
+    else
+      @moves[0] = Pokemon::Move.new(damaging_move_data.id)
+    end
   end
 
   alias random_getMoveList getMoveList
@@ -397,68 +547,92 @@ class Pokemon
 
     $PokemonGlobal.random_moves = {} unless $PokemonGlobal.random_moves
     
-    return $PokemonGlobal.random_moves[@species][self.form] if $PokemonGlobal.random_moves[@species] && $PokemonGlobal.random_moves[@species][self.form]
+    # Determine form key based on configuration
+    form_key = RandomizedChallenge.different_moveset_per_form? ? form : 0
+    
+    return $PokemonGlobal.random_moves[species][form_key] if $PokemonGlobal.random_moves[species] && $PokemonGlobal.random_moves[species][form_key]
 
-    $PokemonGlobal.random_moves[@species] ||= {}
-    $PokemonGlobal.random_moves[@species][self.form] ||= []
+    $PokemonGlobal.random_moves[species] ||= {}
+    $PokemonGlobal.random_moves[species][form_key] ||= []
 
     moves.each do |item|
       level = item[0]
-      if RandomizedChallenge::PRIORIZE_STAB_IN_LEARNSET && rand(100) < RandomizedChallenge::STAB_IN_LEARNSET
+      if RandomizedChallenge.prioritize_stab_in_learnset? && rand(100) < RandomizedChallenge::STAB_IN_LEARNSET
         move = find_valid_move(0, self.types)
       else
         move = find_valid_move
       end
-      $PokemonGlobal.random_moves[@species][self.form] << [level, move]
+      $PokemonGlobal.random_moves[species][form_key] << [level, move]
     end
-    $PokemonGlobal.random_moves[@species][self.form]
+    $PokemonGlobal.random_moves[species][form_key]
   end
 
   alias compatible_with_move_random? compatible_with_move?
   def compatible_with_move?(move_id)
     return compatible_with_move_random?(move_id) unless RandomizedChallenge.enabled? && RandomizedChallenge.tm_compat_on?
 
-    # RAND Compatibility #TM
+    # RAND Compatibility #TM - Use in-memory storage
     $PokemonGlobal.tm_compatibility_random ||= {}
     species_compatibility = $PokemonGlobal.tm_compatibility_random[species] ||= []
 
     existing_compatibility = species_compatibility.find { |item| item[0] == move_id }
     return existing_compatibility[1] if existing_compatibility
 
-    is_compatible = rand(2).zero?
+    move_type = GameData::Move.get(move_id).type
+    if self.types.include?(move_type)
+      is_compatible = rand(100) < 70
+    else
+      is_compatible = rand(100) < 40
+    end
     $PokemonGlobal.tm_compatibility_random[species] << [move_id, is_compatible]
+    RandomizedChallenge.save_tm_compatibility_data($PokemonGlobal.tm_compatibility_random)
     is_compatible
   end
+
 end
 
 # ********************************************************
 # STARTERS RANDOMIZADOS CON DOS ETAPAS EVOLUTIVAS
 # ********************************************************
 
-def generate_random_starters
+def generate_random_starters(type = nil)
+  type ||= MonotypeChallenge.type if defined?(MonotypeChallenge) && MonotypeChallenge.enabled?
   starter_count = RandomizedChallenge::RANDOM_STARTER_VARIABLES.length || 3
   # Selecciona 3 iniciales unicos de la lista
   if RandomizedChallenge::RANDOM_STARTERS_LIST.empty?
-    species_list = [] 
-    GameData::Species.each_species do |species|
-      next if !RandomizedChallenge.gens.empty? && !RandomizedChallenge.gens.include?(species.generation)
-      evolutions = species.get_family_evolutions
-      species_list << species if evolutions.size >= 2 && evolutions.one? {|e| e[0] == species.id }
+    if RandomizedChallenge.progressive?
+      species_list = [] 
+      GameData::Species.each_species do |species|
+        next if !RandomizedChallenge.gens.empty? && !RandomizedChallenge.gens.include?(species.generation)
+        evolutions = species.get_family_evolutions
+        species_list << species if evolutions.size >= 2 && evolutions.one? {|e| e[0] == species.id }
+      end
+      species_list.shuffle!
+      species_list = species_list.select { |s| s.types.include?(type) } if type
+      starters = species_list.sample(starter_count)
     end
-    species_list.shuffle!
-    starters = species_list.sample(starter_count)
   else
     valid_starters = RandomizedChallenge.gens.empty? ? RandomizedChallenge::RANDOM_STARTERS_LIST : RandomizedChallenge::RANDOM_STARTERS_LIST.select { |s| RandomizedChallenge.gens.include?(GameData::Species.get(s).generation) }
     starters = valid_starters.sample(starter_count)
   end
 
   # Asigna los iniciales a las variables
-  RandomizedChallenge.pause
-  RandomizedChallenge::RANDOM_STARTER_VARIABLES.each_with_index do |var, i|
-    pokemon = Pokemon.new(starters[i], 5)
-    pbSet(var, pokemon)
+  if RandomizedChallenge.progressive?
+    RandomizedChallenge.pause_random_species
+    RandomizedChallenge::RANDOM_STARTER_VARIABLES.each_with_index do |var, i|
+      pokemon = Pokemon.new(starters[i], 5)
+      pokemon.randomized = true
+      pbSet(var, pokemon)
+    end
+    RandomizedChallenge.resume_random_species
+  else
+    RandomizedChallenge::RANDOM_STARTER_VARIABLES.each_with_index do |var, i|
+      pokemon = Pokemon.new(:PIKACHU, 5)
+      pokemon.randomized = true
+      pbSet(var, pokemon)
+    end
   end
-  RandomizedChallenge.resume
+
 end
 
 def get_starter(index = 0, var = nil)
@@ -478,118 +652,31 @@ end
 def give_starter_random(index = 0, var = nil, level = 5)
   pokemon = get_starter(index, var)
   if !pokemon.is_a?(Pokemon)
-    RandomizedChallenge.pause
+    RandomizedChallenge.pause_random_species
     pokemon = Pokemon.new(pokemon, level)
-    RandomizedChallenge.resume
+    RandomizedChallenge.resume_random_species
   end
-  # pokemon.reset_moves
+  pokemon.obtain_map = $game_map.map_id
+  pokemon.reset_moves if !RandomizedChallenge.moves_on?
   pbAddPokemon(pokemon)
-end
-
-
-# ********************************************************
-# MEGAS RANDOMIZE TO MEGAS
-# ********************************************************
-alias pbLoadTrainer_random pbLoadTrainer
-def pbLoadTrainer(tr_type, tr_name, tr_version = 0)
-  return pbLoadTrainer_random(tr_type, tr_name, tr_version) unless RandomizedChallenge.enabled?
-
-  trainer_data = GameData::Trainer.try_get(tr_type, tr_name, tr_version)
-
-  if RandomizedChallenge.remember_trainer_teams? && $PokemonGlobal.random_trainer_teams.has_key?(trainer_data.id)
-    trainer = $PokemonGlobal.random_trainer_teams[trainer_data.id]
-    return trainer
-  end
-
-  if !RandomizedChallenge.randomize_trainers? || RandomizedChallenge::UNRANDOMIZABLE_TRAINERS.include?(trainer_data.id)
-    RandomizedChallenge.pause
-    trainer = pbLoadTrainer_random(tr_type, tr_name, tr_version)
-    RandomizedChallenge.resume
-    return trainer
-  end
-
-  trainer = pbLoadTrainer_random(tr_type, tr_name, tr_version)
-  return trainer if trainer.nil?
-
-  unrandomizable_pokes = RandomizedChallenge::UNRANDOMIZABLE_TRAINER_POKEMON.fetch(trainer_data.id, {})
-
-  if unrandomizable_pokes.empty? 
-    trainer.party.map! do |pkmn|
-      if RandomizedChallenge::RERANDOM_TRAINER_MOVESET
-        pkmn.moves = RandomizedChallenge::TRAINERS_MOVESET_RESPECT_PROGRESSIVE ? pkmn.random_moveset : pkmn.random_moveset(false)
-      end
-      if RandomizedChallenge.randomize_trainers_items? && !pkmn&.item&.is_mega_stone?
-        pkmn.item = RandomizedChallenge.random_item(false, true)
-      end
-      pkmn
-    end
-  end
-
-  return trainer if unrandomizable_pokes.empty? && !RandomizedChallenge::MEGAS_RANDOMIZE_TO_MEGAS
-
-  trainer.party.map!.with_index do |pkmn, index|
-    if unrandomizable_pokes[index]
-      RandomizedChallenge.pause
-      pkmn = Pokemon.new(unrandomizable_pokes[index], pkmn.level, pkmn.owner)
-      RandomizedChallenge.resume
-    elsif pkmn&.item&.is_mega_stone?
-      species_data = GameData::Species.get_species_form(pkmn.species, pkmn.form)
-      if species_data.mega_stone
-        pkmn.item = species_data.mega_stone
-      else
-        RandomizedChallenge.pause
-        new_species = random_species(true)
-        pkmn = Pokemon.new(new_species, pkmn.level, pkmn.owner)
-        pkmn.item = GameData::Species.get_species_form(new_species, pkmn.form).mega_stone
-        RandomizedChallenge.resume
-        pkmn.reset_moves
-      end
-    elsif RandomizedChallenge.randomize_trainers_items?
-      pkmn.item = RandomizedChallenge.random_item(false, true)
-    end
-    if RandomizedChallenge::RERANDOM_TRAINER_MOVESET
-      pkmn.moves = RandomizedChallenge::TRAINERS_MOVESET_RESPECT_PROGRESSIVE ? pkmn.random_moveset : pkmn.random_moveset(false)
-    end
-    pkmn
-  end
-
-  if RandomizedChallenge.remember_trainer_teams?
-    $PokemonGlobal.random_trainer_teams[trainer_data.id] = trainer
-  end
-  trainer
 end
 
 class PokemonEncounters
   alias setup_random setup
   def setup(map_ID)
     setup_random(map_ID)
-    badges_max_levels = if defined?(RandomizedChallenge::BADGES_MAX_LEVELS)
-                          RandomizedChallenge::BADGES_MAX_LEVELS
-                        else
-                          {}
-                        end
-    return unless RandomizedChallenge.consistent_wild_encounters? && !badges_max_levels.empty?
+    return unless RandomizedChallenge.consistent_wild_encounters?
 
     encounter_data = GameData::Encounter.get(map_ID, $PokemonGlobal.encounter_version)
     if encounter_data
       encounter_data.types.each do |enc_type|
         next unless @encounter_tables[enc_type]
 
-        highest_level = @encounter_tables[enc_type].max_by { |enc| enc[0] }[0]
-
         @encounter_tables[enc_type].map! do |enc|
-          level, = enc
-          # level_range = (level - 5)..(level + 5)
-
-          badge_count = 0
-          badges_max_levels.each_pair do |badge, max_level|
-            badge_count = badge if highest_level >= max_level
-            break if badge_count != 0 || highest_level < max_level
-          end
-
-          # badge_count = badges_max_levels.find { |_, max_level| level_range.include?(max_level) }&.first || 0
-          new_species = valid_random_species(badge_count)
-          [level, new_species.id]
+          chance, original_species_id, min_level, max_level = enc
+          original_species = GameData::Species.get(original_species_id)
+          new_species = find_similar_bst_species(original_species, 0.12) # 12% margin
+          [chance, new_species.id, min_level, max_level]
         end
         $PokemonGlobal.random_encounter_table ||= {}
         $PokemonGlobal.random_encounter_table[map_ID] ||= {}
@@ -608,36 +695,92 @@ class PokemonEncounters
 
     enc_list = @encounter_tables[enc_type]
     return nil if !enc_list || enc_list.empty?
-    if !$PokemonGlobal.random_encounter_table.dig($game_map.map_id, enc_type) || $PokemonGlobal.random_encounter_table[$game_map.map_id][enc_type].empty?
-      $PokemonGlobal.random_encounter_table ||= {}
-      $PokemonGlobal.random_encounter_table[$game_map.map_id] ||= {}
-      $PokemonGlobal.random_encounter_table[$game_map.map_id][enc_type] ||= []
-      $PokemonGlobal.random_encounter_table[$game_map.map_id][enc_type] = enc_list.map do |enc|
-        enc[1] = valid_random_species.id
-        enc
-      end
-    end
+    
+    # Ensure the random encounter table is properly initialized for this map and encounter type
+    ensure_random_encounter_table_for_map_and_type($game_map.map_id, enc_type, enc_list)
+    
+    # Use the cached randomized encounters
     @encounter_tables[enc_type] = $PokemonGlobal.random_encounter_table[$game_map.map_id][enc_type]
 
     wild = choose_wild_pokemon_random(enc_type, chance_rolls)
+    # if !voe_enabled?
     RandomizedChallenge.pause_random_species
     $PokemonGlobal.dont_randomize << wild[0]
+    # end
     wild
   end
+
+  private
+
+  def ensure_random_encounter_table_for_map_and_type(map_id, enc_type, enc_list)
+    initialize_encounter_table(map_id)
+    return if encounter_table_exists?(map_id, enc_type)
+    
+    $PokemonGlobal.random_encounter_table[map_id][enc_type] = generate_randomized_encounters(enc_list)
+  end
+
+  def initialize_encounter_table(map_id)
+    $PokemonGlobal.random_encounter_table ||= {}
+    $PokemonGlobal.random_encounter_table[map_id] ||= {}
+  end
+
+  def encounter_table_exists?(map_id, enc_type)
+    $PokemonGlobal.random_encounter_table[map_id][enc_type] && 
+      !$PokemonGlobal.random_encounter_table[map_id][enc_type].empty?
+  end
+
+  def generate_randomized_encounters(enc_list)
+    enc_list.map do |enc|
+      chance, original_species_id, min_level, max_level = enc
+      original_species = GameData::Species.get(original_species_id)
+      new_species = find_similar_bst_species(original_species, 0.12) # 12% margin
+      [chance, new_species.id, min_level, max_level]
+    end
+  end
+
+  def find_similar_bst_species(original_species, margin = 0.12)
+    original_bst = original_species.base_stats.values.sum
+    bst_range = create_bst_range(original_bst, margin)
+    
+    attempts = 0
+    max_attempts = 1000
+    
+    loop do
+      candidate = random_species
+      return candidate if valid_pokemon?(candidate, true, nil, nil, bst_range)
+      
+      attempts += 1
+      if attempts >= max_attempts
+        # Fallback to any valid species if we can't find a similar BST
+        return random_species
+      end
+    end
+  end
+
+
 end
 
-class EncounterList_Scene
-  alias initialize_random initialize
-  def initialize
-    initialize_random
-    return unless RandomizedChallenge.enabled?
+def create_bst_range(bst, margin = 0.12)
+  bst_range = ((bst * (1 - margin)).to_i..(bst * (1 + margin)).to_i)
+  bst_range
+end
 
-    if RandomizedChallenge.consistent_wild_encounters?
-      @encounter_tables = $PokemonGlobal.random_encounter_table[$game_map.map_id] || {}
-      @max_enc, @eLength = @encounter_tables.empty? ? [1, 1] : getMaxEncounters(@encounter_tables)
-      pbMessage(_INTL('En el modo random el busca salvajes estará vacío hasta que entres al menos en 1 combate con salvajes por ruta')) if @encounter_tables.empty?
-    else
-      pbMessage(_INTL('En el modo random donde los Pokémon de las rutas son 100% aleatorios el busca salvajes no mostrará información correcta'))
+module Game
+  class << self
+    alias load_without_tm_compat load
+    
+    def load(save_data)
+      load_without_tm_compat(save_data)
+      # Always sync TM compatibility data with the file for this save slot
+      if RandomizedChallenge.enabled? && RandomizedChallenge.tm_compat_on?
+        file_path = RandomizedChallenge.get_tm_compatibility_file_path
+        if File.exist?(file_path)
+          $PokemonGlobal.tm_compatibility_random = RandomizedChallenge.load_tm_compatibility_data
+        else
+          # For old saves, persist current in-memory data to the new file
+          RandomizedChallenge.save_tm_compatibility_data($PokemonGlobal.tm_compatibility_random || {})
+        end
+      end
     end
   end
 end

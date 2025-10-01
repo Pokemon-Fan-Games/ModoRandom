@@ -5,18 +5,18 @@
 #-------------------------------------------------------------------------------
 # Override game switch logic to randomize data when value changed
 #-------------------------------------------------------------------------------
-class Game_Switches
-  alias __randomize__set_switch []= unless method_defined?(:__randomize__set_switch)
-  def []=(switch_id, value)
-    old_value = self[switch_id]
-    ret = __randomize__set_switch(switch_id, value)
-    if [RandomizedChallenge::ABILITY_RANDOMIZER_SWITCH,
-        RandomizedChallenge::ABILITY_SEMI_RANDOMIZER_SWITCH].include?(switch_id) && value != old_value
-      RandomizedChallenge::Ability.reset_randomized_data
-    end
-    ret
-  end
-end
+# class Game_Switches
+#   alias __randomize__set_switch []= unless method_defined?(:__randomize__set_switch)
+#   def []=(switch_id, value)
+#     old_value = self[switch_id]
+#     ret = __randomize__set_switch(switch_id, value)
+#     if [RandomizedChallenge::ABILITY_RANDOMIZER_SWITCH,
+#         RandomizedChallenge::ABILITY_SEMI_RANDOMIZER_SWITCH].include?(switch_id) && value != old_value
+#       RandomizedChallenge::Ability.reset_randomized_data
+#     end
+#     ret
+#   end
+# end
 
 #-------------------------------------------------------------------------------
 # Main module to handle radomization of abilities
@@ -28,7 +28,7 @@ module RandomizedChallenge::Ability
   #-----------------------------------------------------------------------------
   def self.get(key, default, hidden = false)
     # Load default data when switch is off
-    return default if !RandomizedChallenge.random_abilities?
+    return default if !RandomizedChallenge.random_abilities? || !RandomizedChallenge.enabled?
     return default if RandomizedChallenge::SPECIES_WITHOUT_RANDOM_ABS.include?(key)
 
     # Load randomized data if exists
@@ -195,6 +195,26 @@ module GameData
       sp = get_first_evo
       ([sp] + GameData::Species.get(sp).get_next_evos).uniq
     end
+
+    # Returns a random mega stone for a given species.
+    # If the species has multiple mega forms with different mega stones, one is chosen randomly.
+    # Returns nil if the species has no mega forms.
+    def get_mega_stone
+      mega_stones = []
+      species_list = GameData::Species.keys
+      # Find all mega forms for this species and collect their mega stones
+      species_list.each do |data|
+        species_data = GameData::Species.get(data)
+        next if species_data.species != @species
+        next if species_data.form == 0  # Skip base form
+        next unless species_data.mega_stone && species_data.mega_stone != :NONE
+        
+        mega_stones << species_data.mega_stone
+      end
+      
+      # Return a random mega stone if any were found, otherwise nil
+      return mega_stones.empty? ? nil : mega_stones.sample
+    end
   end
 end
 
@@ -213,11 +233,19 @@ class Pokemon
     ability_id_random
   end
 
+  def forced_ability?
+    return @forced_ability != nil
+  end
+
+  def forced_ability
+    return @forced_ability
+  end
 
   def forced_ability=(value)
-    return if !GameData::Ability.exists?(value)
+    return if !GameData::Ability.exists?(value) && value != nil
     @forced_ability = value
   end
+
 end
 
 #-------------------------------------------------------------------------------
