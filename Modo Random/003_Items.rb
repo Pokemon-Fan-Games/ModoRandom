@@ -64,6 +64,12 @@ def pbGenerateWildPokemon(species, level, isRoamer = false)
   end
   wild_poke = pbGenerateWildPokemon_randomized(species, level, isRoamer)
   
+  # Mark Pokemon as randomized when using consistent wild encounters
+  # Since the species was already randomized in choose_wild_pokemon, we need to manually set the flag
+  if RandomizedChallenge.randomize_pokemon?
+    wild_poke.randomized = true
+  end
+
   # Clean up after VOE spawning
   if voe_enabled? && $PokemonGlobal.creatingSpawningPokemon
     $PokemonGlobal.dont_randomize.delete(species) if $PokemonGlobal.dont_randomize&.include?(species)

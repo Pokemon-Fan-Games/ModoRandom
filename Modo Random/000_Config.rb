@@ -251,7 +251,7 @@ module RandomizedChallenge
                      :RAZZBERRY, :BLUKBERRY, :NANABBERRY, :WEPEARBERRY, :CORNNBERRY, :MAGOSTBERRY, :RABUTABERRY, :NOMELBERRY, :SPELONBERRY,
                      :PAMTREBERRY, :WATMELBERRY, :DURINBERRY, :BELUEBERRY, :ABILITYURGE, :GIMMIGHOULCOIN,
                      :SACREDASH, :METALALLOY, :MASTERPIECETEACUP, :UNREMARKABLETEACUP, :SYRUPYAPPLE, :LEADERSCREST, :MALICIOUSARMOR, :AUSPICIOUSARMOR,
-                     :GALARICACUFF, :SWEETAPPLE, :TARTAPPLE, :CHIPPEDPOT, :CRACKEDPOT ]
+                     :GALARICACUFF, :SWEETAPPLE, :TARTAPPLE, :CHIPPEDPOT, :CRACKEDPOT, :EXPSHARE ]
 
   # Lista de objetos que no podrán salir como objetos equipados en salvajes
   HELD_ITEM_BLACK_LIST = []
@@ -659,6 +659,7 @@ module RandomizerConfigurator
       $PokemonGlobal.enable_random_evolutions_similar_bst = false
       $PokemonGlobal.enable_random_evolutions_respect_restrictions = false
       $PokemonGlobal.banohko = false
+      # $PokemonGlobal.random_gens = []
     end 
   end
 
