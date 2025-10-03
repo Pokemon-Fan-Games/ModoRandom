@@ -99,7 +99,7 @@ EventHandlers.add(:on_wild_pokemon_created_for_spawning_end, :cleanup_voe_random
 
 EventHandlers.add(:on_end_battle, :gift_random_item,
   proc { |decision, _canLose, battle|
-    next if !RandomizedChallenge::TRAINERS_CAN_GIVE_RANDOM_ITEMS || !RandomizedChallenge.randomize_items? || decision != 1 || !battle.trainerBattle?
+    next if !RandomizedChallenge::TRAINERS_CAN_GIVE_RANDOM_ITEMS || !RandomizedChallenge.randomize_items? || decision != 1 || !battle ||!battle.trainerBattle?
     chance = RandomizedChallenge::PROBABILITY_OF_RANDOM_ITEMS_FROM_TRAINERS || 15
     give_item = rand < (chance / 100)
     pbReceiveItem(:POKEBALL) if give_item
