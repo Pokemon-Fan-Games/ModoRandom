@@ -178,16 +178,9 @@ module RandomizedChallenge
   # Si esta constante no está mantenida se tendrá que entrar al menos 1 vez a un combate de salvaje y en ese momento
   # Se generaran los salvajes de esa ruta y en futuras ocasiones saldrán los mismos
   BADGES_MAX_LEVELS = { 
-    0 => LevelCapsEX::LEVELGYM0,
-    1 => LevelCapsEX::LEVELGYM1,
-    2 => LevelCapsEX::LEVELGYM2,
-    3 => LevelCapsEX::LEVELGYM3,
-    4 => LevelCapsEX::LEVELGYM4,
-    5 => LevelCapsEX::LEVELGYM5,
-    6 => LevelCapsEX::LEVELGYM6,
-    7 => LevelCapsEX::LEVELGYM7,
-    8 => LevelCapsEX::LEVELGYM8,
-    9 => LevelCapsEX::LEVELGYM9,
+    0 => 14,
+    1 => 23,
+    2 => 30,
   }
 
 
