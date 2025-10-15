@@ -181,7 +181,6 @@ module RandomizerConfigurator
   end
 
   def select_custom_rules(preselected_rules = {}, rules_hash = RULES)
-    rules_hash.delete(:GENS) if $game_switches[MODO_CLASICO]
     selected_rules = preselected_rules
     vp = Viewport.new(0, 0, Graphics.width, Graphics.height)
     infowindow = Window_AdvancedTextPokemon.newWithSize("", 0, Graphics.height - 96, Graphics.width, 96, vp)
