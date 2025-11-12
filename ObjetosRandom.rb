@@ -68,8 +68,16 @@ module RandomizedChallenge
   MT_MOVES_RESPECT_PROGRESSIVE_RANDOM = true
 end
 
+
+def enable_random_items
+  $PokemonGlobal.random_items_enabled = RandomizedChallenge::RANDOM_ITEMS_DEFAULT_VALUE
+  $PokemonGlobal.random_held_items = RandomizedChallenge::RANDOM_HELD_ITEMS_DEFAULT_VALUE
+  $PokemonGlobal.random_items_from_trainers = RandomizedChallenge::BEATEN_TRAINERS_CAN_GIVE_ITEMS
+end
+
+
 def random_items_enabled?
-  random_enabled? && $PokemonGlobal.random_items_enabled ? true : false
+  random_enabled? && $PokemonGlobal.random_items_enabled && !semi_random_mode? ? true : false
 end
 
 def toggle_random_items
@@ -207,7 +215,7 @@ module RandomizedChallenge
   def self.unrandomizable_item?(item)
     item_id = item.is_a?(String) || item.is_a?(Symbol) ? getID(PBItems, item) : item
 
-    return true if self::UNRANDOMIZABLE_ITEMS.include?(item_id) || pbIsKeyItem?(item_id) || pbIsHiddenMachine?(item_id) #|| pbIsMegaStone?(item_id)
+    return true if self::UNRANDOMIZABLE_ITEMS.include?(item_id) || pbIsKeyItem?(item_id) || pbIsHiddenMachine?(item_id) || pbIsMegaStone?(item_id)
 
     false
   end
@@ -289,7 +297,7 @@ def pbAddPokemon(pkmn, level = nil, seeform = true)
 
   item = 0
   item = RandomizedChallenge.held_item if rand < probability
-  pkmn.setItem(item) if item > 0
+  pkmn.setItem(item) if item > 0 && !semi_random_mode?
   pbAddPokemon_random(pkmn, level, seeform)
 end
 
@@ -310,7 +318,7 @@ def pbAddPokemonSilent(pkmn, level = nil, seeform = true)
 
   item = 0
   item = RandomizedChallenge.held_item if rand < probability
-  pkmn.setItem(item) if item > 0
+  pkmn.setItem(item) if item > 0 && !semi_random_mode?
   pbAddPokemonSilent_random(pkmn, level, seeform)
 end
 
@@ -323,7 +331,7 @@ def pbTrainerBattle(trainerid, trainername, endspeech,
                                trainerparty, canlose, variable)
 
   return won unless won
-  return won unless random_enabled? && random_items_enabled? && random_items_from_trainers?
+  return won unless random_enabled? && random_items_enabled? && random_items_from_trainers? && !semi_random_mode?
 
   probability = RandomizedChallenge::PROBABILITY_OF_ITEMS_FROM_BEATEN_TRAINERS
   probability = (probability.to_f / 100) if probability.between?(1, 100)
@@ -343,7 +351,7 @@ module Kernel
     alias pbItemBall_random pbItemBall
     def pbItemBall(item, quantity = 1)
       original_item = item
-      if random_items_enabled?
+      if random_items_enabled? && !semi_random_mode?
         new_item = RandomizedChallenge.determine_random_item(original_item)
         item = new_item
         item = getID(PBItems, item) if item.is_a?(String) || item.is_a?(Symbol)
@@ -363,7 +371,7 @@ module Kernel
     alias pbReceiveItem_random pbReceiveItem
     def pbReceiveItem(item, quantity = 1)
       original_item = item
-      if random_items_enabled?
+      if random_items_enabled? && semi_random_mode?
         new_item = RandomizedChallenge.determine_random_item(original_item)
         item = new_item
         item = getID(PBItems, item) if item.is_a?(String) || item.is_a?(Symbol)
@@ -399,12 +407,13 @@ class PokemonLoad
   alias pbStartLoadScreen_random pbStartLoadScreen
   def pbStartLoadScreen(savenum = 0, auto = nil, savename = 'Partida 1')
     pbStartLoadScreen_random(savenum, auto, savename)
-    if random_enabled? && RandomizedChallenge::RANDOMIZE_TM_MOVES && $PokemonGlobal.tm_moves && !$PokemonGlobal.tm_moves.empty?
+    if random_enabled? && !semi_random_mode? && RandomizedChallenge::RANDOMIZE_TM_MOVES && $PokemonGlobal.tm_moves && !$PokemonGlobal.tm_moves.empty?
       $PokemonGlobal.tm_moves.each_pair do |item, move|
         $ItemData[item][ITEMMACHINE] = move
       end
     end
   end
 end
+
 
 

@@ -144,6 +144,10 @@ module RandomizedChallenge
   # Lo que no significa que Inicio Lento se convierta en Intimidacion
   # Si la variable FULL_RANDOM_ABS esta en true esa sera la opcion determinada
   MAP_RANDOM_ABS = false
+  
+  # Modo Semi Random, solo se randomizan los encuentros y Pokemon Regalados
+  # No se randomizan entrenadores, ataques, habilidades, ni objetos.
+  SEMI_RANDOM_DEFAULT_VALUE = false
 
   # Si ambas variables estan en false no se randomizaran las habilidades
   # Se puede cambiar el metodo de randomizado de habilidades
@@ -262,6 +266,27 @@ module RandomizedChallenge
 
   # Salvajes a los que no se les randomizan los objetos
   SPECIES_UNRAN_HELD_ITEMS = []
+
+  ADVANCED_BADGE_MOVES_BLACKLIST = [PBMoves::TACKLE, PBMoves::KARATECHOP, PBMoves::POUND, PBMoves::DOUBLESLAP, PBMoves::COMETPUNCH, PBMoves::PAYDAY,
+                                    PBMoves::SCRATCH, PBMoves::VICEGRIP, PBMoves::WINGATTACK, PBMoves::GUST, PBMoves::BIND, PBMoves::VINEWHIP, PBMoves::DOUBLEKICK, PBMoves::STOMP,
+                                    PBMoves::SANDATTACK, PBMoves::HORNATTACK, PBMoves::FURYATTACK, PBMoves::WRAP, PBMoves::TAILWHIP, PBMoves::POISONSTING, PBMoves::TWINEDDLE, PBMoves::LEER,
+                                    PBMoves::BITE, PBMoves::GROWL, PBMoves::SUPERSONIC, PBMoves::SONICBOOM, PBMoves::ACID, PBMoves::EMBER, PBMoves::WATERGUN, PBMoves::PSYBEAM,
+                                    PBMoves::BUBBLEBEAM, PBMoves::PECK, PBMoves::ABSORB, PBMoves::MEGADRAIN, PBMoves::STRINGSHOT, PBMoves::DRAGONRAGE, PBMoves::THUNDERSHOCK, PBMoves::ROCKTHROW,
+                                    PBMoves::CONFUSION, PBMoves::MEDITATE, PBMoves::RAGE, PBMoves::TELEPORT, PBMoves::DIG, PBMoves::MIMIC, PBMoves::DOUBLETEAM, PBMoves::HARDEN,
+                                    PBMoves::SMOKESCREEN, PBMoves::WITHDRAW, PBMoves::DEFENSECURL, PBMoves::LICK, PBMoves::SMOG, PBMoves::SLUDGE, PBMoves::BONECLUB, PBMoves::CLAMP,
+                                    PBMoves::SWIFT, PBMoves::CONSTRICT, PBMoves::KINESIS, PBMoves::POISONGAS, PBMoves::BUBBLE, PBMoves::FLASH, PBMoves::FURYSWIPES, PBMoves::SHARPEN,
+                                    PBMoves::STRUGGLE, PBMoves::CHATTERI, PBMoves::FLAMEWHEEL, PBMoves::POWDERSNOW, PBMoves::FAINTATTACK, PBMoves::SNORE, PBMoves::SPITUP, PBMoves::SWALLOW,
+                                    PBMoves::MUDSLAP, PBMoves::FALSESWIPE, PBMoves::SPARK, PBMoves::DRAGONBREATH, PBMoves::PURSUIT, PBMoves::METALCLAW, PBMoves::TWISTER, PBMoves::ROCKSMASH,
+                                    PBMoves::STRUGGLE, PBMoves::CHATTERI, PBMoves::FLAMEWHEEL, PBMoves::POWDERSNOW, PBMoves::FAINTATTACK, PBMoves::SNORE, PBMoves::SPITUP, PBMoves::SWALLOW,
+                                    PBMoves::BEATUP, PBMoves::INGRAIN, PBMoves::RECYCLE, PBMoves::IMPRISON, PBMoves::CAMOUFLAGE, PBMoves::MUDSPORT, PBMoves::ASTONISH, PBMoves::SING,
+                                    PBMoves::WATERSPORT, PBMoves::HOWL, PBMoves::MUDSHOT, PBMoves::POISONTAIL, PBMoves::COVET, PBMoves::MAGICALLEAF, PBMoves::SHOCKWAVE, PBMoves::WATERPULSE,
+                                    PBMoves::FLING, PBMoves::WORRYSEED, PBMoves::COPYCAT, PBMoves::MIRRORSHOT, PBMoves::MAGNETBOMB, PBMoves::BUGBITE, PBMoves::OMINOUSWIND, PBMoves::POWERSWAP,
+                                    PBMoves::GUARDSWAP, PBMoves::TELEKINESIS, PBMoves::MAGICROOM, PBMoves::SMACKDOWN, PBMoves::AFTERYOU, PBMoves::ROUND, PBMoves::ECHOEDVOICE, PBMoves::ALLYSWITCH,
+                                    PBMoves::HEALPULSE, PBMoves::SKYDROP, PBMoves::QUASH, PBMoves::WORKUP, PBMoves::DISARMINGVOICE, PBMoves::FAIRYWIND, PBMoves::CONFIDE, PBMoves::BURNUP]
+
+  # Minimo de medallas para que dejen de salir los movimientos de la blacklist de arriba 
+  WEAK_BLACKLIST_STARTING_BADGE = 4
+
 end
 
 class PokemonGlobalMetadata
@@ -273,7 +298,7 @@ class PokemonGlobalMetadata
                 :last_used_id, :random_abs_pokes, :random_encounter_table,
                 :wild_paused, :dont_randomize, :wild_held_items,
                 :reviving_fossil, :fossil_species, :pause_random_species,
-                :ev_train, :refreshed_moves
+                :ev_train, :refreshed_moves, :semi_random
   alias random_abil_init initialize
   def initialize
     random_abil_init
@@ -291,6 +316,17 @@ def toggle_random_moves
     $PokemonGlobal.enable_random_moves = RandomizedChallenge::RANDOM_MOVES_DEFAULT_VALUE
   end
   $PokemonGlobal.enable_random_moves = !$PokemonGlobal.enable_random_moves
+end
+
+def semi_random_mode?
+  random_enabled? && $PokemonGlobal.semi_random ? true : false
+end
+
+def toggle_semi_random
+  if $PokemonGlobal.semi_random.nil?
+    $PokemonGlobal.semi_random = RandomizedChallenge::SEMI_RANDOM_DEFAULT_VALUE
+  end
+  $PokemonGlobal.semi_random = !$PokemonGlobal.semi_random
 end
 
 def progressive_random_on?
@@ -403,6 +439,8 @@ def config_options
   random_items_enabled? ? commands.push(_INTL('[X] Randomizar objetos')) : commands.push(_INTL('[  ] Randomizar objetos'))
 
   random_held_items_enabled? ? commands.push(_INTL('[X] Randomizar objetos de salvajes')) : commands.push(_INTL('[  ] Randomizar objetos de salvajes'))
+  
+  semi_random_mode? ? commands.push(_INTL('[X] Modo Semi Random')) : commands.push(_INTL('[  ] Modo Semi Random'))
 
   commands
 end
@@ -427,6 +465,8 @@ def change_config(index)
     toggle_random_items
   when 8
     toggle_random_held_items
+  when 9
+    toggle_semi_random
   end
 end
 
@@ -455,6 +495,12 @@ def enable_random
   return unless $game_switches
 
   reset_abilities
+  
+  if !semi_random_mode?
+    $PokemonGlobal.enable_random_tm_compat = RandomizedChallenge::RANDOM_TM_COMPAT_DEFAULT_VALUE
+    $PokemonGlobal.random_evos = RandomizedChallenge::RANDOM_EVOS_DEFAULT_VALUE
+    $PokemonGlobal.random_evos_similar_bst = RandomizedChallenge::RANDOM_EVOS_SIMILAR_BST_DEFAULT_VALUE
+    $PokemonGlobal.enable_random_types = RandomizedChallenge::RANDOM_TYPES_DEFAULT_VALUE
   if $PokemonGlobal.enable_random_moves.nil?
     $PokemonGlobal.enable_random_moves = RandomizedChallenge::RANDOM_MOVES_DEFAULT_VALUE
   end
@@ -467,13 +513,15 @@ def enable_random
                                            :NO_RANDOM
                                          end
   end
+                                       
+    enable_random_items
+  end
+  
+
   if $PokemonGlobal.progressive_random.nil?
     $PokemonGlobal.progressive_random = RandomizedChallenge::PROGRESSIVE_RANDOM_DEFAULT_VALUE
   end
-  $PokemonGlobal.enable_random_tm_compat = RandomizedChallenge::RANDOM_TM_COMPAT_DEFAULT_VALUE
-  $PokemonGlobal.random_evos = RandomizedChallenge::RANDOM_EVOS_DEFAULT_VALUE
-  $PokemonGlobal.random_evos_similar_bst = RandomizedChallenge::RANDOM_EVOS_SIMILAR_BST_DEFAULT_VALUE
-  $PokemonGlobal.enable_random_types = RandomizedChallenge::RANDOM_TYPES_DEFAULT_VALUE
+
   $PokemonGlobal.random_types = {}
   $PokemonGlobal.given_tm_moves = []
   $PokemonGlobal.wild_paused = false
@@ -482,7 +530,8 @@ def enable_random
   $PokemonGlobal.pause_random_species = false
   $PokemonGlobal.ev_train = false
   generate_random_starters
-  enable_random_items
+  
+  
   $game_switches[RandomizedChallenge::SWITCH] = true
 end
 
@@ -698,14 +747,43 @@ def check_tm_move_in_bag(move)
   false
 end
 
-def invalid_move?(progressive, move, move_exists = false, power = 0, for_tm = false, types=[])
-  move = move.id if move.is_a?(PBMove)
-  movedata = PBMoveData.new(move)
+def invalid_move?(progressive, move, move_exists = false, power = 0, for_tm = false, types = [])
+  # Extract move ID if a PBMove object was passed
+  move_id = move.is_a?(PBMove) ? move.id : move
+  move_data = PBMoveData.new(move_id)
 
-  return true if !movedata || !movedata.totalpp || !PBMoves.getName(move) || PBMoves.getName(move) == ''
-  return true if !types.empty? && !types.any? { |type| isConst?(movedata.type, PBTypes, type) }
-  given_tm = for_tm && RandomizedChallenge::RANDOMIZE_TM_MOVES && ($PokemonGlobal.given_tm_moves.include?(move) || check_tm_move_in_bag(move))
-  ((progressive && power > 0 && movedata.basedamage > power) || RandomizedChallenge::MOVEBLACKLIST.include?(move) || move_exists || given_tm) ? true : false
+  # Check if move data is invalid or incomplete
+  return true if move_data.nil?
+  return true if RandomizedChallenge::MOVEBLACKLIST.include?(move_id)
+  
+  move_name = PBMoves.getName(move_id)
+  return true if move_name.nil? || move_name.empty?
+
+  # Check if move type matches the allowed types (if types filter is provided)
+  if !types.empty?
+    has_matching_type = types.any? { |type| isConst?(move_data.type, PBTypes, type) }
+  end
+
+  if RandomizedChallenge::ADVANCED_BADGE_MOVES_BLACKLIST.include?(move_id) && $Trainer && $Trainer.numbadges > RandomizedChallenge::WEAK_BLACKLIST_STARTING_BADGE
+    return true
+  end
+
+  # Check if this TM move was already given in randomized mode
+  is_already_given_tm = for_tm && 
+                        RandomizedChallenge::RANDOMIZE_TM_MOVES && 
+                        ($PokemonGlobal.given_tm_moves.include?(move_id) || 
+                         check_tm_move_in_bag(move_id))
+
+  # Check if move exceeds power limit in progressive mode
+  exceeds_power_limit = progressive && power > 0 && move_data.basedamage > power
+
+  # Move is invalid if any of these conditions are true
+  return true if exceeds_power_limit
+  return true if move_exists
+  return true if !types.empty? && !has_matching_type
+  return true if is_already_given_tm && for_tm
+
+  false
 end
 
 def find_valid_move(progressive = false, power = 0, for_tm = false, movelist = nil, types=[])
@@ -805,6 +883,7 @@ class PokeBattle_Pokemon
 
   alias wildHoldItems_random wildHoldItems
   def wildHoldItems
+    return wildHoldItems_random if semi_random_mode?
     return wildHoldItems_random unless random_held_items_enabled? #|| RandomizedChallenge::SPECIES_UNRAN_HELD_ITEMS.include?(@species)
     if $PokemonGlobal.wild_held_items && $PokemonGlobal.wild_held_items[@species]
       return $PokemonGlobal.wild_held_items[@species]
@@ -824,6 +903,7 @@ class PokeBattle_Pokemon
   alias type2_random type2
 
   def type1
+    return type1_random if semi_random_mode?
     return type1_random unless random_enabled? && random_types_enabled?
 
     # Ensure that a random type is generated and stored if it doesn't exist
@@ -836,6 +916,7 @@ class PokeBattle_Pokemon
   end
 
   def type2
+    return type2_random if semi_random_mode?
     return type2_random unless random_enabled? && random_types_enabled?
 
     # Ensure that the second type is set, either the same as type1 or different
@@ -857,6 +938,7 @@ class PokeBattle_Pokemon
   end
 
   def isCompatibleWithMove?(move)
+    return pbSpeciesCompatible?(species, move) if semi_random_mode?
     return pbSpeciesCompatible?(species, move) unless random_enabled? && random_tm_compat_on?
 
     # RAND TM
@@ -922,6 +1004,9 @@ class PokeBattle_Pokemon
   alias random_getAbilityList getAbilityList
   def getAbilityList
     ret = random_getAbilityList
+    
+    return ret if semi_random_mode?
+    
     if $PokemonGlobal.random_abs_pokes && $PokemonGlobal.random_abs_pokes[@id]
       return $PokemonGlobal.random_abs_pokes[@id]
     end
@@ -938,6 +1023,7 @@ class PokeBattle_Pokemon
 
   alias random_getMoveList getMoveList
   def getMoveList
+    return random_getMoveList if semi_random_mode?
     return random_getMoveList unless random_enabled? && random_moves_on?
 
     different_moves = MultipleForms.hasFunction?(self, 'getMoveList')
@@ -1026,7 +1112,7 @@ def pbCheckEvolutionEx(pokemon)
 
   ret = -1
   pbGetEvolvedFormData(pokemon.species).each do |form|
-    if random_enabled? && random_evos_on?
+    if random_enabled? && random_evos_on? && !semi_random_mode?
       evo = random_evo(pokemon, form[2])
       ret = yield pokemon, form[0], form[1], evo # form[2]
     else
@@ -1041,6 +1127,13 @@ alias pbLoadTrainer_random pbLoadTrainer
 def pbLoadTrainer(trainerid, trainername, partyid = 0)
   return pbLoadTrainer_random(trainerid, trainername, partyid) if !random_enabled?
   resume_wild_species
+  
+  if semi_random_mode?
+    pause_random
+    original_trainer = pbLoadTrainer_random(trainerid, trainername, partyid)
+    resume_random
+    return original_trainer
+  end
 
   if RandomizedChallenge::UNRANDOMIZABLE_TRAINERS.include?(trainerid) || RandomizedChallenge::UNRANDOMIZABLE_TRAINER_POKEMON[trainerid] || ev_train?
     pause_random_species
@@ -1310,7 +1403,7 @@ class PokemonEvolutionScene
     prev_species = @pokemon.species
     prev_level = @pokemon.level
     pbEvolution_random(cancancel)
-    if random_evos_on? && @pokemon.species != prev_species && @pokemon.level != prev_level
+    if !semi_random_mode? && random_evos_on? && @pokemon.species != prev_species && @pokemon.level != prev_level
       @pokemon.level = prev_level
       @pokemon.form = @pokemon.form
       pbSeenForm(@pokemon)
