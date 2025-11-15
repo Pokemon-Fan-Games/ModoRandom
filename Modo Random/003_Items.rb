@@ -296,7 +296,7 @@ module RandomizedChallenge
 
   # Add missing helper methods
   def self.should_randomize_gifted_items?
-    GIFTED_POKEMON_CAN_HAVE_ITEMS && enabled? && randomize_held_items?
+    GIFTED_POKEMON_CAN_HAVE_ITEMS && enabled? && randomize_items? ? true : false
   end
 
   def self.find_available_tm_from_allowlist
@@ -361,7 +361,7 @@ module RandomizedChallenge
   private
   
   def self.should_give_random_item?
-    return false unless GIFTED_POKEMON_CAN_HAVE_ITEMS && enabled? && randomize_held_items?
+    return false unless GIFTED_POKEMON_CAN_HAVE_ITEMS && enabled? && randomize_items?
     
     chance = GIFTED_POKEMON_ITEM_PROBABILITY.between?(0, 100) ? GIFTED_POKEMON_ITEM_PROBABILITY : 15
     rand < (chance / 100.0)

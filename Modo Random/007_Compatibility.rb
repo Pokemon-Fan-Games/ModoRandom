@@ -120,11 +120,13 @@ if PluginManager.installed?("Trade Expert") && defined?(TradeExpert)
   end
 end
 
-alias pbStartRadar_randomized pbStartRadar
-def pbStartRadar
-  return pbStartRadar_randomized if !RandomizedChallenge.enabled? || !RandomizedChallenge.randomize_pokemon? || RandomizedChallenge.consistent_wild_encounters?
-  pbMessage(_INTL('En el modo random donde los Pokémon de las rutas son 100% aleatorios el busca salvajes no mostrará información correcta'))
-  return
+if defined?(pbStartRadar)
+  alias pbStartRadar_randomized pbStartRadar
+  def pbStartRadar
+    return pbStartRadar_randomized if !RandomizedChallenge.enabled? || !RandomizedChallenge.randomize_pokemon? || RandomizedChallenge.consistent_wild_encounters?
+    pbMessage(_INTL('En el modo random donde los Pokémon de las rutas son 100% aleatorios el busca salvajes no mostrará información correcta'))
+    return
+  end
 end
 
 class EncounterList_Scene
