@@ -283,6 +283,8 @@ module RandomizedChallenge
     tms = $PokemonGlobal.tm_mart[id]
     return tms if tms
     tms = get_random_tms(amount)
+    tms.delete_if { |tm| !GameData::Item.get(tm).is_TM? }
+    tms.map! { |tm| GameData::Item.get(tm).move = RandomizedChallenge.random_move_for_tm; tm }
     # randomize_tm_moves(tms, types) if RANDOMIZE_TM_MOVES
     $PokemonGlobal.tm_mart[id] = tms
     return tms

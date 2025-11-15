@@ -228,7 +228,14 @@ module RandomizedChallenge
     return {} unless File.exist?(file_path)
     
     begin
-      File.open(file_path, 'rb') { |f| Marshal.load(f) }
+      data = File.open(file_path, 'rb') { |f| Marshal.load(f) }
+      # Normalize data: ensure all move references are IDs, not objects
+      data.each do |species, compatibility_array|
+        compatibility_array.each do |item|
+          item[0] = item[0].id if item[0].respond_to?(:id)
+        end
+      end
+      data
     rescue
       return {}
     end
@@ -295,7 +302,12 @@ end
 def random_species(with_mega = false)
   species_list = GameData::Species.keys
   if with_mega
-    species_list = species_list.select { |s| GameData::Species.get(s).mega_stone }
+    species_list = species_list.select { |s| 
+      species_data = GameData::Species.get(s)
+      species_data.mega_stone && 
+        (![:ALCREMIE, :PIKACHU, :EEVEE].include?(species_data.species) || 
+         [:PIKACHU_16, :EEVEE_1, :ALCREMIE].include?(species_data.id))
+    }
     species = species_list.sample
     species = GameData::Species.get(species).species
   else
@@ -571,10 +583,12 @@ class Pokemon
   def compatible_with_move?(move_id)
     return compatible_with_move_random?(move_id) unless RandomizedChallenge.enabled? && RandomizedChallenge.tm_compat_on?
 
-    move_id = move_id.is_a?(GameData::Move) ? move_id.id : move_id
+    # Ensure move_id is always an ID, not an object
+    move_id = move_id.id if move_id.respond_to?(:id)
+
     # RAND Compatibility #TM - Use in-memory storage
     $PokemonGlobal.tm_compatibility_random ||= {}
-    species_compatibility = $PokemonGlobal.tm_compatibility_random[species] ||= []
+    species_compatibility = $PokemonGlobal.tm_compatibility_random[self.species] ||= []
 
     existing_compatibility = species_compatibility.find { |item| item[0] == move_id }
     return existing_compatibility[1] if existing_compatibility
@@ -585,7 +599,7 @@ class Pokemon
     else
       is_compatible = rand(100) < 40
     end
-    $PokemonGlobal.tm_compatibility_random[species] << [move_id, is_compatible]
+    $PokemonGlobal.tm_compatibility_random[self.species] << [move_id, is_compatible]
     RandomizedChallenge.save_tm_compatibility_data($PokemonGlobal.tm_compatibility_random)
     is_compatible
   end
@@ -627,13 +641,32 @@ def generate_random_starters(type = nil)
     end
     RandomizedChallenge.resume_random_species
   else
-    RandomizedChallenge::RANDOM_STARTER_VARIABLES.each_with_index do |var, i|
-      pokemon = Pokemon.new(:PIKACHU, 5)
-      pokemon.randomized = true
-      pbSet(var, pokemon)
+    if type
+      species_list = GameData::Species.keys
+      species_list = species_list.select { |s| 
+        species_data = GameData::Species.get(s)
+        species_data.types.include?(type)
+      }
+      RandomizedChallenge.pause_random_species
+      RandomizedChallenge::RANDOM_STARTER_VARIABLES.each_with_index do |var, i|
+        species = species_list.sample
+        # Remove the selected species and its evolution chain from the list
+        species_data = GameData::Species.get(species)
+        evolution_chain = species_data.get_family_species
+        species_list.delete_if { |s| evolution_chain.include?(GameData::Species.get(s).species) }
+        pokemon = Pokemon.new(species, 5)
+        pokemon.randomized = true
+        pbSet(var, pokemon)
+      end
+      RandomizedChallenge.resume_random_species
+    else
+      RandomizedChallenge::RANDOM_STARTER_VARIABLES.each_with_index do |var, i|
+        pokemon = Pokemon.new(:PIKACHU, 5)
+        pokemon.randomized = true
+        pbSet(var, pokemon)
+      end
     end
   end
-
 end
 
 def get_starter(index = 0, var = nil)
@@ -676,7 +709,11 @@ class PokemonEncounters
         @encounter_tables[enc_type].map! do |enc|
           chance, original_species_id, min_level, max_level = enc
           original_species = GameData::Species.get(original_species_id)
-          new_species = find_similar_bst_species(original_species, 0.12) # 12% margin
+          if RandomizedChallenge.progressive?
+            new_species = find_similar_bst_species(original_species, 0.12) # 12% margin
+          else
+            new_species = valid_random_species
+          end
           [chance, new_species.id, min_level, max_level]
         end
         $PokemonGlobal.random_encounter_table ||= {}
@@ -734,7 +771,11 @@ class PokemonEncounters
     enc_list.map do |enc|
       chance, original_species_id, min_level, max_level = enc
       original_species = GameData::Species.get(original_species_id)
-      new_species = find_similar_bst_species(original_species, 0.12) # 12% margin
+      if RandomizedChallenge.progressive?
+        new_species = find_similar_bst_species(original_species, 0.12) # 12% margin
+      else
+        new_species = valid_random_species
+      end
       [chance, new_species.id, min_level, max_level]
     end
   end
@@ -779,8 +820,17 @@ module Game
           $PokemonGlobal.tm_compatibility_random = RandomizedChallenge.load_tm_compatibility_data
         else
           # For old saves, persist current in-memory data to the new file
+          # First normalize any existing data
+          if $PokemonGlobal.tm_compatibility_random
+            $PokemonGlobal.tm_compatibility_random.each do |species, compatibility_array|
+              compatibility_array.each do |item|
+                item[0] = item[0].id if item[0].respond_to?(:id)
+              end
+            end
+          end
           RandomizedChallenge.save_tm_compatibility_data($PokemonGlobal.tm_compatibility_random || {})
         end
+
       end
     end
   end

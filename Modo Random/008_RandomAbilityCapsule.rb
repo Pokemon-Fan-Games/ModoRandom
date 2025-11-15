@@ -34,7 +34,7 @@ class Pokemon
     
     # Replace each ability in the original list with a random one
     original_list.each do |abil_data|
-      ability_id, ability_index = abil_data
+      _, ability_index = abil_data
       random_ability = abilities.sample
       new_ability_list.push([random_ability, ability_index])
     end
@@ -43,7 +43,7 @@ class Pokemon
     $PokemonGlobal.random_abs_pokes[@id] = new_ability_list
     
     # Force the Pokémon to recalculate its ability with the new randomized set
-    old_index = @ability_index
+    # old_index = @ability_index
     @ability = nil
     @ability_index = nil
     

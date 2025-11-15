@@ -27,7 +27,11 @@ def pbLoadTrainer(tr_type, tr_name, tr_version = 0)
   if RandomizedChallenge.randomize_trainers? &&
      RandomizedChallenge.remember_trainer_teams? &&
      $PokemonGlobal.random_trainer_teams.has_key?(trainer_data.id)
-    return $PokemonGlobal.random_trainer_teams[trainer_data.id]
+    stored_trainer = $PokemonGlobal.random_trainer_teams[trainer_data.id]
+    # Create a deep copy so we don't modify the stored version
+    trainer = Marshal.load(Marshal.dump(stored_trainer))
+    trainer.party.each { |pkmn| pkmn.heal }
+    return trainer
   end
 
   # Estado previo del mapeo global
