@@ -82,7 +82,23 @@ end
 module MoveRandomizer
   # Progressive difficulty thresholds
   EARLY_GAME_BADGES = 3
-  LATE_GAME_BADGES = 6
+  LATE_GAME_BADGES = 4
+  LATE_GAME_BANNED_MOVES = Set.new([:TACKLE, :KARATECHOP, :POUND, :DOUBLESLAP, :COMETPUNCH, :PAYDAY,
+                            :SCRATCH, :VICEGRIP, :WINGATTACK, :GUST, :BIND, :VINEWHIP, :DOUBLEKICK, :STOMP,
+                            :SANDATTACK, :HORNATTACK, :FURYATTACK, :WRAP, :TAILWHIP, :POISONSTING, :TWINEDDLE, :LEER,
+                            :BITE, :GROWL, :SUPERSONIC, :SONICBOOM, :ACID, :EMBER, :WATERGUN, :PSYBEAM,
+                            :BUBBLEBEAM, :PECK, :ABSORB, :MEGADRAIN, :STRINGSHOT, :DRAGONRAGE, :THUNDERSHOCK, :ROCKTHROW,
+                            :CONFUSION, :MEDITATE, :RAGE, :TELEPORT, :DIG, :MIMIC, :DOUBLETEAM, :HARDEN,
+                            :SMOKESCREEN, :WITHDRAW, :DEFENSECURL, :LICK, :SMOG, :SLUDGE, :BONECLUB, :CLAMP,
+                            :SWIFT, :CONSTRICT, :KINESIS, :POISONGAS, :BUBBLE, :FLASH, :FURYSWIPES, :SHARPEN,
+                            :STRUGGLE, :CHATTER, :FLAMEWHEEL, :POWDERSNOW, :FAINTATTACK, :SNORE, :SPITUP, :SWALLOW,
+                            :MUDSLAP, :FALSESWIPE, :SPARK, :DRAGONBREATH, :PURSUIT, :METALCLAW, :TWISTER, :ROCKSMASH,
+                            :STRUGGLE, :CHATTERI, :FLAMEWHEEL, :POWDERSNOW, :FAINTATTACK, :SNORE, :SPITUP, :SWALLOW,
+                            :BEATUP, :INGRAIN, :RECYCLE, :IMPRISON, :CAMOUFLAGE, :MUDSPORT, :ASTONISH, :SING,
+                            :WATERSPORT, :HOWL, :MUDSHOT, :POISONTAIL, :COVET, :MAGICALLEAF, :SHOCKWAVE, :WATERPULSE,
+                            :FLING, :WORRYSEED, :COPYCAT, :MIRRORSHOT, :MAGNETBOMB, :BUGBITE, :OMINOUSWIND, :POWERSWAP,
+                            :GUARDSWAP, :TELEKINESIS, :MAGICROOM, :SMACKDOWN, :AFTERYOU, :ROUND, :ECHOEDVOICE, :ALLYSWITCH,
+                            :HEALPULSE, :SKYDROP, :QUASH, :WORKUP, :DISARMINGVOICE, :FAIRYWIND, :BRINCO, :CONFIDE, :BURNUP, :DOUBLESHOCK])
   POWER_THRESHOLD = 70
   MAX_ATTEMPTS = 1000  # Prevent infinite loops
 end
@@ -147,7 +163,7 @@ def find_valid_move(min_damage = 0, types = [], for_tm = false, progressive = Ra
         valid = power <= MoveRandomizer::POWER_THRESHOLD
       when MoveRandomizer::LATE_GAME_BADGES..Float::INFINITY
         # Late game: prefer stronger moves
-        valid = power >= MoveRandomizer::POWER_THRESHOLD
+        valid = !MoveRandomizer::LATE_GAME_BANNED_MOVES.include?(move.id)
       else
         # Mid game: any power level is fine
         valid = true
