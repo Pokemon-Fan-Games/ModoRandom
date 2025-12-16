@@ -21,4 +21,4 @@ jobs:
         files: "ModoRandom.zip"
         generate_release_notes: true
         make_latest: true
-        token: ${{ secrets.RELEASE_TOKEN_FANGAMES }}
+        token: ${{ secrets.RELEASE_TOKEN_PLUGINS }}
