@@ -131,9 +131,8 @@ module RandomizedChallenge
 
   # Pokémon que no pueden salir en el modo Random. Añade aquí los que no quieres que salgan
   # con el mismo formato de los que ya aparecen.
-  BLACKLISTED_POKEMON = [:ARCEUS, :MEWTWO_5, :GRENINJA_1, :GRENINJA_2,
-                         :BASCULIN_2,  :BASCULIN_3,
-                         :CRAMORANT_1, :CRAMORANT_2]
+  BLACKLISTED_POKEMON = [:ARCEUS_9, :MEWTWO_5, :GRENINJA_1, :GRENINJA_2,
+                         :CRAMORANT_1, :CRAMORANT_2, :SILVALLY_9]
 
   # Pokemon que no se randomizarán
   UNRANDOMIZABLE_POKEMON = [:MEWTWO_5]
@@ -244,7 +243,9 @@ module RandomizedChallenge
                      :RAZZBERRY, :BLUKBERRY, :NANABBERRY, :WEPEARBERRY, :CORNNBERRY, :MAGOSTBERRY, :RABUTABERRY, :NOMELBERRY, :SPELONBERRY,
                      :PAMTREBERRY, :WATMELBERRY, :DURINBERRY, :BELUEBERRY, :ABILITYURGE, :GIMMIGHOULCOIN,
                      :SACREDASH, :METALALLOY, :MASTERPIECETEACUP, :UNREMARKABLETEACUP, :SYRUPYAPPLE, :LEADERSCREST, :MALICIOUSARMOR, :AUSPICIOUSARMOR,
-                     :GALARICACUFF, :SWEETAPPLE, :TARTAPPLE, :CHIPPEDPOT, :CRACKEDPOT, :EXPSHARE ]
+                     :GALARICACUFF, :SWEETAPPLE, :TARTAPPLE, :CHIPPEDPOT, :CRACKEDPOT, :EXPSHARE,
+                     :EXPCANDYXS, :EXPCANDYS, :EXPCANDYM, :EXPCANDYL, :EXPCANDYXL, :UNRARECANDY,
+                     :TINYBAMBOOSHOOT, :BIGBAMBOOSHOOT]
 
   # Lista de objetos que no podrán salir como objetos equipados en salvajes
   HELD_ITEM_BLACK_LIST = []
@@ -657,6 +658,8 @@ module RandomizerConfigurator
   end
 
   def ability_mode=(mode = RandomizedChallenge::RANDOM_ABILITY_METHOD)
+    current_mode = RandomizedChallenge.ability_mode
+    return if current_mode == mode
     case mode
     when :FULLRANDOM
       $game_switches[RandomizedChallenge::ABILITY_RANDOMIZER_SWITCH] = true
@@ -672,6 +675,7 @@ module RandomizerConfigurator
       $game_switches[RandomizedChallenge::ABILITY_SWAP_RANDOMIZER_SWITCH] = false
       $game_switches[RandomizedChallenge::ABILITY_SEMI_RANDOMIZER_SWITCH] = false
     end
+    RandomizedChallenge::Ability.reset_randomized_data
   end
 
   def toggle_remember_trainer_teams

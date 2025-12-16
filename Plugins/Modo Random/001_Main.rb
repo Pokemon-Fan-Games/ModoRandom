@@ -103,7 +103,7 @@ module RandomizedChallenge
     $game_switches[RandomizedChallenge::ABILITY_RANDOMIZER_SWITCH] = false
     $game_switches[RandomizedChallenge::ABILITY_SWAP_RANDOMIZER_SWITCH] = false
     $game_switches[RandomizedChallenge::ABILITY_SEMI_RANDOMIZER_SWITCH] = false
-    RandomizedChallenge::Ability.reset_randomized_data
+    RandomizerConfigurator.ability_mode = :NO
     $PokemonGlobal.disable_random_params
     $PokemonGlobal.random_enabled = false
   end
@@ -297,6 +297,17 @@ def min_bst_cap(badge_count = nil)
 
   # Si el jugador tiene mas medallas que las definidas en min_caps se devuelve el valor de la mas alta
   badge_count > max_key ? min_caps[max_key] : min_caps.fetch(badge_count, 0)
+end
+
+def find_badge_count_for_level(level)
+  # Use the BADGES_MAX_LEVELS hash from RandomizedChallenge config
+  badge_count = 0
+  RandomizedChallenge::BADGES_MAX_LEVELS.each do |badges, cap_level|
+    badge_count = badges if level <= cap_level
+    break if level <= cap_level
+  end
+  
+  badge_count
 end
 
 def random_species(with_mega = false)
@@ -570,9 +581,9 @@ class Pokemon
     moves.each do |item|
       level = item[0]
       if RandomizedChallenge.prioritize_stab_in_learnset? && rand(100) < RandomizedChallenge::STAB_IN_LEARNSET
-        move = find_valid_move(0, self.types)
+        move = find_valid_move(0, self.types, false, RandomizedChallenge.progressive?, find_badge_count_for_level(level))
       else
-        move = find_valid_move
+        move = find_valid_move(0, [], false, RandomizedChallenge.progressive?, find_badge_count_for_level(level))
       end
       $PokemonGlobal.random_moves[species][form_key] << [level, move]
     end

@@ -140,8 +140,8 @@ end
 # @param for_tm [Boolean] whether this is for a TM move
 # @param progressive [Boolean] whether to use progressive difficulty
 # @return [GameData::Move, nil] valid move or nil if none found
-def find_valid_move(min_damage = 0, types = [], for_tm = false, progressive = RandomizedChallenge.progressive?)
-  badge_count = $player&.badge_count || 0
+def find_valid_move(min_damage = 0, types = [], for_tm = false, progressive = RandomizedChallenge.progressive?, badge_count = $player.badge_count)
+  badge_count ||= $player&.badge_count || 0
   attempts = 0
   move = nil
   loop do

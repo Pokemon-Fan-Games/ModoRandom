@@ -44,16 +44,25 @@ class Pokemon
   def get_random_evo(_current_species, new_species)
     species_list = GameData::Species.keys
     
-    return nil if species_list.empty?  # Safety check
-    
+    # Filter out mega species from rand_species - retry if needed
+    attempts = 0
+    loop do
+      rand_species = random_species
+      rand_species_data = GameData::Species.get(rand_species)
+      next if !rand_species_data  # Retry if invalid species
+      break if rand_species_data.form == 0 || !rand_species_data.form_name&.downcase&.include?("mega")
+      attempts += 1
+      break if attempts >= 100  # Prevent infinite loop
+    end
+
     # If no special constraints are enabled, return any random species
     if !RandomizedChallenge.evolutions_similar_bst_on? && !RandomizedChallenge.evos_respect_restrictions?
-      return species_list.sample
+      return rand_species
     end
     
     # Get target species data once to avoid repeated lookups
     target_species_data = GameData::Species.get(new_species)
-    return species_list.sample unless target_species_data  # Fallback if target invalid
+    return rand_species unless target_species_data  # Fallback if target invalid
     
     target_bst = target_species_data.base_stats.values.sum if RandomizedChallenge.evolutions_similar_bst_on?
     
@@ -61,6 +70,9 @@ class Pokemon
     filtered_species = species_list.filter_map do |species|
       species_data = GameData::Species.get(species)
       next unless species_data  # Skip invalid species
+      
+      # Skip mega species
+      next if species_data.form != 0 && species_data.form_name&.downcase&.include?("mega")
       
       # Check BST similarity constraint
       if RandomizedChallenge.evolutions_similar_bst_on?
@@ -81,8 +93,21 @@ class Pokemon
       species  # Include this species in the filtered list
     end
     
+    # Apply multiple form pool filtering to reduce probability of species with many forms
+    unless filtered_species.empty?
+      filtered_species = filtered_species.filter_map do |species|
+        species_id = GameData::Species.get(species).species
+        rand_count = RandomizedChallenge::MULTIPLE_FORM_POOL[species_id]
+        rand_val = rand(rand_count)
+        if rand_count && rand_val != 0
+          next if RandomizedChallenge::MULTIPLE_FORM_POOL.has_key?(species_id)
+        end
+        species
+      end
+    end
+    
     # Return random species from filtered list, or fallback to any species
-    filtered_species.empty? ? species_list.sample : filtered_species.sample
+    filtered_species.empty? ? rand_species : filtered_species.sample
   end
   
   # Internal method to check and process evolution logic

@@ -142,6 +142,13 @@ module RandomizedChallenge
 
     return nil if @@filtered_items[cache_key].empty?
     item = GameData::Item.get(@@filtered_items[cache_key].sample)
+    if rand(100) < 70 && item.is_mega_stone?
+      # Reroll to avoid too many mega stones
+      loop do
+        item = GameData::Item.get(@@filtered_items[cache_key].sample)
+        break if item && !item.is_mega_stone?
+      end
+    end
 
     if (item.is_TM? || item.is_TR?) && $bag.has?(item)
       return fallback_to_random_item
@@ -296,7 +303,7 @@ module RandomizedChallenge
 
   # Add missing helper methods
   def self.should_randomize_gifted_items?
-    GIFTED_POKEMON_CAN_HAVE_ITEMS && enabled? && randomize_items? ? true : false
+    GIFTED_POKEMON_CAN_HAVE_ITEMS && enabled? && randomize_held_items?
   end
 
   def self.find_available_tm_from_allowlist
@@ -361,7 +368,7 @@ module RandomizedChallenge
   private
   
   def self.should_give_random_item?
-    return false unless GIFTED_POKEMON_CAN_HAVE_ITEMS && enabled? && randomize_items?
+    return false unless GIFTED_POKEMON_CAN_HAVE_ITEMS && enabled? && randomize_held_items?
     
     chance = GIFTED_POKEMON_ITEM_PROBABILITY.between?(0, 100) ? GIFTED_POKEMON_ITEM_PROBABILITY : 15
     rand < (chance / 100.0)
