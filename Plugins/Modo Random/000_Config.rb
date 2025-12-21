@@ -144,7 +144,7 @@ module RandomizedChallenge
 
   # Lista de movimientos que no pueden aparecer en el modo Random.
   # Debes añadirlos con el nombre interno que aparece en el PBS moves.txt.
-  MOVEBLACKLIST = [:CHATTER, :DIG, :TELEPORT, :SONICBOOM, :DRAGONRAGE, :STRUGGLE]
+  MOVEBLACKLIST = [:CHATTER, :DIG, :TELEPORT, :SONICBOOM, :DRAGONRAGE, :STRUGGLE, :NIHILLIGHT]
 
   # Si el pokemon no tiene un movimiento con stab en su moveset base, hay una probabilidad de que se le añada uno
   # Este valor puede ir entre 1 y 100 o cualquier valor menor 1 para desactivarlo
@@ -201,10 +201,10 @@ module RandomizedChallenge
   # Lista de habilidades que no pueden aparecer en el modo Random.
   # Debes añadirlas con el nombre interno que aparece en el PBS abilities.txt.
   ABILITY_EXCLUSIONS = [
-    :PLUS, :MINUS, :WONDERGUARD, :FORECAST, :HARVEST, :HONEYGATHER,
+    :PLUS, :MINUS, :WONDERGUARD, :FORECAST, :HONEYGATHER,
     :BATTLEBOND, :HUNGERSWITCH, :SHIELDSDOWN, :SCHOOLING, :RKSSYSTEM, :POWERCONSTRUCT,
     :STANCECHANGE, :ZENMODE, :COMMANDER, :MULTITYPE, :GULPMISSILE, :ICEFACE, :ZEROTOHERO, :DISGUISE,
-    :COMATOSE, :SHIELDSDOWN, :TERASHIFT, :EMBODYASPECT, :EMBODYASPECT_1, :EMBODYASPECT_2, :EMBODYASPECT_3
+    :COMATOSE, :TERASHIFT, :EMBODYASPECT, :EMBODYASPECT_1, :EMBODYASPECT_2, :EMBODYASPECT_3
   ]
 
   # Especies a los que no se les randomizará nunca la habilidad

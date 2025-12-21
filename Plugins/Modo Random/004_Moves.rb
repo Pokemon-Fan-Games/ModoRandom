@@ -62,6 +62,9 @@ module GameData
       when "HitTwoTimes", "HitTwoTimesFlinchTarget", "HitTwoTimesPoisonTarget", "HitTwoTimesTargetThenTargetAlly"
         # Double hit moves
         @power * 2
+      when 'HitTenTimes'
+        # Ten hit moves
+        @power * 10
       else
         # For all other moves, return base power
         @power || 0
@@ -98,7 +101,8 @@ module MoveRandomizer
                             :WATERSPORT, :HOWL, :MUDSHOT, :POISONTAIL, :COVET, :MAGICALLEAF, :SHOCKWAVE, :WATERPULSE,
                             :FLING, :WORRYSEED, :COPYCAT, :MIRRORSHOT, :MAGNETBOMB, :BUGBITE, :OMINOUSWIND, :POWERSWAP,
                             :GUARDSWAP, :TELEKINESIS, :MAGICROOM, :SMACKDOWN, :AFTERYOU, :ROUND, :ECHOEDVOICE, :ALLYSWITCH,
-                            :HEALPULSE, :SKYDROP, :QUASH, :WORKUP, :DISARMINGVOICE, :FAIRYWIND, :BRINCO, :CONFIDE, :BURNUP, :DOUBLESHOCK])
+                            :HEALPULSE, :SKYDROP, :QUASH, :WORKUP, :DISARMINGVOICE, :FAIRYWIND, :BRINCO, :CONFIDE, :BURNUP, 
+                            :DOUBLESHOCK, :NIHILLIGHT])
   POWER_THRESHOLD = 70
   MAX_ATTEMPTS = 1000  # Prevent infinite loops
 end
