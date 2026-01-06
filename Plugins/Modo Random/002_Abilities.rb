@@ -1,9 +1,9 @@
 #-------------------------------------------------------------------------------
-# Habilidades
+# Abilities
 #-------------------------------------------------------------------------------
 
 #-------------------------------------------------------------------------------
-# Main module to handle radomization of abilities
+# Main module to handle randomization of abilities
 #-------------------------------------------------------------------------------
 
 module RandomizedChallenge::Ability
@@ -16,99 +16,93 @@ module RandomizedChallenge::Ability
     return default if RandomizedChallenge::SPECIES_WITHOUT_RANDOM_ABS.include?(key)
 
     # Load randomized data if exists
-    all_abils = self.get_randomized_data
-    ret = all_abils[key]
-    return ret[hidden ? :hidden : :base] if GameData::Species.exists?(key) && ret.is_a?(Hash)
-
-    default
+    all_abilities = self.get_randomized_data
+    ret = all_abilities[key]
+    return default unless GameData::Species.exists?(key) && ret.is_a?(Hash)
+    
+    ability_type = hidden ? :hidden : :base
+    return default unless ret[ability_type].is_a?(Array)
+    
+    ret[ability_type]
+  end
+  #-----------------------------------------------------------------------------
+  # Helper: Prepare shuffled ability pool
+  #-----------------------------------------------------------------------------
+  def self.prepare_shuffled_abilities
+    keys = GameData::Ability::DATA.keys.clone
+    shuffle_keys = keys.clone.shuffle
+    # Delete blacklisted abilities
+    RandomizedChallenge::ABILITY_EXCLUSIONS.each do |a|
+      shuffle_keys.delete(a)
+    end
+    shuffle_keys
+  end
+  #-----------------------------------------------------------------------------
+  # Helper: Assign abilities to a species
+  #-----------------------------------------------------------------------------
+  def self.assign_abilities_to_species(key, sp_data, shuffle_keys)
+    $randomized_data[:abilities][key] = { :base => [], :hidden => [] }
+    
+    # Use shuffle.take to avoid duplicate abilities on the same Pokemon
+    base_count = sp_data.real_abilities.length
+    hidden_count = sp_data.real_hidden_abilities.length
+    total_needed = base_count + hidden_count
+    
+    selected_abilities = shuffle_keys.shuffle.take(total_needed)
+    $randomized_data[:abilities][key][:base] = selected_abilities.take(base_count)
+    $randomized_data[:abilities][key][:hidden] = selected_abilities.drop(base_count).take(hidden_count)
+  end
+  #-----------------------------------------------------------------------------
+  # Helper: Assign abilities for semi-randomized mode (evolutionary lines share abilities)
+  #-----------------------------------------------------------------------------
+  def self.assign_semi_randomized_abilities(shuffle_keys)
+    GameData::Species.each do |sp_data|
+      key = sp_data.id
+      next if $randomized_data[:abilities][key].is_a?(Hash)
+      
+      # Get abilities from first species in evolutionary line, or create new ones
+      first_species = sp_data.get_first_evo
+      if $randomized_data[:abilities][first_species].is_a?(Hash)
+        ability_hash = $randomized_data[:abilities][first_species]
+      else
+        assign_abilities_to_species(first_species, GameData::Species.get(first_species), shuffle_keys)
+        ability_hash = $randomized_data[:abilities][first_species]
+      end
+      
+      # Apply the same abilities to all Pokemon in the evolutionary line
+      sp_data.get_evolutionary_line.each do |pkmn|
+        next if $randomized_data[:abilities][pkmn].is_a?(Hash)
+        $randomized_data[:abilities][pkmn] = { :base => [], :hidden => [] }
+        $randomized_data[:abilities][pkmn][:base] = ability_hash[:base].clone
+        $randomized_data[:abilities][pkmn][:hidden] = ability_hash[:hidden].clone
+      end
+    end
+  end
+  #-----------------------------------------------------------------------------
+  # Helper: Assign abilities for fully randomized mode
+  #-----------------------------------------------------------------------------
+  def self.assign_fully_randomized_abilities(shuffle_keys)
+    GameData::Species.each do |sp_data|
+      key = sp_data.id
+      assign_abilities_to_species(key, sp_data, shuffle_keys)
+    end
   end
   #-----------------------------------------------------------------------------
   # Load all randomized abilities
   #-----------------------------------------------------------------------------
   def self.get_randomized_data
     $randomized_data ||= {}
-
-    unless $randomized_data[:abilities].is_a?(Hash)
-      $randomized_data[:abilities] = {}
-      keys = GameData::Ability::DATA.keys.clone
-      shuffle_keys = keys.clone
-      5.times { shuffle_keys.shuffle! }
-      # Delete blacklisted abilities
-      RandomizedChallenge::ABILITY_EXCLUSIONS.each do |a|
-        shuffle_keys.delete(a)
-      end
-      if $game_switches[RandomizedChallenge::ABILITY_SEMI_RANDOMIZER_SWITCH]
-        # Assign shuffled abilties to respective species
-        GameData::Species.each do |sp_data|
-          key = sp_data.id
-          next if $randomized_data[:abilities][key].is_a?(Hash)
-          first_species = sp_data.get_first_evo
-          if $randomized_data[:abilities][first_species].is_a?(Hash)
-            abil_hash = $randomized_data[:abilities][first_species]
-          else
-            $randomized_data[:abilities][key] = { :base => [], :hidden => [] }
-            sp_data.real_abilities.each_with_index do |abil, i|
-              $randomized_data[:abilities][key][:base][i] = shuffle_keys.sample
-            end
-            sp_data.real_hidden_abilities.each_with_index do |abil, i|
-              $randomized_data[:abilities][key][:hidden][i] = shuffle_keys.sample
-            end
-            abil_hash = $randomized_data[:abilities][key]
-          end
-          if !$randomized_data[:abilities][key].is_a?(Hash)
-            $randomized_data[:abilities][key] = { :base => [], :hidden => [] }
-            sp_data.real_abilities.each_with_index do |abil, i|
-              $randomized_data[:abilities][key][:base][i] = shuffle_keys.sample
-            end
-            sp_data.real_hidden_abilities.each_with_index do |abil, i|
-              $randomized_data[:abilities][key][:hidden][i] = shuffle_keys.sample
-            end
-          end
-          sp_data.get_evolutionary_line.each do |pkmn|
-            next if $randomized_data[:abilities][pkmn].is_a?(Hash)
-            $randomized_data[:abilities][pkmn] = { :base => [], :hidden => [] }
-            $randomized_data[:abilities][pkmn][:base] = abil_hash[:base].clone
-            $randomized_data[:abilities][pkmn][:hidden] = abil_hash[:hidden].clone
-          end
-        end
-      elsif 1 > 100 # Change the condition here to be whatever
-        # Shuffle abilities but keep blacklisted abilities unshuffled
-        shuffle_keys.each_with_index do |abil, i|
-          next if !RandomizedChallenge::ABILITY_EXCLUSIONS.include?(abil)
-          abil = shuffle_keys.delete_at(i)
-          shuffle_keys.insert(keys.index(abil), abil)
-        end
-        abil_hash = {}
-        keys.each_with_index do |key, idx|
-          abil_hash[key] = key
-          next if RandomizedChallenge::ABILITY_EXCLUSIONS.include?(key)
-          abil_hash[key] = shuffle_keys[idx]
-        end
-        # Assign shuffled abilties to respective species
-        GameData::Species.each do |sp_data|
-          key = sp_data.id
-          $randomized_data[:abilities][key] = { :base => [], :hidden => [] }
-          sp_data.real_abilities.each_with_index do |abil, i|
-            $randomized_data[:abilities][key][:base][i] = abil_hash[abil]
-          end
-          sp_data.real_hidden_abilities.each_with_index do |abil, i|
-            $randomized_data[:abilities][key][:hidden][i] = abil_hash[abil]
-          end
-        end
-      else
-        # Assign random abilities to each species
-        GameData::Species.each do |sp_data|
-          key = sp_data.id
-          $randomized_data[:abilities][key] = { :base => [], :hidden => [] }
-          sp_data.real_abilities.each_with_index do |abil, i|
-            $randomized_data[:abilities][key][:base][i] = shuffle_keys.sample
-          end
-          sp_data.real_hidden_abilities.each_with_index do |abil, i|
-            $randomized_data[:abilities][key][:hidden][i] = shuffle_keys.sample
-          end
-        end
-      end
+    return $randomized_data[:abilities] if $randomized_data[:abilities].is_a?(Hash)
+    
+    $randomized_data[:abilities] = {}
+    shuffle_keys = prepare_shuffled_abilities
+    
+    if $game_switches[RandomizedChallenge::ABILITY_SEMI_RANDOMIZER_SWITCH]
+      assign_semi_randomized_abilities(shuffle_keys)
+    else
+      assign_fully_randomized_abilities(shuffle_keys)
     end
+    
     $randomized_data[:abilities]
   end
   #-----------------------------------------------------------------------------
@@ -218,15 +212,11 @@ class Pokemon
   end
 
   def forced_ability?
-    return @forced_ability != nil
-  end
-
-  def forced_ability
-    return @forced_ability
+    !@forced_ability.nil?
   end
 
   def forced_ability=(value)
-    return if !GameData::Ability.exists?(value) && value != nil
+    return if !GameData::Ability.exists?(value) && !value.nil?
     @forced_ability = value
   end
 
