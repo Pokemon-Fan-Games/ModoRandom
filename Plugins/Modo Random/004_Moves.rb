@@ -85,7 +85,7 @@ end
 module MoveRandomizer
   # Progressive difficulty thresholds
   EARLY_GAME_BADGES = 3
-  LATE_GAME_BADGES = 4
+  LATE_GAME_BADGES = 5
   LATE_GAME_BANNED_MOVES = Set.new([:TACKLE, :KARATECHOP, :POUND, :DOUBLESLAP, :COMETPUNCH, :PAYDAY,
                             :SCRATCH, :VICEGRIP, :WINGATTACK, :GUST, :BIND, :VINEWHIP, :DOUBLEKICK, :STOMP,
                             :SANDATTACK, :HORNATTACK, :FURYATTACK, :WRAP, :TAILWHIP, :POISONSTING, :TWINEDDLE, :LEER,
@@ -101,8 +101,8 @@ module MoveRandomizer
                             :WATERSPORT, :HOWL, :MUDSHOT, :POISONTAIL, :COVET, :MAGICALLEAF, :SHOCKWAVE, :WATERPULSE,
                             :FLING, :WORRYSEED, :COPYCAT, :MIRRORSHOT, :MAGNETBOMB, :BUGBITE, :OMINOUSWIND, :POWERSWAP,
                             :GUARDSWAP, :TELEKINESIS, :MAGICROOM, :SMACKDOWN, :AFTERYOU, :ROUND, :ECHOEDVOICE, :ALLYSWITCH,
-                            :HEALPULSE, :SKYDROP, :QUASH, :WORKUP, :DISARMINGVOICE, :FAIRYWIND, :BRINCO, :CONFIDE, :BURNUP, 
-                            :DOUBLESHOCK, :NIHILLIGHT])
+                            :HEALPULSE, :SKYDROP, :QUASH, :WORKUP, :DISARMINGVOICE, :FAIRYWIND, :POUNCE, :CONFIDE, :BURNUP, 
+                            :DOUBLESHOCK])
   POWER_THRESHOLD = 70
   MAX_ATTEMPTS = 1000  # Prevent infinite loops
 end
@@ -130,7 +130,7 @@ def invalid_move?(move, move_data, for_tm = false)
   return true if move_data.ohko? && RandomizedChallenge.ohko_banned?
   
   # Check if this TM move was already given (only for TMs)
-  if for_tm && RandomizedChallenge::RANDOMIZE_TM_MOVES
+  if for_tm && RandomizedChallenge.randomize_tm_moves?
     RandomizedChallenge.ensure_tm_moves_set
     return true if $PokemonGlobal.given_tm_moves&.include?(move_id)
   end

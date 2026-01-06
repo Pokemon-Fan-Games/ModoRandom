@@ -10,7 +10,7 @@ class PokemonGlobalMetadata
                 :enable_random_tm_compat, :tm_compatibility_random, :enable_random_evolutions,
                 :enable_random_evolutions_similar_bst,
                 :enable_random_evolutions_respect_restrictions, :enable_random_types,
-                :random_types, :randomize_items, :randomize_held_items,
+                :random_types, :randomize_items, :randomize_held_items, :randomize_tm_moves,
                 :random_encounter_table, :consistent_wild_encounters, :dont_randomize, :wild_paused, 
                 :given_tm_moves, :randomize_trainers, :randomize_starters, :semi_random_mode,
                 :remember_trainer_teams, :random_trainer_teams, :randomize_trainers_items, :randomize_pokemon,
@@ -34,6 +34,7 @@ class PokemonGlobalMetadata
       @randomize_trainers_items = RandomizedChallenge::RANDOM_TRAINER_ITEMS_DEFAULT_VALUE
       @randomize_pokemon = RandomizedChallenge::RANDOMIZE_POKEMON
       @prioritize_stab_in_learnset = RandomizedChallenge::PRIORIZE_STAB_IN_LEARNSET
+      @randomize_tm_moves = RandomizedChallenge::RANDOMIZE_TM_MOVES
     end
     @reviving_fossil = nil
     @fossil_species = nil
@@ -78,6 +79,7 @@ class PokemonGlobalMetadata
     @randomize_pokemon = false
     @raid_battle_type = nil
     @prioritize_stab_in_learnset = false
+    @randomize_tm_moves = false
   end
 
   private
@@ -316,8 +318,8 @@ def random_species(with_mega = false)
     species_list = species_list.select { |s| 
       species_data = GameData::Species.get(s)
       species_data.mega_stone && 
-        (![:ALCREMIE, :PIKACHU, :EEVEE].include?(species_data.species) || 
-         [:PIKACHU_16, :EEVEE_1, :ALCREMIE].include?(species_data.id))
+        (![:ALCREMIE, :PIKACHU, :EEVEE, :FLOETTE].include?(species_data.species) || 
+         [:PIKACHU_16, :EEVEE_1, :ALCREMIE, :FLOETTE_5].include?(species_data.id))
     }
     species = species_list.sample
     species = GameData::Species.get(species).species
@@ -380,9 +382,9 @@ class Pokemon
   attr_accessor :randomized
   alias randomized_init initialize
 
-  def initialize(species, level, owner = $player, withMoves = true, recheck_form = true)
+  def initialize(species, level, owner = $player, withMoves = true, recheck_form = true, randomize = true)
     @randomized = false
-    return randomized_init(species, level, owner, withMoves, recheck_form) if !RandomizedChallenge.enabled?
+    return randomized_init(species, level, owner, withMoves, recheck_form) if !RandomizedChallenge.enabled? || !randomize
     original_species = species
     if RandomizedChallenge.randomize_pokemon? && !RandomizedChallenge::UNRANDOMIZABLE_POKEMON.include?(species)
       if RandomizedChallenge::KEEP_SAME_FOSSIL_POKEMON && $PokemonGlobal.reviving_fossil

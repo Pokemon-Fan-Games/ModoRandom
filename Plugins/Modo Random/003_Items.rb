@@ -125,6 +125,10 @@ module RandomizedChallenge
     enabled? && $PokemonGlobal.randomize_held_items ? true : false
   end
 
+  def self.randomize_tm_moves?
+    enabled? && $PokemonGlobal.randomize_tm_moves ? true : false
+  end
+
   def self.random_item(ignore_exclusions = false, no_tm = false, is_held_item = false)
     # Cache filtered lists based on parameters
     cache_key = "#{ignore_exclusions}_#{no_tm}_#{is_held_item}"
@@ -155,7 +159,7 @@ module RandomizedChallenge
     end
 
     # Add TM move assignment logic
-    if (item.is_TM? || item.is_TR?) && RANDOMIZE_TM_MOVES
+    if (item.is_TM? || item.is_TR?) && randomize_tm_moves?
       random_move = random_move_for_tm
       if !random_move
         return fallback_to_random_item
@@ -215,7 +219,7 @@ module RandomizedChallenge
   def self.determine_random_item(original_item)
     return original_item if unrandomizable_item?(original_item)
     item = GameData::Item.get(original_item)
-    if item.is_machine? && RANDOMIZE_TM_MOVES
+    if item.is_machine? && randomize_tm_moves?
       if $bag.has?(item)
         return fallback_to_random_item
       end
@@ -328,7 +332,7 @@ module RandomizedChallenge
     
     max_attempts.times do
       tm = tm_list.sample
-      if RandomizedChallenge::RANDOMIZE_TM_MOVES
+      if RandomizedChallenge.randomize_tm_moves?
         move = find_valid_move(0, [], true)
         counter = 0
         while $PokemonGlobal.given_tm_moves.include?(move.id)
@@ -390,5 +394,21 @@ def pbAddPokemonSilent(pkmn, level = 1, see_form = true)
   
   RandomizedChallenge.with_pokemon_item_randomization(pkmn, level) do |pokemon, lvl|
     pbAddPokemonSilent_random(pokemon, lvl, see_form)
+  end
+end
+
+class PokemonMartAdapter
+  alias getDescription_random getDescription
+  def getDescription(item)
+    return getDescription_random(item) unless RandomizedChallenge.randomize_tm_moves?
+    item_data = GameData::Item.get(item)
+    if item_data.is_TM? || item_data.is_TR?
+      move_id = item_data.move
+      move_data = GameData::Move.get(move_id) if move_id
+      if move_data
+        return move_data.description
+      end
+    end
+    return getDescription_random(item)
   end
 end

@@ -132,7 +132,7 @@ module RandomizedChallenge
   # Pokémon que no pueden salir en el modo Random. Añade aquí los que no quieres que salgan
   # con el mismo formato de los que ya aparecen.
   BLACKLISTED_POKEMON = [:ARCEUS_9, :MEWTWO_5, :GRENINJA_1, :GRENINJA_2,
-                         :CRAMORANT_1, :CRAMORANT_2, :SILVALLY_9]
+                         :CRAMORANT_1, :CRAMORANT_2, :SILVALLY_9, :PICHU_2]
 
   # Pokemon que no se randomizarán
   UNRANDOMIZABLE_POKEMON = [:MEWTWO_5]
@@ -458,12 +458,14 @@ module RandomizerConfigurator
     #   :order => 16,
     #   :parent => :RANDOMIZE_ITEMS
     # },
-    # :RANDOMIZE_TM_MOVES => {
-    #   :name  => _INTL("Randomizar movimientos de MTs"),
-    #   :desc  => _INTL("Al obtener una MT el movimiento que contiene será randomizado."),
-    #   :order => 17,
-    #   :parent => :RANDOMIZE_ITEMS
-    # },
+    :RANDOMIZE_TM_MOVES => {
+      :name  => _INTL("Randomizar movimientos de MTs"),
+      :desc  => _INTL("Al obtener una MT el movimiento que contiene será randomizado."),
+      :order => 20,
+      :parent => :RANDOMIZE_ITEMS,
+      :check => lambda { RandomizedChallenge.randomize_tm_moves? },
+      :toggle => lambda { RandomizerConfigurator.toggle_randomize_tm_moves }
+    },
   }
 
   GENS = {
@@ -606,6 +608,13 @@ module RandomizerConfigurator
 
   def toggle_held_items
     $PokemonGlobal.randomize_held_items = !$PokemonGlobal.randomize_held_items
+  end
+
+  def toggle_randomize_tm_moves
+    if $PokemonGlobal.randomize_tm_moves.nil?
+      $PokemonGlobal.randomize_tm_moves = RandomizedChallenge::RANDOMIZE_TM_MOVES
+    end
+    $PokemonGlobal.randomize_tm_moves = !$PokemonGlobal.randomize_tm_moves
   end
 
   def toggle_trainers_items
