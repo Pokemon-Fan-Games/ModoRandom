@@ -95,16 +95,11 @@ module RandomizedChallenge
 
     $PokemonGlobal.initialize_random_params(without_defaults)
     RandomizerConfigurator.ability_mode = RandomizedChallenge::RANDOM_ABILITY_METHOD
-    # $game_switches[RandomizedChallenge::SWITCH] = true
     $PokemonGlobal.random_enabled = true
     generate_random_starters #if randomize_starters?
   end
 
   def self.disable
-    # $game_switches[RandomizedChallenge::SWITCH] = false
-    $game_switches[RandomizedChallenge::ABILITY_RANDOMIZER_SWITCH] = false
-    $game_switches[RandomizedChallenge::ABILITY_SWAP_RANDOMIZER_SWITCH] = false
-    $game_switches[RandomizedChallenge::ABILITY_SEMI_RANDOMIZER_SWITCH] = false
     RandomizerConfigurator.ability_mode = :NO
     $PokemonGlobal.disable_random_params
     $PokemonGlobal.random_enabled = false
