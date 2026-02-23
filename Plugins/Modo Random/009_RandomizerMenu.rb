@@ -15,6 +15,43 @@ module RandomizerConfigurator
       pbFadeOutIn { UI::Options.new(false, :randomizer_main_menu).main }
     end
   end
+
+  def display_current_rules
+    rules_text = RandomizerMenuHelpers.build_current_rules_text
+
+    return if rules_text.empty? || !RandomizedChallenge.enabled?
+    
+    vp = Viewport.new(0, 0, Graphics.width, Graphics.height)
+    vp.z = 999999
+    infowindow = Window_AdvancedTextPokemon.newWithSize("", 0, 0, Graphics.width, Graphics.height, vp)
+    infowindow.setSkin(MessageConfig.pbGetSystemFrame)
+    infowindow.letterbyletter = true
+    infowindow.lineHeight = 28
+    pbSetSmallFont(infowindow.contents)
+    infowindow.text = rules_text
+    infowindow.resizeHeightToFit(rules_text)
+    infowindow.height = Graphics.height if infowindow.height > Graphics.height
+    infowindow.y = (Graphics.height - infowindow.height) / 2
+    infowindow.z = 999999
+    pbPlayDecisionSE
+    loop do
+      Graphics.update
+      Input.update
+      infowindow.update
+      pbUpdateSceneMap
+      if Input.trigger?(Input::USE) || Input.trigger?(Input::BACK)
+        if infowindow.busy?
+          pbPlayDecisionSE if infowindow.pausing?
+          infowindow.resume
+        else
+          break
+        end
+      end
+    end
+    infowindow.dispose
+    vp.dispose
+  end
+
 end
 
 #===============================================================================
