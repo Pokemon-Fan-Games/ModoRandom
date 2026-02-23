@@ -1,5 +1,7 @@
 # Modo Random
 
+## El desarrollo de este Plugin fue migrado a [GitLab](https://gitlab.com/la-base-de-sky/la-base-de-sky-plugins/ModoRandom)
+
 ## Descripción
 
 El modo random randomizará ataques y habilidades de los pokémon tanto de entrenadores como de los salvajes, se puede activar que también se randomice la compatibilidad con las MTs, se podrá restringir las generaciones de los pokémon que apareceran en el random.
